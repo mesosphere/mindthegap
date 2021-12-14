@@ -1,0 +1,72 @@
+before:
+  hooks:
+    - go mod download
+env:
+  - GO111MODULE=on
+builds:
+  - main: ./cmd/seed/main.go
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X {{.Env.GOMODULENAME}}/pkg/version.version={{.Version}}
+      - -X {{.Env.GOMODULENAME}}/pkg/version.major={{.Major}}
+      - -X {{.Env.GOMODULENAME}}/pkg/version.minor={{.Minor}}
+      - -X {{.Env.GOMODULENAME}}/pkg/version.patch={{.Patch}}
+      - -X {{.Env.GOMODULENAME}}/pkg/version.revision={{.FullCommit}}
+      - -X {{.Env.GOMODULENAME}}/pkg/version.commitDate={{.CommitDate}}
+      - -X {{.Env.GOMODULENAME}}/pkg/version.branch={{.Branch}}
+      - -X {{.Env.GOMODULENAME}}/pkg/version.gitTreeState={{.Env.GIT_TREE_STATE}}
+      - -X {{.Env.GOMODULENAME}}/pkg/version.builtBy=goreleaser
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+dockers:
+  - image_templates:
+    - "{{.Env.DOCKER_REPOSITORY}}/{{.ProjectName}}:{{ .Tag }}-amd64"
+    dockerfile: Dockerfile
+    use_buildx: true
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--platform=linux/amd64"
+  - image_templates:
+    - "{{.Env.DOCKER_REPOSITORY}}/{{.ProjectName}}:{{ .Tag }}-arm64"
+    dockerfile: Dockerfile
+    # Using buildx can result in outdated builds when buildx would incorrectly
+    # use cached build layers for updated artifacts. Until the issue is resolved
+    # we cannot reliably use buildx for builds.
+    # https://github.com/moby/buildkit/issues/1368
+    use_buildx: false
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--platform=linux/arm64"
+    goarch: arm64
+docker_manifests:
+  - name_template: "{{.Env.DOCKER_REPOSITORY}}/{{.ProjectName}}:{{ .Tag }}"
+    image_templates:
+      - "{{.Env.DOCKER_REPOSITORY}}/{{.ProjectName}}:{{ .Tag }}-amd64"
+      - "{{.Env.DOCKER_REPOSITORY}}/{{.ProjectName}}:{{ .Tag }}-arm64"
+archives:
+  - format_overrides:
+    - goos: windows
+      format: zip
+release:
+  github:
+  prerelease: auto

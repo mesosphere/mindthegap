@@ -1,0 +1,62 @@
+repos:
+- repo: local
+  hooks:
+  - id: lint-helm-chart
+    name: Lint Helm chart
+    entry: make helm.ct
+    files: ^chart/
+    language: system
+    stages: [commit]
+    pass_filenames: false
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v3.4.0
+  hooks:
+  - id: trailing-whitespace
+    stages: [commit]
+  - id: check-yaml
+    args: ["-m", "--unsafe"]
+    stages: [commit]
+    exclude: ^chart/
+  - id: mixed-line-ending
+    args: ["-f", "lf"]
+    exclude: \.bat$
+    stages: [commit]
+  - id: no-commit-to-branch
+    stages: [commit]
+  - id: check-added-large-files
+    stages: [commit]
+  - id: check-case-conflict
+    stages: [commit]
+  - id: check-merge-conflict
+    stages: [commit]
+  - id: forbid-new-submodules
+    stages: [commit]
+  - id: check-executables-have-shebangs
+    stages: [commit]
+  - id: check-symlinks
+    stages: [commit]
+  - id: end-of-file-fixer
+    stages: [commit]
+- repo: https://github.com/jorisroovers/gitlint
+  rev: v0.15.0
+  hooks:
+  - id: gitlint
+    stages: [commit-msg]
+- repo: https://github.com/jumanjihouse/pre-commit-hooks
+  rev: 2.1.5
+  hooks:
+  - id: shellcheck
+    stages: [commit]
+    args: ["-e", "SC2211"]
+    additional_dependencies: []
+  - id: shfmt
+    stages: [commit]
+    args: ["-s", "-i", "2"]
+  - id: script-must-have-extension
+    stages: [commit]
+- repo: https://github.com/golangci/golangci-lint
+  rev: v1.38.0
+  hooks:
+  - id: golangci-lint
+    args: ["-c", ".golangci.yml", "--fix"]
+    stages: [commit]
