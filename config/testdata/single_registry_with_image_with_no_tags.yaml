@@ -1,0 +1,4 @@
+---
+test.registry.io:
+  images:
+    test-image:

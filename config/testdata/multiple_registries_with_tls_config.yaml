@@ -1,0 +1,5 @@
+---
+test.registry.io:
+  tls-verify: false
+test.registry2.io:
+  tls-verify: true

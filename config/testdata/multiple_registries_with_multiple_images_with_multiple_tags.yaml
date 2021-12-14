@@ -1,0 +1,29 @@
+---
+test.registry.io:
+  images:
+    test-image:
+      - tag1
+      - tag2
+      - tag3
+    test-image2:
+      - tag3
+      - tag4
+      - tag5
+    test-image3:
+      - tag6
+      - tag7
+      - tag8
+test.registry2.io:
+  images:
+    test-image:
+      - tag11
+      - tag21
+      - tag31
+    test-image5:
+      - tag32
+      - tag42
+      - tag52
+    test-image6:
+      - tag63
+      - tag73
+      - tag83
