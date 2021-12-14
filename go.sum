@@ -596,8 +596,6 @@ github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182aff
 github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369/go.mod h1:BSXmuO+STAnVfrANrmjBb36TMTDstsz7MSK+HVaYKv4=
 github.com/mesosphere/dkp-cli/runtime v0.5.0 h1:halQuiutauu4ceD4ZHe+jk2WlN33BP02K9cyNPubd4g=
 github.com/mesosphere/dkp-cli/runtime v0.5.0/go.mod h1:XMgM4r/FsKQe/YkCKIFd2blGcUX+Eg7UChU32+2gsuQ=
-github.com/mesosphere/golang-repository-template v0.0.0-20210303212036-05f96aedf5a9 h1:2ejP3uuexzuI6rv+tPQ+ehkU5rWnJk0JGAFQNTE3BmI=
-github.com/mesosphere/golang-repository-template v0.0.0-20210303212036-05f96aedf5a9/go.mod h1:XjWaMslxk8t3JLAQcGPt9BYdB7d500YKZhz1Uxte5DQ=
 github.com/miekg/dns v1.0.14/go.mod h1:W1PPwlIAgtquWBMBEV9nkV9Cazfe8ScdGz/Lj7v3Nrg=
 github.com/miekg/pkcs11 v1.0.3/go.mod h1:XsNlhZGX73bx86s2hdc/FuaLm2CPZJemRLMA+WTFxgs=
 github.com/mistifyio/go-zfs v2.1.2-0.20190413222219-f784269be439+incompatible/go.mod h1:8AuVvqP/mXw1px98n46wfvcGfQ4ci2FwoAjKYxuo3Z4=

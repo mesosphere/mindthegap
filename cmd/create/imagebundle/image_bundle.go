@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/distribution/distribution/v3/manifest/manifestlist"
 	"github.com/mesosphere/dkp-cli/runtime/cli"
 	"github.com/mesosphere/dkp-cli/runtime/cmd/log"
 	"github.com/spf13/cobra"
@@ -92,6 +93,7 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 				if klog.V(4).Enabled() {
 					skopeoOpts = append(skopeoOpts, skopeo.Debug())
 				}
+
 				for imageName, imageTags := range registryConfig.Images {
 					for _, imageTag := range imageTags {
 						srcImageName := fmt.Sprintf("%s/%s:%s", registryName, imageName, imageTag)
@@ -100,10 +102,36 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 								srcImageName, platforms,
 							),
 						)
+
+						srcImageManifestList, skopeoOutput, err := skopeoRunner.InspectManifest(
+							context.TODO(), fmt.Sprintf("docker://%s", srcImageName),
+						)
+						if err != nil {
+							klog.Info(string(skopeoOutput))
+							statusLogger.End(false)
+							return err
+						}
+						klog.V(4).Info(string(skopeoOutput))
+						destImageManifestList := manifestlist.ManifestList{Versioned: srcImageManifestList.Versioned}
+						platformManifests := make(map[string]manifestlist.ManifestDescriptor, len(srcImageManifestList.Manifests))
+						for _, m := range srcImageManifestList.Manifests {
+							srcManifestPlatform := m.Platform.OS + "/" + m.Platform.Architecture
+							if m.Platform.Variant != "" {
+								srcManifestPlatform += "/" + m.Platform.Variant
+							}
+							platformManifests[srcManifestPlatform] = m
+						}
+
 						for _, p := range platforms {
+							platformManifest, ok := platformManifests[p.String()]
+							if !ok {
+								statusLogger.End(false)
+								return fmt.Errorf("could not find platform %s for image %s", p, srcImageName)
+							}
+
 							skopeoOutput, err := skopeoRunner.Copy(context.TODO(),
-								fmt.Sprintf("docker://%s", srcImageName),
-								fmt.Sprintf("docker://%s/%s:%s", reg.Address(), imageName, imageTag),
+								fmt.Sprintf("docker://%s/%s@%s", registryName, imageName, platformManifest.Digest),
+								fmt.Sprintf("docker://%s/%s@%s", reg.Address(), imageName, platformManifest.Digest),
 								append(
 									skopeoOpts,
 									skopeo.DisableDestTLSVerify(), skopeo.OS(p.os), skopeo.Arch(p.arch), skopeo.Variant(p.variant),
@@ -115,8 +143,25 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 								return err
 							}
 							klog.V(4).Info(string(skopeoOutput))
-							statusLogger.End(true)
+
+							destImageManifestList.Manifests = append(destImageManifestList.Manifests, platformManifest)
 						}
+						skopeoOutput, err = skopeoRunner.CopyManifest(context.TODO(),
+							destImageManifestList,
+							fmt.Sprintf("docker://%s/%s:%s", reg.Address(), imageName, imageTag),
+							append(
+								skopeoOpts,
+								skopeo.DisableDestTLSVerify(),
+							)...,
+						)
+						if err != nil {
+							klog.Info(string(skopeoOutput))
+							statusLogger.End(false)
+							return err
+						}
+						klog.V(4).Info(string(skopeoOutput))
+
+						statusLogger.End(true)
 					}
 				}
 			}

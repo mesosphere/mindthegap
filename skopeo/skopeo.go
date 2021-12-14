@@ -60,6 +60,7 @@ func Debug() SkopeoOption {
 		return "--debug"
 	}
 }
+
 func All() SkopeoOption {
 	return func() string {
 		return "--all"
@@ -135,6 +136,28 @@ func (r *Runner) InspectManifest(
 	}
 
 	return m, output, nil
+}
+
+func (r *Runner) CopyManifest(
+	ctx context.Context, manifest manifestlist.ManifestList, dest string, opts ...SkopeoOption,
+) ([]byte, error) {
+	td, err := os.MkdirTemp("", ".image-bundle-manifest-*")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temp dir: %w", err)
+	}
+	defer os.RemoveAll(td)
+
+	mf, err := os.Create(filepath.Join(td, "manifest.json"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create manifest.jsin file: %w", err)
+	}
+	defer mf.Close()
+
+	if err := json.NewEncoder(mf).Encode(manifest); err != nil {
+		return nil, fmt.Errorf("failed to encode manifest: %w", err)
+	}
+
+	return r.Copy(ctx, "dir:"+td, dest, append(opts, func() string { return "--multi-arch=index-only" })...)
 }
 
 func (r *Runner) run(ctx context.Context, baseArgs []string, opts ...SkopeoOption) ([]byte, error) {
