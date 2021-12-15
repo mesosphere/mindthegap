@@ -1,0 +1,32 @@
+name: pull-request
+
+on:
+  pull_request:
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Install asdf and tools
+        uses: asdf-vm/actions/install@v1
+
+      - name: Run unit tests
+        run: make test
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Install asdf and tools
+        uses: asdf-vm/actions/install@v1
+
+      - name: Install asdf and tools
+        uses: asdf-vm/actions/install@v1
+
+      - name: Lint code
+        run: make lint
