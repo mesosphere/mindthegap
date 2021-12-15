@@ -24,6 +24,7 @@ import (
 
 	"github.com/mesosphere/mindthegap/cmd/create"
 	"github.com/mesosphere/mindthegap/cmd/push"
+	"github.com/mesosphere/mindthegap/cmd/serve"
 )
 
 func NewCommand(in io.Reader, out, errOut io.Writer) *cobra.Command {
@@ -33,6 +34,7 @@ func NewCommand(in io.Reader, out, errOut io.Writer) *cobra.Command {
 
 	rootCmd.AddCommand(create.NewCommand(ioStreams))
 	rootCmd.AddCommand(push.NewCommand(ioStreams))
+	rootCmd.AddCommand(serve.NewCommand(ioStreams))
 
 	return rootCmd
 }
