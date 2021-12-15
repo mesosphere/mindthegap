@@ -1,4 +1,5 @@
-SHELL := /bin/bash
+# This is compatible with Darwin, see https://itnext.io/upgrading-bash-on-macos-7138bd1066ba
+SHELL := /usr/bin/env bash
 .SHELLFLAGS = -euo pipefail -c
 
 # We need to explicitly get the bash version via shell command here because the user could be
