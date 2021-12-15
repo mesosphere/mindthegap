@@ -29,7 +29,9 @@ import (
 
 type Config struct {
 	StorageDirectory string
+	Host             string
 	Port             uint16
+	ReadOnly         bool
 }
 
 func (c Config) ToRegistryConfiguration() (*configuration.Configuration, error) {
@@ -41,9 +43,11 @@ storage:
   maintenance:
     uploadpurging:
       enabled: false
+    readonly:
+      enabled: {{ .ReadOnly }}
 http:
   net: tcp
-  addr: localhost:{{ .Port }}
+  addr: {{Host}}:{{ .Port }}
 log:
   accesslog:
     disabled: true
@@ -58,13 +62,20 @@ log:
 		port = uint16(freePort)
 	}
 
+	host := "localhost"
+	if c.Host != "" {
+		host = c.Host
+	}
+
 	tmpl := template.New("registryConfig")
 	template.Must(tmpl.Parse(configTmpl))
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, struct {
 		StorageDirectory string
+		Host             string
 		Port             uint16
-	}{c.StorageDirectory, port}); err != nil {
+		ReadOnly         bool
+	}{c.StorageDirectory, host, port, c.ReadOnly}); err != nil {
 		return nil, fmt.Errorf("failed to render registry configuration: %w", err)
 	}
 

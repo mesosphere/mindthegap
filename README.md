@@ -60,6 +60,18 @@ mindthegap push image-bundle --image-bundle <path/to/images.tar> \
 
 All images in the image bundle tar file will be pushed to the target docker registry.
 
+### Serving an image bundle
+
+```shell
+mindthegap serve image-bundle --image-bundle <path/to/images.tar> \
+  [--listen-address <listen.address>] \
+  [--listen-port <listen.port>]
+```
+
+Start a Docker registry serving the contents of the image bundle. Note that he Docker registry will
+be in read-only mode to reflect the source of the data being a static tarball so pushes to this
+registry will fail.
+
 ## How does it work?
 
 `mindthegap` starts up a [Docker registry](https://docs.docker.com/registry/)

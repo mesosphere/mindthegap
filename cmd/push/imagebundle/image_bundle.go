@@ -73,7 +73,7 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 			statusLogger.End(true)
 
 			statusLogger.Start("Starting temporary Docker registry")
-			reg, err := registry.NewRegistry(registry.Config{StorageDirectory: tempDir})
+			reg, err := registry.NewRegistry(registry.Config{StorageDirectory: tempDir, ReadOnly: true})
 			if err != nil {
 				statusLogger.End(false)
 				return fmt.Errorf("failed to create local Docker registry: %w", err)
