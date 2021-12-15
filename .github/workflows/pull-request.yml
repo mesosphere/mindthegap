@@ -1,0 +1,47 @@
+name: pull-request
+
+on:
+  pull_request:
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Install asdf and tools
+        uses: asdf-vm/actions/install@v1
+
+      - name: Run unit tests
+        run: make test
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Install asdf and tools
+        uses: asdf-vm/actions/install@v1
+
+      - name: Lint code
+        run: make lint
+
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Install asdf and tools
+        uses: asdf-vm/actions/install@v1
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - uses: pre-commit/action@v2.0.3
+        with:
+          extra_args: --all-files
