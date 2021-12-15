@@ -8,6 +8,7 @@ import (
 
 	"github.com/mesosphere/dkp-cli/runtime/cli"
 	"github.com/mesosphere/dkp-cli/runtime/cmd/log"
+	"github.com/mholt/archiver/v3"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog/v2"
@@ -15,7 +16,6 @@ import (
 	"github.com/mesosphere/mindthegap/config"
 	"github.com/mesosphere/mindthegap/docker/registry"
 	"github.com/mesosphere/mindthegap/skopeo"
-	"github.com/mesosphere/mindthegap/tar"
 )
 
 func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
@@ -41,17 +41,11 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 			defer os.RemoveAll(tempDir)
 			statusLogger.End(true)
 
-			statusLogger.Start("Untarring image bundle")
-			tarFile, err := os.Open(imageBundleFile)
+			statusLogger.Start("Unarchiving image bundle")
+			err = archiver.Unarchive(imageBundleFile, tempDir)
 			if err != nil {
 				statusLogger.End(false)
-				return fmt.Errorf("failed to open image bundle file: %w", err)
-			}
-			err = tar.Untar(tarFile, tempDir)
-			_ = tarFile.Close()
-			if err != nil {
-				statusLogger.End(false)
-				return fmt.Errorf("failed to untar image bundle: %w", err)
+				return fmt.Errorf("failed to unarchive image bundle: %w", err)
 			}
 			statusLogger.End(true)
 

@@ -9,6 +9,7 @@ import (
 	"github.com/distribution/distribution/v3/manifest/manifestlist"
 	"github.com/mesosphere/dkp-cli/runtime/cli"
 	"github.com/mesosphere/dkp-cli/runtime/cmd/log"
+	"github.com/mholt/archiver/v3"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog/v2"
@@ -16,7 +17,6 @@ import (
 	"github.com/mesosphere/mindthegap/config"
 	"github.com/mesosphere/mindthegap/docker/registry"
 	"github.com/mesosphere/mindthegap/skopeo"
-	"github.com/mesosphere/mindthegap/tar"
 )
 
 func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
@@ -170,7 +170,17 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 				return err
 			}
 
-			if err = tar.Tar(tempDir, outputFile); err != nil {
+			statusLogger.Start("Archiving image bundle")
+			fi, err := os.ReadDir(tempDir)
+			if err != nil {
+				statusLogger.End(false)
+				return fmt.Errorf("failed to read temp directory: %w", err)
+			}
+			filesToArchive := make([]string, 0, len(fi))
+			for _, f := range fi {
+				filesToArchive = append(filesToArchive, filepath.Join(tempDir, f.Name()))
+			}
+			if err = archiver.Archive(filesToArchive, outputFile); err != nil {
 				statusLogger.End(false)
 				return fmt.Errorf("failed to create image bundle tarball: %w", err)
 			}
