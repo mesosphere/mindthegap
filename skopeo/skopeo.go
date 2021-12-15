@@ -17,6 +17,7 @@ package skopeo
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -30,6 +31,9 @@ import (
 	"github.com/docker/cli/cli/config"
 	"k8s.io/klog/v2"
 )
+
+//go:embed default-policy.json
+var defaultSkopeoPolicy []byte
 
 type SkopeoOption func() string
 
@@ -94,8 +98,9 @@ func DestCredentials(username, password string) SkopeoOption {
 }
 
 type Runner struct {
-	unpacked           sync.Once
-	unpackedSkopeoPath string
+	unpacked                 sync.Once
+	unpackedSkopeoPath       string
+	unpackedSkopeoPolicyPath string
 }
 
 type CleanupFunc func() error
@@ -117,11 +122,16 @@ func (r *Runner) mustUnpack() {
 	if err = os.WriteFile(r.unpackedSkopeoPath, skopeoBinary, 0700); err != nil {
 		panic(err)
 	}
+	r.unpackedSkopeoPolicyPath = filepath.Join(tempDir, "policy.json")
+	if err = os.WriteFile(r.unpackedSkopeoPolicyPath, defaultSkopeoPolicy, 0400); err != nil {
+		panic(err)
+	}
 }
 
 func (r *Runner) Copy(ctx context.Context, src, dest string, opts ...SkopeoOption) ([]byte, error) {
 	copyArgs := []string{
 		"copy",
+		"--policy", r.unpackedSkopeoPolicyPath,
 		"--preserve-digests",
 		src,
 		dest,
