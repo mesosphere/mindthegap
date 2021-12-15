@@ -47,7 +47,7 @@ storage:
       enabled: {{ .ReadOnly }}
 http:
   net: tcp
-  addr: {{Host}}:{{ .Port }}
+  addr: {{ .Host }}:{{ .Port }}
 log:
   accesslog:
     disabled: true
