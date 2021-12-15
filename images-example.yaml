@@ -1,16 +1,16 @@
-// Copyright 2021 Mesosphere, Inc. All rights reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+# Copyright 2021 Mesosphere, Inc. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 ---
 docker.io:
@@ -54,47 +54,6 @@ docker.io:
 #       - 1.18
 #     library/traefik:
 #       - 2.5.0
-#     mesosphere/cluster-observer:
-#       - 1.0.0
-#     mesosphere/dex-controller:
-#       - v0.6.11
-#     mesosphere/dex-k8s-authenticator:
-#       - v1.2.2-d2iq
-#     mesosphere/dex:
-#       - v2.27.0-7-g258c09-d2iq
-#     mesosphere/grafana-plugins:
-#       - v0.0.1
-#     mesosphere/karma:
-#       - v0.88-d2iq-server-name
-#     mesosphere/kommander2-appmanagement:
-#       - v2.1.0
-#     mesosphere/kommander2-federation-authorizedlister:
-#       - v2.1.0
-#     mesosphere/kommander2-federation-controller-manager:
-#       - v2.1.0
-#     mesosphere/kommander2-federation-webhook:
-#       - v2.1.0
-#     mesosphere/kommander2-flux-operator:
-#       - v2.1.0
-#     mesosphere/kommander2-helm-mirror:
-#       - v2.1.0
-#     mesosphere/kommander2-kubetools:
-#       - v2.1.0
-#     mesosphere/kommander2-licensing-controller-manager:
-#       - v2.1.0
-#     mesosphere/kommander2-licensing-webhook:
-#       - v2.1.0
-#     mesosphere/kommander:
-#       - 8.39.1
-#     mesosphere/kubeaddons-addon-initializer:
-#       - v0.5.5
-#     mesosphere/kubetunnel-controller:
-#       - v0.0.8
-#     mesosphere/kubetunnel-webhook:
-#       - v0.0.8
-#     mesosphere/traefik-forward-auth:
-#       - 3.0.2
-#       - 3.0.3
 #     metallb/controller:
 #       - v0.9.3
 #     metallb/speaker:
