@@ -31,3 +31,5 @@ func main() {
 
 	cmd.Execute()
 }
+
+// A trivial change to trigger a PR.
