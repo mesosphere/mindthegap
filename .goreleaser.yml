@@ -27,9 +27,6 @@ builds:
       - arm64
     mod_timestamp: '{{ .CommitTimestamp }}'
     hooks:
-      pre: |
-        make IS_SNAPSHOT={{ .IsSnapshot }} GOOS={{ .Os }} GOARCH={{ .Arch }} skopeo.build
-        make IS_SNAPSHOT={{ .IsSnapshot }} GOOS={{ .Os }} GOARCH={{ .Arch }} UPX_TARGET=skopeo/static/skopeo-{{ .Os }}-{{ .Arch }} upx
       post: |
         make IS_SNAPSHOT={{ .IsSnapshot }} GOOS={{ .Os }} GOARCH={{ .Arch }} UPX_TARGET={{ .Path }} upx
 universal_binaries:
