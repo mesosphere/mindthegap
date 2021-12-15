@@ -23,6 +23,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/mesosphere/mindthegap/cmd/create"
+	"github.com/mesosphere/mindthegap/cmd/importcmd"
 	"github.com/mesosphere/mindthegap/cmd/push"
 	"github.com/mesosphere/mindthegap/cmd/serve"
 )
@@ -35,6 +36,7 @@ func NewCommand(in io.Reader, out, errOut io.Writer) *cobra.Command {
 	rootCmd.AddCommand(create.NewCommand(ioStreams))
 	rootCmd.AddCommand(push.NewCommand(ioStreams))
 	rootCmd.AddCommand(serve.NewCommand(ioStreams))
+	rootCmd.AddCommand(importcmd.NewCommand(ioStreams))
 
 	return rootCmd
 }
