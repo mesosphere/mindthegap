@@ -21,5 +21,4 @@ openapi_violations.report
 dist/
 .local/
 
-skopeo/static
 .image-bundle-*
