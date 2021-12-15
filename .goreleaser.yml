@@ -5,20 +5,6 @@ gomod:
     - GOPRIVATE=github.com/mesosphere
 changelog:
   use: github-native
-  groups:
-    - title: Features
-      regexp: "^feat[(\\w)]*:+.*$"
-      order: 0
-    - title: 'Bug fixes'
-      regexp: "^fix[(\\w)]*:+.*$"
-      order: 1
-    - title: Others
-      order: 999
-  filters:
-    exclude:
-      - '^docs:'
-      - '^build:'
-      - '^chore:'
 builds:
   - id: mindthegap
     env:
