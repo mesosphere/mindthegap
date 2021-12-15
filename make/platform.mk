@@ -1,6 +1,6 @@
 OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ifeq ($(OS), darwin)
-  BREW_PREFIX := $(shell brew --prefix &>/dev/null)
+  BREW_PREFIX := $(shell brew --prefix 2>/dev/null)
   ifeq ($(BREW_PREFIX),)
     $(error Unable to discover brew prefix - do you have brew installed? See https://brew.sh/ for details of how to install)
   endif
