@@ -45,7 +45,7 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 			err = archiver.Unarchive(imageBundleFile, tempDir)
 			if err != nil {
 				statusLogger.End(false)
-				return fmt.Errorf("failed to untar image bundle: %w", err)
+				return fmt.Errorf("failed to unarchive image bundle: %w", err)
 			}
 			statusLogger.End(true)
 

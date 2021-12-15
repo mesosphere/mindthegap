@@ -3,14 +3,13 @@ package imagebundle
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/distribution/distribution/v3/manifest/manifestlist"
 	"github.com/mesosphere/dkp-cli/runtime/cli"
 	"github.com/mesosphere/dkp-cli/runtime/cmd/log"
-	"github.com/mholt/archiver"
+	"github.com/mholt/archiver/v3"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog/v2"
@@ -172,7 +171,7 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 			}
 
 			statusLogger.Start("Archiving image bundle")
-			fi, err := ioutil.ReadDir(tempDir)
+			fi, err := os.ReadDir(tempDir)
 			if err != nil {
 				statusLogger.End(false)
 				return fmt.Errorf("failed to read temp directory: %w", err)
