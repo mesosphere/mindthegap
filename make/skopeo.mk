@@ -11,7 +11,12 @@ skopeo.build.all:
 	$(MAKE) --no-print-directory GOOS=windows GOARCH=amd64 skopeo.build
 	$(MAKE) --no-print-directory GOOS=windows GOARCH=arm64 skopeo.build
 
+
+ifeq ($(IS_SNAPSHOT),false)
+.PHONY: skopeo/static/skopeo-$(GOOS)-$(GOARCH)$(if $(filter $(GOOS),windows),.exe)
+endif
 skopeo/static/skopeo-$(GOOS)-$(GOARCH)$(if $(filter $(GOOS),windows),.exe): ; $(info $(M) Building skopeo for $(GOOS)/$(GOARCH))
 	mkdir -p $(dir $@)
+	rm -f $(REPO_ROOT)/$@
 	cd skopeo-static && \
 		CGO_ENABLED=0 go build -o $(REPO_ROOT)/$@ -tags containers_image_openpgp github.com/containers/skopeo/cmd/skopeo

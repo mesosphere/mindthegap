@@ -28,10 +28,10 @@ builds:
     mod_timestamp: '{{ .CommitTimestamp }}'
     hooks:
       pre: |
-        make GOOS={{ .Os }} GOARCH={{ .Arch }} skopeo.build
-        make SKIP_UPX={{ .IsSnapshot }} GOOS={{ .Os }} GOARCH={{ .Arch }} UPX_TARGET=skopeo/static/skopeo-{{ .Os }}-{{ .Arch }} upx
+        make IS_SNAPSHOT={{ .IsSnapshot }} GOOS={{ .Os }} GOARCH={{ .Arch }} skopeo.build
+        make IS_SNAPSHOT={{ .IsSnapshot }} GOOS={{ .Os }} GOARCH={{ .Arch }} UPX_TARGET=skopeo/static/skopeo-{{ .Os }}-{{ .Arch }} upx
       post: |
-        make SKIP_UPX={{ .IsSnapshot }} GOOS={{ .Os }} GOARCH={{ .Arch }} UPX_TARGET={{ .Path }} upx
+        make IS_SNAPSHOT={{ .IsSnapshot }} GOOS={{ .Os }} GOARCH={{ .Arch }} UPX_TARGET={{ .Path }} upx
 universal_binaries:
   - replace: true
     id: mindthegap
