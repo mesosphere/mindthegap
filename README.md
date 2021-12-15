@@ -4,11 +4,6 @@
 creating image bundles and seeding images from a bundle into an existing
 image registry.
 
-## Building
-
-Build the CLI using `make build-snapshot` that will output binary into
-`dist/mindthegap_$(GOOS)_$(GOARCH)/mindthegap` and put it in `$PATH`.
-
 ## Usage
 
 ### Creating an image bundle
@@ -58,3 +53,18 @@ specified images.
 The resulting tarball can be loaded into a running Docker registry, or
 be used as the initial storage for running your own registry from via Docker
 or in a Kubernetes cluster.
+
+## Building
+
+### Prerequisite: set up git lfs
+
+`mindthegap` embeds a static build of [`skopeo`](https://github.com/containers/skopeo). In order to
+make keep the repo clean, the static builds of `skopeo` are added via
+[`git lfs`](https://git-lfs.github.com/). If you haven't previously set up `git lfs` on your machine
+(don't worry, it's just a case of install `git-lfs` and running `git lfs install`), then follow the
+instructions on the `git lfs` site.
+
+### Building the CLI
+
+Build the CLI using `make build-snapshot` that will output binary into
+`dist/mindthegap_$(GOOS)_$(GOARCH)/mindthegap` and put it in `$PATH`.
