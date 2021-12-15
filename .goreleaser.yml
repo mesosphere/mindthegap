@@ -3,6 +3,22 @@ gomod:
   proxy: true
   env:
     - GOPRIVATE=github.com/mesosphere
+changelog:
+  use: github-native
+  groups:
+    - title: Features
+      regexp: "^feat[(\\w)]*:+.*$"
+      order: 0
+    - title: 'Bug fixes'
+      regexp: "^fix[(\\w)]*:+.*$"
+      order: 1
+    - title: Others
+      order: 999
+  filters:
+    exclude:
+      - '^docs:'
+      - '^build:'
+      - '^chore:'
 builds:
   - id: mindthegap
     env:
@@ -44,7 +60,3 @@ checksum:
   name_template: 'checksums.txt'
 snapshot:
   name_template: "{{ incminor .Tag }}-dev"
-changelog:
-  filters:
-    exclude:
-      - '^(refactor|chore|docs|build):'
