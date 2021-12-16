@@ -72,6 +72,17 @@ Start a Docker registry serving the contents of the image bundle. Note that he D
 be in read-only mode to reflect the source of the data being a static tarball so pushes to this
 registry will fail.
 
+### Importing an image bundle into containerd
+
+```shell
+mindthegap import image-bundle --image-bundle <path/to/images.tar> \
+  [--containerd-namespace <containerd.namespace]
+```
+
+Import the images from the image bundle into containerd in the specified namespace. If
+`--containerd-namespace` is not specified, images will be imported into `k8s.io` namespace. This
+command requires `ctr` to be in the `PATH`.
+
 ## How does it work?
 
 `mindthegap` starts up a [Docker registry](https://docs.docker.com/registry/)
