@@ -190,7 +190,7 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 				return err
 			}
 
-			statusLogger.Start("Archiving image bundle")
+			statusLogger.Start(fmt.Sprintf("Archiving images to %s", outputFile))
 			fi, err := os.ReadDir(tempDir)
 			if err != nil {
 				statusLogger.End(false)
