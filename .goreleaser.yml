@@ -3,8 +3,27 @@ gomod:
   proxy: true
   env:
     - GOPRIVATE=github.com/mesosphere
+
 changelog:
-  use: github-native
+  use: github
+  groups:
+    - title: Features
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: 'Bug fixes'
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+  filters:
+    exclude:
+      - '^docs:'
+      - '^chore:'
+      - '^build:'
+
+release:
+  footer: |
+    ### Summary
+    **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/{{ .PreviousTag }}...{{ .Tag }}
+
 builds:
   - id: mindthegap
     env:
