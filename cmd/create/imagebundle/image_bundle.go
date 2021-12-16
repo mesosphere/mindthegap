@@ -16,6 +16,7 @@ package imagebundle
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -23,11 +24,11 @@ import (
 	"github.com/distribution/distribution/v3/manifest/manifestlist"
 	"github.com/mesosphere/dkp-cli/runtime/cli"
 	"github.com/mesosphere/dkp-cli/runtime/cmd/log"
-	"github.com/mholt/archiver/v3"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog/v2"
 
+	"github.com/mesosphere/mindthegap/archive"
 	"github.com/mesosphere/mindthegap/config"
 	"github.com/mesosphere/mindthegap/docker/registry"
 	"github.com/mesosphere/mindthegap/skopeo"
@@ -38,6 +39,7 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 		configFile string
 		platforms  []platform
 		outputFile string
+		overwrite  bool
 	)
 
 	cmd := &cobra.Command{
@@ -46,6 +48,21 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 			klog.SetOutput(ioStreams.ErrOut)
 			logger := log.NewLogger(ioStreams.ErrOut)
 			statusLogger := cli.StatusForLogger(logger)
+
+			if !overwrite {
+				statusLogger.Start("Checking if output file already exists")
+				_, err := os.Stat(outputFile)
+				switch {
+				case err == nil:
+					statusLogger.End(false)
+					return fmt.Errorf("%s already exists: specify --overwrite to overwrite existing file", outputFile)
+				case !errors.Is(err, os.ErrNotExist):
+					statusLogger.End(false)
+					return fmt.Errorf("failed to check if output file %s already exists: %w", outputFile, err)
+				default:
+					statusLogger.End(true)
+				}
+			}
 
 			statusLogger.Start("Parsing image bundle config")
 			cfg, err := config.ParseFile(configFile)
@@ -191,16 +208,7 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 			}
 
 			statusLogger.Start(fmt.Sprintf("Archiving images to %s", outputFile))
-			fi, err := os.ReadDir(tempDir)
-			if err != nil {
-				statusLogger.End(false)
-				return fmt.Errorf("failed to read temp directory: %w", err)
-			}
-			filesToArchive := make([]string, 0, len(fi))
-			for _, f := range fi {
-				filesToArchive = append(filesToArchive, filepath.Join(tempDir, f.Name()))
-			}
-			if err = archiver.Archive(filesToArchive, outputFile); err != nil {
+			if err := archive.ArchiveDirectory(tempDir, outputFile); err != nil {
 				statusLogger.End(false)
 				return fmt.Errorf("failed to create image bundle tarball: %w", err)
 			}
@@ -215,6 +223,7 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 	cmd.Flags().Var(newPlatformSlicesValue([]platform{{os: "linux", arch: "amd64"}}, &platforms), "platform",
 		"platforms to download images (required format: <os>/<arch>[/<variant>])")
 	cmd.Flags().StringVar(&outputFile, "output-file", "images.tar", "Output file to write image bundle to")
+	cmd.Flags().BoolVar(&overwrite, "overwrite", false, "Overwrite image bundle file if it already exists")
 
 	return cmd
 }
