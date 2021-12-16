@@ -139,8 +139,14 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 						for _, p := range platforms {
 							platformManifest, ok := platformManifests[p.String()]
 							if !ok {
-								statusLogger.End(false)
-								return fmt.Errorf("could not find platform %s for image %s", p, srcImageName)
+								if p.arch == "arm64" {
+									p.variant = "v8"
+								}
+								platformManifest, ok = platformManifests[p.String()]
+								if !ok {
+									statusLogger.End(false)
+									return fmt.Errorf("could not find platform %s for image %s", p, srcImageName)
+								}
 							}
 
 							skopeoOutput, err := skopeoRunner.Copy(context.TODO(),
