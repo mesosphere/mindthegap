@@ -142,6 +142,7 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 							platformManifests[srcManifestPlatform] = m
 						}
 
+						var digestFound bool
 						for _, p := range platforms {
 							platformManifest, ok := platformManifests[p.String()]
 							if !ok {
@@ -150,14 +151,22 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 								}
 								platformManifest, ok = platformManifests[p.String()]
 								if !ok {
-									statusLogger.End(false)
-									return fmt.Errorf("could not find platform %s for image %s", p, srcImageName)
+									klog.Warningf("could not find platform %s for image %s, continuing without a digest\n", p, srcImageName)
 								}
+							}
+							// the digest may be empty, don't use it but still save images using tags
+							digestFound = platformManifest.Digest != ""
+
+							src := fmt.Sprintf("docker://%s/%s:%s", registryName, imageName, imageTag)
+							dst := fmt.Sprintf("docker://%s/%s:%s", reg.Address(), imageName, imageTag)
+							if digestFound {
+								src = fmt.Sprintf("docker://%s/%s@%s", registryName, imageName, platformManifest.Digest)
+								dst = fmt.Sprintf("docker://%s/%s@%s", reg.Address(), imageName, platformManifest.Digest)
 							}
 
 							skopeoOutput, err := skopeoRunner.Copy(context.TODO(),
-								fmt.Sprintf("docker://%s/%s@%s", registryName, imageName, platformManifest.Digest),
-								fmt.Sprintf("docker://%s/%s@%s", reg.Address(), imageName, platformManifest.Digest),
+								src,
+								dst,
 								append(
 									skopeoOpts,
 									skopeo.DisableDestTLSVerify(), skopeo.OS(p.os), skopeo.Arch(p.arch), skopeo.Variant(p.variant),
@@ -170,23 +179,26 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 							}
 							klog.V(4).Info(string(skopeoOutput))
 
-							destImageManifestList.Manifests = append(destImageManifestList.Manifests, platformManifest)
+							if digestFound {
+								destImageManifestList.Manifests = append(destImageManifestList.Manifests, platformManifest)
+							}
 						}
-						skopeoOutput, err = skopeoRunner.CopyManifest(context.TODO(),
-							destImageManifestList,
-							fmt.Sprintf("docker://%s/%s:%s", reg.Address(), imageName, imageTag),
-							append(
-								skopeoOpts,
-								skopeo.DisableDestTLSVerify(),
-							)...,
-						)
-						if err != nil {
-							klog.Info(string(skopeoOutput))
-							statusLogger.End(false)
-							return err
+						if digestFound {
+							skopeoOutput, err = skopeoRunner.CopyManifest(context.TODO(),
+								destImageManifestList,
+								fmt.Sprintf("docker://%s/%s:%s", reg.Address(), imageName, imageTag),
+								append(
+									skopeoOpts,
+									skopeo.DisableDestTLSVerify(),
+								)...,
+							)
+							if err != nil {
+								klog.Info(string(skopeoOutput))
+								statusLogger.End(false)
+								return err
+							}
+							klog.V(4).Info(string(skopeoOutput))
 						}
-						klog.V(4).Info(string(skopeoOutput))
-
 						statusLogger.End(true)
 					}
 				}
