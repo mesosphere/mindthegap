@@ -130,5 +130,5 @@ go-generate: install-tool.mockery ; $(info $(M) running go generate)
 
 .PHONY: go-mod-upgrade
 go-mod-upgrade: ## Interactive check for direct module dependency upgrades
-go-mod-upgrade: install-tools.go ; $(info $(M) checking for direct module dependency upgrades)
+go-mod-upgrade: install-tool.golang ; $(info $(M) checking for direct module dependency upgrades)
 	go-mod-upgrade
