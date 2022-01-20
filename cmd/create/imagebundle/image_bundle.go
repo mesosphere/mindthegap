@@ -11,11 +11,8 @@ import (
 	"path/filepath"
 
 	"github.com/distribution/distribution/v3/manifest/manifestlist"
-	"github.com/mesosphere/dkp-cli/runtime/cli"
-	"github.com/mesosphere/dkp-cli/runtime/cmd/log"
+	"github.com/mesosphere/dkp-cli-runtime/core/output"
 	"github.com/spf13/cobra"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/klog/v2"
 
 	"github.com/mesosphere/mindthegap/archive"
 	"github.com/mesosphere/mindthegap/config"
@@ -23,7 +20,7 @@ import (
 	"github.com/mesosphere/mindthegap/skopeo"
 )
 
-func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
+func NewCommand(out output.Output) *cobra.Command {
 	var (
 		configFile string
 		platforms  []platform
@@ -34,64 +31,60 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "image-bundle",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			klog.SetOutput(ioStreams.ErrOut)
-			logger := log.NewLogger(ioStreams.ErrOut)
-			statusLogger := cli.StatusForLogger(logger)
-
 			if !overwrite {
-				statusLogger.Start("Checking if output file already exists")
+				out.StartOperation("Checking if output file already exists")
 				_, err := os.Stat(outputFile)
 				switch {
 				case err == nil:
-					statusLogger.End(false)
+					out.EndOperation(false)
 					return fmt.Errorf("%s already exists: specify --overwrite to overwrite existing file", outputFile)
 				case !errors.Is(err, os.ErrNotExist):
-					statusLogger.End(false)
+					out.EndOperation(false)
 					return fmt.Errorf("failed to check if output file %s already exists: %w", outputFile, err)
 				default:
-					statusLogger.End(true)
+					out.EndOperation(true)
 				}
 			}
 
-			statusLogger.Start("Parsing image bundle config")
+			out.StartOperation("Parsing image bundle config")
 			cfg, err := config.ParseFile(configFile)
 			if err != nil {
-				statusLogger.End(false)
+				out.EndOperation(false)
 				return err
 			}
-			klog.V(4).Infof("Images config: %+v", cfg)
-			statusLogger.End(true)
+			out.V(4).Infof("Images config: %+v", cfg)
+			out.EndOperation(true)
 
-			statusLogger.Start("Creating temporary directory")
+			out.StartOperation("Creating temporary directory")
 			outputFileAbs, err := filepath.Abs(outputFile)
 			if err != nil {
-				statusLogger.End(false)
+				out.EndOperation(false)
 				return fmt.Errorf("failed to determine where to create temporary directory: %w", err)
 			}
 
 			tempDir, err := os.MkdirTemp(filepath.Dir(outputFileAbs), ".image-bundle-*")
 			if err != nil {
-				statusLogger.End(false)
+				out.EndOperation(false)
 				return fmt.Errorf("failed to create temporary directory: %w", err)
 			}
 			defer os.RemoveAll(tempDir)
-			statusLogger.End(true)
+			out.EndOperation(true)
 
-			statusLogger.Start("Starting temporary Docker registry")
+			out.StartOperation("Starting temporary Docker registry")
 			reg, err := registry.NewRegistry(registry.Config{StorageDirectory: tempDir})
 			if err != nil {
-				statusLogger.End(false)
+				out.EndOperation(false)
 				return fmt.Errorf("failed to create local Docker registry: %w", err)
 			}
 			go func() {
 				if err := reg.ListenAndServe(); err != nil {
-					fmt.Fprintf(ioStreams.ErrOut, "error serving Docker registry: %v\n", err)
+					out.Error(err, "error serving Docker registry")
 					os.Exit(2)
 				}
 			}()
-			statusLogger.End(true)
+			out.EndOperation(true)
 
-			skopeoRunner, skopeoCleanup := skopeo.NewRunner()
+			skopeoRunner, skopeoCleanup := skopeo.NewRunner(out)
 			defer func() { _ = skopeoCleanup() }()
 
 			for registryName, registryConfig := range cfg {
@@ -105,19 +98,16 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 						skopeo.SrcCredentials(registryConfig.Credentials.Username, registryConfig.Credentials.Password),
 					)
 				} else {
-					err = skopeoRunner.AttemptToLoginToRegistry(context.TODO(), registryName, klog.V(4).Enabled())
+					err = skopeoRunner.AttemptToLoginToRegistry(context.TODO(), registryName)
 					if err != nil {
 						return fmt.Errorf("error logging in to registry: %w", err)
 					}
-				}
-				if klog.V(4).Enabled() {
-					skopeoOpts = append(skopeoOpts, skopeo.Debug())
 				}
 
 				for imageName, imageTags := range registryConfig.Images {
 					for _, imageTag := range imageTags {
 						srcImageName := fmt.Sprintf("%s/%s:%s", registryName, imageName, imageTag)
-						statusLogger.Start(
+						out.StartOperation(
 							fmt.Sprintf("Copying %s (platforms: %v)",
 								srcImageName, platforms,
 							),
@@ -127,11 +117,11 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 							context.TODO(), fmt.Sprintf("docker://%s", srcImageName),
 						)
 						if err != nil {
-							klog.Info(string(skopeoOutput))
-							statusLogger.End(false)
+							out.Info(string(skopeoOutput))
+							out.EndOperation(false)
 							return err
 						}
-						klog.V(4).Info(string(skopeoOutput))
+						out.V(4).Info(string(skopeoOutput))
 						destImageManifestList := manifestlist.ManifestList{Versioned: srcImageManifestList.Versioned}
 						platformManifests := make(map[string]manifestlist.ManifestDescriptor, len(srcImageManifestList.Manifests))
 						for _, m := range srcImageManifestList.Manifests {
@@ -150,7 +140,7 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 								}
 								platformManifest, ok = platformManifests[p.String()]
 								if !ok {
-									statusLogger.End(false)
+									out.EndOperation(false)
 									return fmt.Errorf("could not find platform %s for image %s", p, srcImageName)
 								}
 							}
@@ -164,11 +154,11 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 								)...,
 							)
 							if err != nil {
-								klog.Info(string(skopeoOutput))
-								statusLogger.End(false)
+								out.Info(string(skopeoOutput))
+								out.EndOperation(false)
 								return err
 							}
-							klog.V(4).Info(string(skopeoOutput))
+							out.V(4).Info(string(skopeoOutput))
 
 							destImageManifestList.Manifests = append(destImageManifestList.Manifests, platformManifest)
 						}
@@ -181,13 +171,13 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 							)...,
 						)
 						if err != nil {
-							klog.Info(string(skopeoOutput))
-							statusLogger.End(false)
+							out.Info(string(skopeoOutput))
+							out.EndOperation(false)
 							return err
 						}
-						klog.V(4).Info(string(skopeoOutput))
+						out.V(4).Info(string(skopeoOutput))
 
-						statusLogger.End(true)
+						out.EndOperation(true)
 					}
 				}
 			}
@@ -196,12 +186,12 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 				return err
 			}
 
-			statusLogger.Start(fmt.Sprintf("Archiving images to %s", outputFile))
+			out.StartOperation(fmt.Sprintf("Archiving images to %s", outputFile))
 			if err := archive.ArchiveDirectory(tempDir, outputFile); err != nil {
-				statusLogger.End(false)
+				out.EndOperation(false)
 				return fmt.Errorf("failed to create image bundle tarball: %w", err)
 			}
-			statusLogger.End(true)
+			out.EndOperation(true)
 
 			return nil
 		},

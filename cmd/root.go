@@ -7,9 +7,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/mesosphere/dkp-cli/runtime/cmd/root"
+	"github.com/mesosphere/dkp-cli-runtime/core/cmd/root"
+	"github.com/mesosphere/dkp-cli-runtime/core/output"
 	"github.com/spf13/cobra"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/mesosphere/mindthegap/cmd/create"
 	"github.com/mesosphere/mindthegap/cmd/importcmd"
@@ -17,23 +17,24 @@ import (
 	"github.com/mesosphere/mindthegap/cmd/serve"
 )
 
-func NewCommand(in io.Reader, out, errOut io.Writer) *cobra.Command {
-	ioStreams := genericclioptions.IOStreams{In: in, Out: out, ErrOut: errOut}
+func NewCommand(in io.Reader, out, errOut io.Writer) (*cobra.Command, output.Output) {
+	rootCmd, rootOts := root.NewCommand(out, errOut)
 
-	rootCmd, _ := root.NewCommand(ioStreams)
+	rootCmd.AddCommand(create.NewCommand(rootOts.Output))
+	rootCmd.AddCommand(push.NewCommand(rootOts.Output))
+	rootCmd.AddCommand(serve.NewCommand(rootOts.Output))
+	rootCmd.AddCommand(importcmd.NewCommand(rootOts.Output))
 
-	rootCmd.AddCommand(create.NewCommand(ioStreams))
-	rootCmd.AddCommand(push.NewCommand(ioStreams))
-	rootCmd.AddCommand(serve.NewCommand(ioStreams))
-	rootCmd.AddCommand(importcmd.NewCommand(ioStreams))
-
-	return rootCmd
+	return rootCmd, rootOts.Output
 }
 
 func Execute() {
-	rootCmd := NewCommand(os.Stdin, os.Stdout, os.Stderr)
+	rootCmd, out := NewCommand(os.Stdin, os.Stdout, os.Stderr)
+	// disable cobra built-in error printing, we output the error with formatting.
+	rootCmd.SilenceErrors = true
 
 	if err := rootCmd.Execute(); err != nil {
+		out.Error(err, "")
 		os.Exit(1)
 	}
 }

@@ -9,19 +9,16 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/mesosphere/dkp-cli/runtime/cli"
-	"github.com/mesosphere/dkp-cli/runtime/cmd/log"
+	"github.com/mesosphere/dkp-cli-runtime/core/output"
 	"github.com/mholt/archiver/v3"
 	"github.com/spf13/cobra"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/klog/v2"
 
 	"github.com/mesosphere/mindthegap/config"
 	"github.com/mesosphere/mindthegap/containerd"
 	"github.com/mesosphere/mindthegap/docker/registry"
 )
 
-func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
+func NewCommand(out output.Output) *cobra.Command {
 	var (
 		imageBundleFile     string
 		containerdNamespace string
@@ -30,66 +27,62 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "image-bundle",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			klog.SetOutput(ioStreams.ErrOut)
-			logger := log.NewLogger(ioStreams.ErrOut)
-			statusLogger := cli.StatusForLogger(logger)
-
-			statusLogger.Start("Creating temporary directory")
+			out.StartOperation("Creating temporary directory")
 			tempDir, err := os.MkdirTemp("", ".image-bundle-*")
 			if err != nil {
-				statusLogger.End(false)
+				out.EndOperation(false)
 				return fmt.Errorf("failed to create temporary directory: %w", err)
 			}
 			defer os.RemoveAll(tempDir)
-			statusLogger.End(true)
+			out.EndOperation(true)
 
-			statusLogger.Start("Unarchiving image bundle")
+			out.StartOperation("Unarchiving image bundle")
 			err = archiver.Unarchive(imageBundleFile, tempDir)
 			if err != nil {
-				statusLogger.End(false)
+				out.EndOperation(false)
 				return fmt.Errorf("failed to unarchive image bundle: %w", err)
 			}
-			statusLogger.End(true)
+			out.EndOperation(true)
 
-			statusLogger.Start("Parsing image bundle config")
+			out.StartOperation("Parsing image bundle config")
 			cfg, err := config.ParseFile(filepath.Join(tempDir, "images.yaml"))
 			if err != nil {
-				statusLogger.End(false)
+				out.EndOperation(false)
 				return err
 			}
-			klog.V(4).Infof("Images config: %+v", cfg)
-			statusLogger.End(true)
+			out.V(4).Infof("Images config: %+v", cfg)
+			out.EndOperation(true)
 
-			statusLogger.Start("Starting temporary Docker registry")
+			out.StartOperation("Starting temporary Docker registry")
 			reg, err := registry.NewRegistry(registry.Config{StorageDirectory: tempDir, ReadOnly: true})
 			if err != nil {
-				statusLogger.End(false)
+				out.EndOperation(false)
 				return fmt.Errorf("failed to create local Docker registry: %w", err)
 			}
 			go func() {
 				if err := reg.ListenAndServe(); err != nil {
-					fmt.Fprintf(ioStreams.ErrOut, "error serving Docker registry: %v\n", err)
+					out.Error(err, "error serving Docker registry")
 					os.Exit(2)
 				}
 			}()
-			statusLogger.End(true)
+			out.EndOperation(true)
 
 			for registryName, registryConfig := range cfg {
 				for imageName, imageTags := range registryConfig.Images {
 					for _, imageTag := range imageTags {
 						srcImageName := fmt.Sprintf("%s/%s:%s", reg.Address(), imageName, imageTag)
 						destImageName := fmt.Sprintf("%s/%s:%s", registryName, imageName, imageTag)
-						statusLogger.Start(fmt.Sprintf("Importing %s", destImageName))
+						out.StartOperation(fmt.Sprintf("Importing %s", destImageName))
 						ctrOutput, err := containerd.ImportImage(
-							context.TODO(), srcImageName, destImageName, containerdNamespace, klog.V(4).Enabled(),
+							context.TODO(), srcImageName, destImageName, containerdNamespace,
 						)
 						if err != nil {
-							klog.Info(string(ctrOutput))
-							statusLogger.End(false)
+							out.Info(string(ctrOutput))
+							out.EndOperation(false)
 							return err
 						}
-						klog.V(4).Info(string(ctrOutput))
-						statusLogger.End(true)
+						out.V(4).Info(string(ctrOutput))
+						out.EndOperation(true)
 					}
 				}
 			}

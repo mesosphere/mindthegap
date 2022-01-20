@@ -7,17 +7,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mesosphere/dkp-cli/runtime/cli"
-	"github.com/mesosphere/dkp-cli/runtime/cmd/log"
+	"github.com/mesosphere/dkp-cli-runtime/core/output"
 	"github.com/mholt/archiver/v3"
 	"github.com/spf13/cobra"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/klog/v2"
 
 	"github.com/mesosphere/mindthegap/docker/registry"
 )
 
-func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
+func NewCommand(out output.Output) *cobra.Command {
 	var (
 		imageBundleFile string
 		listenAddress   string
@@ -27,28 +24,24 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "image-bundle",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			klog.SetOutput(ioStreams.ErrOut)
-			logger := log.NewLogger(ioStreams.ErrOut)
-			statusLogger := cli.StatusForLogger(logger)
-
-			statusLogger.Start("Creating temporary directory")
+			out.StartOperation("Creating temporary directory")
 			tempDir, err := os.MkdirTemp("", ".image-bundle-*")
 			if err != nil {
-				statusLogger.End(false)
+				out.EndOperation(false)
 				return fmt.Errorf("failed to create temporary directory: %w", err)
 			}
 			defer os.RemoveAll(tempDir)
-			statusLogger.End(true)
+			out.EndOperation(true)
 
-			statusLogger.Start("Unarchiving image bundle")
+			out.StartOperation("Unarchiving image bundle")
 			err = archiver.Unarchive(imageBundleFile, tempDir)
 			if err != nil {
-				statusLogger.End(false)
+				out.EndOperation(false)
 				return fmt.Errorf("failed to unarchive image bundle: %w", err)
 			}
-			statusLogger.End(true)
+			out.EndOperation(true)
 
-			statusLogger.Start("Creating temporary Docker registry")
+			out.StartOperation("Creating temporary Docker registry")
 			reg, err := registry.NewRegistry(registry.Config{
 				StorageDirectory: tempDir,
 				ReadOnly:         true,
@@ -56,14 +49,13 @@ func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
 				Port:             listenPort,
 			})
 			if err != nil {
-				statusLogger.End(false)
+				out.EndOperation(false)
 				return fmt.Errorf("failed to create local Docker registry: %w", err)
 			}
-			statusLogger.End(true)
-			fmt.Fprintf(ioStreams.Out, "Listening on %s\n", reg.Address())
+			out.EndOperation(true)
+			out.Infof("Listening on %s\n", reg.Address())
 			if err := reg.ListenAndServe(); err != nil {
-				statusLogger.End(false)
-				fmt.Fprintf(ioStreams.ErrOut, "error serving Docker registry: %v\n", err)
+				out.Error(err, "error serving Docker registry")
 				os.Exit(2)
 			}
 

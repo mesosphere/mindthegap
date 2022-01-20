@@ -33,12 +33,12 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X 'k8s.io/component-base/version.buildDate={{ .CommitDate }}'
-      - -X 'k8s.io/component-base/version.gitCommit={{ .FullCommit }}'
-      - -X 'k8s.io/component-base/version.gitTreeState={{ .Env.GIT_TREE_STATE }}'
-      - -X 'k8s.io/component-base/version.gitVersion=v{{ trimprefix .Version "v" }}'
-      - -X 'k8s.io/component-base/version.gitMajor={{ .Major }}'
-      - -X 'k8s.io/component-base/version.gitMinor={{ .Minor }}'
+      - -X 'github.com/mesosphere/dkp-cli-runtime/core/cmd/version.buildDate={{ .CommitDate }}'
+      - -X 'github.com/mesosphere/dkp-cli-runtime/core/cmd/version.gitCommit={{ .FullCommit }}'
+      - -X 'github.com/mesosphere/dkp-cli-runtime/core/cmd/version.gitTreeState={{ .Env.GIT_TREE_STATE }}'
+      - -X 'github.com/mesosphere/dkp-cli-runtime/core/cmd/version.gitVersion=v{{ trimprefix .Version "v" }}'
+      - -X 'github.com/mesosphere/dkp-cli-runtime/core/cmd/version.major={{ .Major }}'
+      - -X 'github.com/mesosphere/dkp-cli-runtime/core/cmd/version.minor={{ .Minor }}'
     goos:
       - linux
       - windows

@@ -11,11 +11,8 @@ import (
 
 type CtrOption func() string
 
-func ImportImage(ctx context.Context, src, tag, containerdNamespace string, debug bool) ([]byte, error) {
+func ImportImage(ctx context.Context, src, tag, containerdNamespace string) ([]byte, error) {
 	baseArgs := []string{"-n", containerdNamespace}
-	if debug {
-		baseArgs = append(baseArgs, "--debug")
-	}
 	//nolint:gosec // Args are fine.
 	cmd := exec.CommandContext(ctx, "ctr", append(baseArgs, []string{"images", "pull", "--plain-http", src}...)...)
 	cmdOutput, err := cmd.CombinedOutput()
