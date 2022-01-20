@@ -18,7 +18,7 @@ import (
 
 	"github.com/distribution/distribution/v3/manifest/manifestlist"
 	"github.com/docker/cli/cli/config"
-	"k8s.io/klog/v2"
+	"github.com/mesosphere/dkp-cli-runtime/core/output"
 )
 
 //go:embed default-policy.json
@@ -90,11 +90,12 @@ type Runner struct {
 	unpacked                 sync.Once
 	unpackedSkopeoPath       string
 	unpackedSkopeoPolicyPath string
+	out                      output.Output
 }
 
 type CleanupFunc func() error
 
-func NewRunner() (*Runner, CleanupFunc) {
+func NewRunner(out output.Output) (*Runner, CleanupFunc) {
 	r := &Runner{}
 	return r, func() error {
 		return os.RemoveAll(filepath.Dir(r.unpackedSkopeoPath))
@@ -183,24 +184,21 @@ func (r *Runner) run(ctx context.Context, baseArgs []string, opts ...SkopeoOptio
 		skopeoArgs = append(skopeoArgs, o())
 	}
 
-	klog.V(4).Infof("Running skopeo: %s %v", r.unpackedSkopeoPath, skopeoArgs)
+	r.out.V(4).Infof("Running skopeo: %s %v", r.unpackedSkopeoPath, skopeoArgs)
 	//nolint:gosec // Args are valid
 	cmd := exec.CommandContext(ctx, r.unpackedSkopeoPath, skopeoArgs...)
 	return cmd.CombinedOutput()
 }
 
-func (r *Runner) AttemptToLoginToRegistry(ctx context.Context, registryName string, debug bool) error {
+func (r *Runner) AttemptToLoginToRegistry(ctx context.Context, registryName string) error {
 	var skopeoOpts []SkopeoOption
-	if debug {
-		skopeoOpts = append(skopeoOpts, Debug())
-	}
 	getLoginOutput, err := r.run(ctx, []string{"login", "--get-login", registryName}, skopeoOpts...)
 	if err == nil {
-		klog.V(4).Info(string(getLoginOutput))
+		r.out.V(4).Info(string(getLoginOutput))
 		return nil
 	}
 	if err != nil && !strings.Contains(string(getLoginOutput), fmt.Sprintf("not logged into %s", registryName)) {
-		klog.Info(string(getLoginOutput))
+		r.out.Info(string(getLoginOutput))
 		return fmt.Errorf("failed to check if already logged in to %s: %w", registryName, err)
 	}
 
@@ -222,10 +220,10 @@ func (r *Runner) AttemptToLoginToRegistry(ctx context.Context, registryName stri
 				skopeoOpts...,
 			)
 			if err == nil {
-				klog.V(4).Info(string(loginOutput))
+				r.out.V(4).Info(string(loginOutput))
 				return nil
 			}
-			klog.Info(string(loginOutput))
+			r.out.Info(string(loginOutput))
 			return fmt.Errorf("failed to login to %s: %w", registryName, err)
 		}
 	}

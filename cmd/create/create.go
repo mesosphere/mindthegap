@@ -4,17 +4,17 @@
 package create
 
 import (
+	"github.com/mesosphere/dkp-cli-runtime/core/output"
 	"github.com/spf13/cobra"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/mesosphere/mindthegap/cmd/create/imagebundle"
 )
 
-func NewCommand(ioStreams genericclioptions.IOStreams) *cobra.Command {
+func NewCommand(out output.Output) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "create",
 	}
 
-	cmd.AddCommand(imagebundle.NewCommand(ioStreams))
+	cmd.AddCommand(imagebundle.NewCommand(out))
 	return cmd
 }
