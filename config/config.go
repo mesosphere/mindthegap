@@ -4,10 +4,14 @@
 package config
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
+	"strings"
 
 	"github.com/containers/image/types"
+	"github.com/distribution/distribution/v3/reference"
 	"gopkg.in/yaml.v3"
 )
 
@@ -26,20 +30,54 @@ type RegistrySyncConfig struct {
 type SourceConfig map[string]RegistrySyncConfig
 
 func ParseFile(configFile string) (SourceConfig, error) {
-	f, err := os.Open(configFile)
-	if err != nil {
-		return SourceConfig{}, fmt.Errorf("failed to read images config file: %w", err)
+	f, yamlParseErr := os.Open(configFile)
+	if yamlParseErr != nil {
+		return SourceConfig{}, fmt.Errorf("failed to read images config file: %w", yamlParseErr)
 	}
+	defer f.Close()
+
 	var (
 		config SourceConfig
 		dec    = yaml.NewDecoder(f)
 	)
 	dec.KnownFields(true)
-	err = dec.Decode(&config)
-	_ = f.Close()
-	if err != nil {
-		return SourceConfig{}, fmt.Errorf("failed to parse config file: %w", err)
+	yamlParseErr = dec.Decode(&config)
+	if yamlParseErr == nil {
+		return config, nil
 	}
+
+	config = SourceConfig{}
+
+	if _, seekErr := f.Seek(0, io.SeekStart); seekErr != nil {
+		return SourceConfig{}, fmt.Errorf("failed to reset file reader for parsing: %w", seekErr)
+	}
+
+	fileScanner := bufio.NewScanner(f)
+	fileScanner.Split(bufio.ScanLines)
+	for fileScanner.Scan() {
+		trimmedLine := strings.TrimSpace(fileScanner.Text())
+		if trimmedLine == "" || strings.HasPrefix(trimmedLine, "#") {
+			continue
+		}
+		named, nameErr := reference.ParseNamed(trimmedLine)
+		if nameErr != nil {
+			return SourceConfig{}, fmt.Errorf("failed to parse config file: %w", yamlParseErr)
+		}
+		namedTagged, ok := named.(reference.NamedTagged)
+		if !ok {
+			return SourceConfig{}, fmt.Errorf("failed to parse config file: %w", yamlParseErr)
+		}
+
+		registry := reference.Domain(namedTagged)
+		name := reference.Path(named)
+		tag := namedTagged.Tag()
+
+		if _, found := config[registry]; !found {
+			config[registry] = RegistrySyncConfig{Images: map[string][]string{}}
+		}
+		config[registry].Images[name] = append(config[registry].Images[name], tag)
+	}
+
 	return config, nil
 }
 
