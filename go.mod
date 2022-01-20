@@ -7,11 +7,11 @@ go 1.17
 
 require (
 	github.com/containers/image v3.0.2+incompatible
-	github.com/distribution/distribution/v3 v3.0.0-20211125133600-cc4627fc6e5f
+	github.com/distribution/distribution/v3 v3.0.0-20220119135727-5f1974ab8b53
 	github.com/docker/cli v20.10.12+incompatible
 	github.com/mesosphere/dkp-cli/runtime v0.5.0
 	github.com/mholt/archiver/v3 v3.5.1
-	github.com/moby/moby v20.10.11+incompatible
+	github.com/moby/moby v20.10.12+incompatible
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.1
@@ -109,7 +109,7 @@ require (
 	github.com/yvasiyarov/newrelic_platform_go v0.0.0-20140908184405-b21fdbd4370f // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
-	golang.org/x/net v0.0.0-20210825183410-e898025ed96a // indirect
+	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f // indirect
 	golang.org/x/sys v0.0.0-20210831042530-f4d43177bf5e // indirect
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
