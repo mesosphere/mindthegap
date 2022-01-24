@@ -8,3 +8,10 @@
 contrib=contrib-title-conventional-commits
 # Do not require a body in the git commit.
 ignore=body-is-missing
+
+[body-max-line-length]
+line-length=120
+
+[ignore-body-lines]
+# Ignore dependabot long lines.
+regex=^Bumps .+ from .+ to .+\.$
