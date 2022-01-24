@@ -22,7 +22,16 @@ mindthegap create image-bundle --images-file <path/to/images.yaml> \
 ```
 
 See the [example images.yaml](images-example.yaml) for the structure of the
-images config file.
+images config file. You can also provide the images file in a simple file with
+an image per line, e.g.
+
+```plain
+docker.io/library/nginx:1.21.5
+test.registry2.io/test-image6:atag
+```
+
+Note that images from Docker Hub must be prefixed with `docker.io` and those "official" images
+must have the `library` namespace specified.
 
 Platform can be specified multiple times. Supported platforms:
 

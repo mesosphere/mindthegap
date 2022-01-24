@@ -197,7 +197,8 @@ func NewCommand(out output.Output) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&configFile, "images-file", "", "YAML file containing list of images to create bundle from")
+	cmd.Flags().StringVar(&configFile, "images-file", "",
+		"File containing list of images to create bundle from, either as YAML configuration or a simple list of images")
 	_ = cmd.MarkFlagRequired("images-file")
 	cmd.Flags().Var(newPlatformSlicesValue([]platform{{os: "linux", arch: "amd64"}}, &platforms), "platform",
 		"platforms to download images (required format: <os>/<arch>[/<variant>])")

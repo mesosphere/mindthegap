@@ -1,0 +1,21 @@
+#  Copyright 2021 D2iQ, Inc. All rights reserved.
+#  SPDX-License-Identifier: Apache-2.0
+test.registry.io/test-image:tag1
+test.registry.io/test-image:tag3
+test.registry.io/test-image:tag2
+test.registry.io/test-image2:tag3
+test.registry.io/test-image2:tag4
+test.registry2.io/test-image:tag21
+test.registry2.io/test-image5:tag32
+test.registry2.io/test-image5:tag42
+test.registry.io/test-image2:tag5
+test.registry.io/test-image3:tag6
+test.registry.io/test-image3:tag7
+test.registry.io/test-image3:tag8
+
+test.registry2.io/test-image:tag11
+test.registry2.io/test-image:tag31
+test.registry2.io/test-image5:tag52
+test.registry2.io/test-image6:tag63
+test.registry2.io/test-image6:tag73
+test.registry2.io/test-image6:tag83
