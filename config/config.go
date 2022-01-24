@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/containers/image/types"
+	"github.com/containers/image/v5/types"
 	"github.com/distribution/distribution/v3/reference"
 	"gopkg.in/yaml.v3"
 )
