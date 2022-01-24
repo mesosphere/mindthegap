@@ -9,7 +9,7 @@ require (
 	github.com/containers/image v3.0.2+incompatible
 	github.com/distribution/distribution/v3 v3.0.0-20220119135727-5f1974ab8b53
 	github.com/docker/cli v20.10.12+incompatible
-	github.com/mesosphere/dkp-cli-runtime/core v0.2.0
+	github.com/mesosphere/dkp-cli-runtime/core v0.2.1
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/sirupsen/logrus v1.8.1
