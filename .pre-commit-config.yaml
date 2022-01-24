@@ -77,7 +77,7 @@ repos:
     files: "(.*\\.go|go.mod)$"
     args:
       - --license-filepath
-      - license_header.txt
+      - header.txt
       - --comment-style
       - //
   - id: insert-license
@@ -86,13 +86,13 @@ repos:
     files: (^Makefile|\.(yaml|mk))$
     args:
       - --license-filepath
-      - license_header.txt
+      - header.txt
   - id: insert-license
     name: License headers - Markdown
     stages: [commit]
     files: \.md$
     args:
       - --license-filepath
-      - license_header.txt
+      - header.txt
       - --comment-style
       - <!--|| -->
