@@ -83,7 +83,7 @@ repos:
   - id: insert-license
     name: License headers - YAML and Makefiles
     stages: [commit]
-    files: (^Makefile|\.(yaml|mk))$
+    files: (^Makefile|\.(ya?ml|mk))$
     args:
       - --license-filepath
       - header.txt

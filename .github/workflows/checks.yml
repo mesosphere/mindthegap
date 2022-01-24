@@ -1,3 +1,6 @@
+# Copyright 2021 D2iQ, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 name: mindthegap
 
 on:
@@ -48,3 +51,5 @@ jobs:
       - uses: pre-commit/action@v2.0.3
         with:
           extra_args: --all-files
+        env:
+          SKIP: no-commit-to-branch
