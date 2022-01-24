@@ -1,7 +1,10 @@
-name: pull-request
+name: mindthegap
 
 on:
+  push:
+    branches: [ main ]
   pull_request:
+    branches: [ main ]
 
 jobs:
   unit-test:
