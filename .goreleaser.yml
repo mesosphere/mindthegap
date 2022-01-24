@@ -1,8 +1,6 @@
 project_name: mindthegap
 gomod:
   proxy: true
-  env:
-    - GOPRIVATE=github.com/mesosphere
 
 changelog:
   use: github
