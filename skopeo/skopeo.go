@@ -96,7 +96,7 @@ type Runner struct {
 type CleanupFunc func() error
 
 func NewRunner(out output.Output) (*Runner, CleanupFunc) {
-	r := &Runner{}
+	r := &Runner{out: out}
 	return r, func() error {
 		return os.RemoveAll(filepath.Dir(r.unpackedSkopeoPath))
 	}
