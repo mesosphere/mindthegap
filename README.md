@@ -5,7 +5,7 @@
 
 # Mind The Gap
 
-![GitHub](https://img.shields.io/github/license/mesosphere/mindthegap)
+![GitHub](https://img.shields.io/github/license/mesosphere/mindthegap?style=flat-square)
 
 `mindthegap` provides utilities to manage air-gapped image bundles, both
 creating image bundles and seeding images from a bundle into an existing
