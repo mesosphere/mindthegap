@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/spf13/pflag"
+	"github.com/stretchr/testify/require"
 )
 
 const argfmt = "--ps=%s"
@@ -247,10 +248,7 @@ func TestPSAsSliceValue(t *testing.T) {
 	in := []string{"linux/amd64", "darwin/arm64/v8"}
 	arg1 := fmt.Sprintf(argfmt, in[0])
 	arg2 := fmt.Sprintf(argfmt, in[1])
-	err := f.Parse([]string{arg1, arg2})
-	if err != nil {
-		t.Fatal("expected no error; got", err)
-	}
+	require.NoError(t, f.Parse([]string{arg1, arg2}), "error parsing flags")
 
 	f.VisitAll(func(f *pflag.Flag) {
 		if val, ok := f.Value.(pflag.SliceValue); ok {
@@ -258,7 +256,54 @@ func TestPSAsSliceValue(t *testing.T) {
 		}
 	})
 	expectedPlatform := platform{os: "windows", arch: "arm", variant: "v7"}
-	if len(ps) != 1 || ps[0] != expectedPlatform {
-		t.Fatalf("Expected ps to be overwritten with 'windows/arm/v7', but got: %s", ps)
-	}
+	require.ElementsMatch(t, []platform{expectedPlatform}, ps, "Expected ps to be overwritten with 'windows/arm/v7'")
+}
+
+func TestPSGetSlice(t *testing.T) {
+	t.Parallel()
+	var ps []platform
+	f := setUpPSFlagSet(&ps)
+
+	in := []string{"linux/amd64", "darwin/arm64/v8"}
+	arg1 := fmt.Sprintf(argfmt, in[0])
+	arg2 := fmt.Sprintf(argfmt, in[1])
+	require.NoError(t, f.Parse([]string{arg1, arg2}), "error parsing flags")
+
+	require.ElementsMatch(t,
+		in,
+		f.Lookup("ps").Value.(pflag.SliceValue).GetSlice(),
+		"incorrect platforms",
+	)
+}
+
+func TestPSAppend(t *testing.T) {
+	t.Parallel()
+	var ps []platform
+	f := setUpPSFlagSet(&ps)
+
+	in := []string{"linux/amd64", "darwin/arm64/v8"}
+	arg1 := fmt.Sprintf(argfmt, in[0])
+	arg2 := fmt.Sprintf(argfmt, in[1])
+	require.NoError(t, f.Parse([]string{arg1, arg2}), "error parsing flags")
+
+	require.NoError(t, f.Lookup("ps").Value.(pflag.SliceValue).Append("windows/i386"), "error appending to platforms")
+	require.ElementsMatch(t,
+		append(in, "windows/i386"),
+		f.Lookup("ps").Value.(pflag.SliceValue).GetSlice(),
+		"incorrect platforms",
+	)
+}
+
+func TestPSInvalidPlatform(t *testing.T) {
+	t.Parallel()
+	var ps []platform
+	f := setUpPSFlagSet(&ps)
+
+	in := []string{"wibble"}
+	arg1 := fmt.Sprintf(argfmt, in[0])
+	require.EqualError(t, f.Parse([]string{arg1}),
+		`invalid argument "wibble" for "--ps" flag: invalid platform specification: `+
+			`wibble (required format: <os>/<arch>[/<variant>]`,
+		"expected error parsing flags",
+	)
 }
