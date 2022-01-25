@@ -4,9 +4,13 @@
 linters:
   disable-all: true
   enable:
+    - containedctx
+    - contextcheck
     - deadcode
     - depguard
     - errcheck
+    - errchkjson
+    - errname
     - gochecknoinits
     - gci
     - goconst
@@ -25,6 +29,9 @@ linters:
     - staticcheck
     - structcheck
     - stylecheck
+    - tenv
+    - thelper
+    - tparallel
     - typecheck
     - unconvert
     - unparam
@@ -33,16 +40,22 @@ linters:
     - whitespace
 
 linters-settings:
-  lll:
-    line-length: 120
-  gci:
-    local-prefixes: github.com/mesosphere/mindthegap
   depguard:
     list-type: blacklist
     packages:
-    - k8s.io/kubernetes
+      - k8s.io/kubernetes
     packages-with-error-messages:
       k8s.io/kubernetes: "do not use k8s.io/kubernetes directly"
+  errcheck:
+    exclude-functions:
+      - encoding/json.Marshal
+      - encoding/json.MarshalIndent
+  errchkjson:
+    check-error-free-encoding: true
+  gci:
+    local-prefixes: github.com/mesosphere/mindthegap
+  lll:
+    line-length: 120
 
 issues:
   exclude-rules:

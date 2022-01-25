@@ -210,9 +210,9 @@ func (r *Runner) CopyManifest(
 	}
 	defer mf.Close()
 
-	if err := json.NewEncoder(mf).Encode(manifest); err != nil {
-		return nil, fmt.Errorf("failed to encode manifest: %w", err)
-	}
+	// No need to check error - safe to enscode this type. See https://github.com/breml/errchkjson#safe
+	// for details
+	_ = json.NewEncoder(mf).Encode(manifest)
 
 	return r.Copy(ctx, "dir:"+td, dest, append(opts, func() string { return "--multi-arch=index-only" })...)
 }
