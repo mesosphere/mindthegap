@@ -16,7 +16,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/containers/skopeo/cmd/skopeo/inspect"
+	"github.com/distribution/distribution/v3"
 	"github.com/distribution/distribution/v3/manifest/manifestlist"
+	"github.com/distribution/distribution/v3/manifest/schema2"
 	"github.com/docker/cli/cli/config"
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 )
@@ -139,17 +142,57 @@ func (r *Runner) InspectManifest(
 		imageName,
 	}
 
-	output, err := r.run(ctx, inspectArgs, opts...)
+	rawOutput, err := r.run(ctx, inspectArgs, opts...)
 	if err != nil {
-		return manifestlist.ManifestList{}, output, fmt.Errorf("failed to read image manifest: %w", err)
-	}
-	var m manifestlist.ManifestList
-	dec := json.NewDecoder(bytes.NewReader(output))
-	if err := dec.Decode(&m); err != nil {
-		return manifestlist.ManifestList{}, output, fmt.Errorf("failed to deserialize manifest: %w", err)
+		return manifestlist.ManifestList{}, rawOutput, fmt.Errorf("failed to read image manifest: %w", err)
 	}
 
-	return m, output, nil
+	var ml manifestlist.ManifestList
+	dec := json.NewDecoder(bytes.NewReader(rawOutput))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&ml); err == nil {
+		return ml, rawOutput, nil
+	}
+
+	var m schema2.Manifest
+	dec = json.NewDecoder(bytes.NewReader(rawOutput))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&m); err != nil {
+		return manifestlist.ManifestList{}, rawOutput, fmt.Errorf("failed to deserialize manifest: %w", err)
+	}
+
+	inspectArgs = []string{
+		"inspect",
+		imageName,
+	}
+
+	inspectOutput, err := r.run(ctx, inspectArgs, opts...)
+	if err != nil {
+		return manifestlist.ManifestList{}, rawOutput, fmt.Errorf("failed to read image manifest: %w", err)
+	}
+
+	var i inspect.Output
+	dec = json.NewDecoder(bytes.NewReader(inspectOutput))
+	if err := dec.Decode(&i); err != nil {
+		return manifestlist.ManifestList{}, rawOutput, fmt.Errorf("failed to deserialize manifest: %w", err)
+	}
+
+	ml = manifestlist.ManifestList{
+		Versioned: manifestlist.SchemaVersion,
+		Manifests: []manifestlist.ManifestDescriptor{{
+			Descriptor: distribution.Descriptor{
+				MediaType: schema2.MediaTypeManifest,
+				Digest:    i.Digest,
+				Size:      int64(len(rawOutput)),
+			},
+			Platform: manifestlist.PlatformSpec{
+				OS:           i.Os,
+				Architecture: i.Architecture,
+			},
+		}},
+	}
+
+	return ml, rawOutput, nil
 }
 
 func (r *Runner) CopyManifest(

@@ -6,15 +6,14 @@ docker.io:
   images:
     apteno/alpine-jq:
       - 2021-01-19
-    # bitnami images don't support arm64...
-    # bitnami/kubectl:
-    #   - 1.17.16
-    #   - 1.19.7
-    #   - 1.21.3
-    # bitnami/memcached:
-    #   - 1.6.9-debian-10-r114
-    # bitnami/postgresql:
-    #   - 11.11.0-debian-10-r62
+    bitnami/kubectl:
+      - 1.17.16
+      - 1.19.7
+      - 1.21.3
+    bitnami/memcached:
+      - 1.6.9-debian-10-r114
+    bitnami/postgresql:
+      - 11.11.0-debian-10-r62
     directxman12/k8s-prometheus-adapter:
       - v0.8.3
     fluent/fluent-bit:
@@ -65,17 +64,17 @@ docker.io:
       - v2.19.2
     stakater/reloader:
       - v0.0.99
-    # thanosio/thanos:
-    #   - v0.15.0
-    #   - v0.22.0
+    thanosio/thanos:
+      - v0.15.0
+      - v0.22.0
     velero/velero-plugin-for-aws:
       - v1.3.0
     velero/velero:
       - v1.5.2
 gcr.io:
   images:
-    # google_containers/kubernetes-dashboard-init:
-    #   - v1.0.0
+    google_containers/kubernetes-dashboard-init-amd64:
+      - v1.0.0
     kubebuilder/kube-rbac-proxy:
       - v0.8.0
     kubecost1/cost-model:
@@ -114,14 +113,14 @@ quay.io:
       - v1.5.4
     jetstack/cert-manager-webhook:
       - v1.5.4
-    # jetstack/kube-oidc-proxy:
-    #   - v0.2.0
+    jetstack/kube-oidc-proxy:
+      - v0.2.0
     kiwigrid/k8s-sidecar:
       - 1.12.2
       - 1.3.0
-    # kubernetes-multicluster/kubefed:
-    #   - v0.8.1
-    #   - v0.9.0
+    kubernetes-multicluster/kubefed:
+      - v0.8.1
+      - v0.9.0
     prometheus-operator/prometheus-config-reloader:
       - v0.49.0
     prometheus-operator/prometheus-operator:
@@ -133,6 +132,6 @@ quay.io:
       - v1.2.1
     prometheus/prometheus:
       - v2.28.1
-    # thanos/thanos:
-    #   - v0.17.1
-    #   - v0.17.2
+    thanos/thanos:
+      - v0.17.1
+      - v0.17.2
