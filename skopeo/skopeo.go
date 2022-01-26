@@ -244,7 +244,7 @@ func (r *Runner) AttemptToLoginToRegistry(ctx context.Context, registryName stri
 	if err == nil {
 		return getLoginStdout, getLoginStderr, nil
 	}
-	if err != nil && !strings.Contains(string(getLoginStdout), fmt.Sprintf("not logged into %s", registryName)) {
+	if err != nil && !strings.Contains(string(getLoginStderr), fmt.Sprintf("not logged into %s", registryName)) {
 		return getLoginStdout, getLoginStderr, fmt.Errorf("failed to check if already logged in to %s: %w", registryName, err)
 	}
 
