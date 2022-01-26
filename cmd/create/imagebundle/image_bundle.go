@@ -209,7 +209,7 @@ func NewCommand(out output.Output) *cobra.Command {
 	_ = cmd.MarkFlagRequired("images-file")
 	cmd.Flags().Var(newPlatformSlicesValue([]platform{{os: "linux", arch: "amd64"}}, &platforms), "platform",
 		"platforms to download images (required format: <os>/<arch>[/<variant>])")
-	cmd.Flags().StringVar(&outputFile, "output-file", "images.tar", "Output file to write image bundle to")
+	cmd.Flags().StringVar(&outputFile, "output-file", "images.tar.gz", "Output file to write image bundle to")
 	cmd.Flags().BoolVar(&overwrite, "overwrite", false, "Overwrite image bundle file if it already exists")
 
 	return cmd
