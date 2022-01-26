@@ -109,6 +109,8 @@ func NewRegistry(cfg Config) (*Registry, error) {
 		return nil, err
 	}
 
+	registryConfig.Log.Level = "fatal"
+
 	reg, err := registry.NewRegistry(context.TODO(), registryConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create registry: %w", err)
