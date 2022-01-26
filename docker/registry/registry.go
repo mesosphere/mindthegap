@@ -21,9 +21,28 @@ type Config struct {
 	Host             string
 	Port             uint16
 	ReadOnly         bool
+	TLS              TLS
+}
+
+type TLS struct {
+	Certificate string
+	Key         string
 }
 
 func (c Config) ToRegistryConfiguration() (*configuration.Configuration, error) {
+	registryConfigString, err := registryConfiguration(c)
+	if err != nil {
+		return nil, err
+	}
+
+	registryConfig, err := configuration.Parse(strings.NewReader(registryConfigString))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse registry configuration: %w", err)
+	}
+	return registryConfig, nil
+}
+
+func registryConfiguration(c Config) (string, error) {
 	configTmpl := `
 version: 0.1
 storage:
@@ -37,6 +56,11 @@ storage:
 http:
   net: tcp
   addr: {{ .Host }}:{{ .Port }}
+  {{- if .TLSCertificate }}
+  tls:
+    certificate: {{ .TLSCertificate }}
+    key: {{ .TLSKey }}
+  {{- end }}
 log:
   accesslog:
     disabled: true
@@ -46,7 +70,7 @@ log:
 	if port == 0 {
 		freePort, err := freeport.GetFreePort()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get free port: %w", err)
+			return "", fmt.Errorf("failed to get free port: %w", err)
 		}
 		port = uint16(freePort)
 	}
@@ -64,15 +88,13 @@ log:
 		Host             string
 		Port             uint16
 		ReadOnly         bool
-	}{c.StorageDirectory, host, port, c.ReadOnly}); err != nil {
-		return nil, fmt.Errorf("failed to render registry configuration: %w", err)
+		TLSCertificate   string
+		TLSKey           string
+	}{c.StorageDirectory, host, port, c.ReadOnly, c.TLS.Certificate, c.TLS.Key}); err != nil {
+		return "", fmt.Errorf("failed to render registry configuration: %w", err)
 	}
 
-	registryConfig, err := configuration.Parse(strings.NewReader(buf.String()))
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse registry configuration: %w", err)
-	}
-	return registryConfig, nil
+	return buf.String(), nil
 }
 
 type Registry struct {
