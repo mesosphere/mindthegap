@@ -19,6 +19,8 @@ func NewCommand(out output.Output) *cobra.Command {
 		imageBundleFile string
 		listenAddress   string
 		listenPort      uint16
+		tlsCertificate  string
+		tlsKey          string
 	)
 
 	cmd := &cobra.Command{
@@ -47,6 +49,10 @@ func NewCommand(out output.Output) *cobra.Command {
 				ReadOnly:         true,
 				Host:             listenAddress,
 				Port:             listenPort,
+				TLS: registry.TLS{
+					Certificate: tlsCertificate,
+					Key:         tlsKey,
+				},
 			})
 			if err != nil {
 				out.EndOperation(false)
@@ -67,6 +73,8 @@ func NewCommand(out output.Output) *cobra.Command {
 	_ = cmd.MarkFlagRequired("image-bundle")
 	cmd.Flags().StringVar(&listenAddress, "listen-address", "localhost", "Address to list on")
 	cmd.Flags().Uint16Var(&listenPort, "listen-port", 0, "Port to listen on (0 means use any free port)")
+	cmd.Flags().StringVar(&tlsCertificate, "tls-cert-file", "", "TLS certificate file")
+	cmd.Flags().StringVar(&tlsKey, "tls-private-key-file", "", "TLS private key file")
 
 	return cmd
 }
