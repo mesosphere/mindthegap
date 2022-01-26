@@ -26,18 +26,18 @@ type RegistrySyncConfig struct {
 	Credentials *types.DockerAuthConfig `yaml:"credentials,omitempty"`
 }
 
-// SourceConfig contains all registries information read from the source YAML file.
-type SourceConfig map[string]RegistrySyncConfig
+// ImagesConfig contains all registries information read from the source YAML file.
+type ImagesConfig map[string]RegistrySyncConfig
 
-func ParseFile(configFile string) (SourceConfig, error) {
+func ParseImagesConfigFile(configFile string) (ImagesConfig, error) {
 	f, yamlParseErr := os.Open(configFile)
 	if yamlParseErr != nil {
-		return SourceConfig{}, fmt.Errorf("failed to read images config file: %w", yamlParseErr)
+		return ImagesConfig{}, fmt.Errorf("failed to read images config file: %w", yamlParseErr)
 	}
 	defer f.Close()
 
 	var (
-		config SourceConfig
+		config ImagesConfig
 		dec    = yaml.NewDecoder(f)
 	)
 	dec.KnownFields(true)
@@ -46,10 +46,10 @@ func ParseFile(configFile string) (SourceConfig, error) {
 		return config, nil
 	}
 
-	config = SourceConfig{}
+	config = ImagesConfig{}
 
 	if _, seekErr := f.Seek(0, io.SeekStart); seekErr != nil {
-		return SourceConfig{}, fmt.Errorf("failed to reset file reader for parsing: %w", seekErr)
+		return ImagesConfig{}, fmt.Errorf("failed to reset file reader for parsing: %w", seekErr)
 	}
 
 	fileScanner := bufio.NewScanner(f)
@@ -61,11 +61,11 @@ func ParseFile(configFile string) (SourceConfig, error) {
 		}
 		named, nameErr := reference.ParseNamed(trimmedLine)
 		if nameErr != nil {
-			return SourceConfig{}, fmt.Errorf("failed to parse config file: %w", yamlParseErr)
+			return ImagesConfig{}, fmt.Errorf("failed to parse config file: %w", yamlParseErr)
 		}
 		namedTagged, ok := named.(reference.NamedTagged)
 		if !ok {
-			return SourceConfig{}, fmt.Errorf("failed to parse config file: %w", yamlParseErr)
+			return ImagesConfig{}, fmt.Errorf("failed to parse config file: %w", yamlParseErr)
 		}
 
 		registry := reference.Domain(namedTagged)
@@ -81,7 +81,7 @@ func ParseFile(configFile string) (SourceConfig, error) {
 	return config, nil
 }
 
-func WriteSanitizedConfig(cfg SourceConfig, fileName string) error {
+func WriteSanitizedConfig(cfg ImagesConfig, fileName string) error {
 	for regName, regConfig := range cfg {
 		regConfig.Credentials = nil
 		cfg[regName] = regConfig

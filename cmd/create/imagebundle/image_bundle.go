@@ -55,7 +55,7 @@ func NewCommand(out output.Output) *cobra.Command {
 			}
 
 			out.StartOperation("Parsing image bundle config")
-			cfg, err := config.ParseFile(configFile)
+			cfg, err := config.ParseImagesConfigFile(configFile)
 			if err != nil {
 				out.EndOperation(false)
 				return err

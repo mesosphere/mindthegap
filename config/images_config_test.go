@@ -12,23 +12,23 @@ import (
 	"k8s.io/utils/pointer"
 )
 
-func TestParseFile(t *testing.T) {
+func TestParseImagesFile(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name    string
-		want    SourceConfig
+		want    ImagesConfig
 		wantErr bool
 	}{{
 		name: "empty",
 		want: nil,
 	}, {
 		name: "single registry with no images",
-		want: SourceConfig{
+		want: ImagesConfig{
 			"test.registry.io": RegistrySyncConfig{},
 		},
 	}, {
 		name: "single registry with image with no tags",
-		want: SourceConfig{
+		want: ImagesConfig{
 			"test.registry.io": RegistrySyncConfig{
 				Images: map[string][]string{
 					"test-image": nil,
@@ -37,7 +37,7 @@ func TestParseFile(t *testing.T) {
 		},
 	}, {
 		name: "single registry with image with single tag",
-		want: SourceConfig{
+		want: ImagesConfig{
 			"test.registry.io": RegistrySyncConfig{
 				Images: map[string][]string{
 					"test-image": {"tag1"},
@@ -46,7 +46,7 @@ func TestParseFile(t *testing.T) {
 		},
 	}, {
 		name: "single registry with image with multiple tags",
-		want: SourceConfig{
+		want: ImagesConfig{
 			"test.registry.io": RegistrySyncConfig{
 				Images: map[string][]string{
 					"test-image": {"tag1", "tag2", "tag3"},
@@ -55,7 +55,7 @@ func TestParseFile(t *testing.T) {
 		},
 	}, {
 		name: "single registry with multiple images with multiple tags",
-		want: SourceConfig{
+		want: ImagesConfig{
 			"test.registry.io": RegistrySyncConfig{
 				Images: map[string][]string{
 					"test-image":  {"tag1", "tag2", "tag3"},
@@ -66,7 +66,7 @@ func TestParseFile(t *testing.T) {
 		},
 	}, {
 		name: "multiple registries with multiple images with multiple tags",
-		want: SourceConfig{
+		want: ImagesConfig{
 			"test.registry.io": RegistrySyncConfig{
 				Images: map[string][]string{
 					"test-image":  {"tag1", "tag2", "tag3"},
@@ -83,14 +83,14 @@ func TestParseFile(t *testing.T) {
 		},
 	}, {
 		name: "single registry with tls config",
-		want: SourceConfig{
+		want: ImagesConfig{
 			"test.registry.io": RegistrySyncConfig{
 				TLSVerify: pointer.Bool(false),
 			},
 		},
 	}, {
 		name: "multiple registries with tls config",
-		want: SourceConfig{
+		want: ImagesConfig{
 			"test.registry.io": RegistrySyncConfig{
 				TLSVerify: pointer.Bool(false),
 			},
@@ -100,7 +100,7 @@ func TestParseFile(t *testing.T) {
 		},
 	}, {
 		name: "multiple registries with multiple images with multiple tags in plain text file",
-		want: SourceConfig{
+		want: ImagesConfig{
 			"test.registry.io": RegistrySyncConfig{
 				Images: map[string][]string{
 					"test-image":  {"tag1", "tag3", "tag2"},
@@ -124,8 +124,8 @@ func TestParseFile(t *testing.T) {
 			if strings.HasSuffix(tt.name, "in plain text file") {
 				ext = "txt"
 			}
-			got, err := ParseFile(
-				filepath.Join("testdata", strings.ReplaceAll(tt.name, " ", "_")+"."+ext),
+			got, err := ParseImagesConfigFile(
+				filepath.Join("testdata", "images", strings.ReplaceAll(tt.name, " ", "_")+"."+ext),
 			)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ParseFile() error = %v, wantErr %v", err, tt.wantErr)
