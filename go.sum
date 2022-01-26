@@ -650,8 +650,8 @@ github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5
 github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 h1:I0XW9+e1XWDxdcEniV4rQAIOPUGDq67JSCiRCgGCZLI=
 github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369/go.mod h1:BSXmuO+STAnVfrANrmjBb36TMTDstsz7MSK+HVaYKv4=
 github.com/maxbrunsfeld/counterfeiter/v6 v6.2.2/go.mod h1:eD9eIE7cdwcMi9rYluz88Jz2VyhSmden33/aXg4oVIY=
-github.com/mesosphere/dkp-cli-runtime/core v0.2.1 h1:zQdi5QzuigGsUyN6u8ihDVRyvmEYHyQWAldhSG7diRM=
-github.com/mesosphere/dkp-cli-runtime/core v0.2.1/go.mod h1:+S7/mejVeo2MviMGtnJo2bCASSbSgATWbaCf72GQrOk=
+github.com/mesosphere/dkp-cli-runtime/core v0.2.3-0.20220126101922-a3bc54b7951e h1:A9ivBPa3STTPlMftDLIHhzIWrFKcbtG6jXspaW3WeC4=
+github.com/mesosphere/dkp-cli-runtime/core v0.2.3-0.20220126101922-a3bc54b7951e/go.mod h1:L040J2Z4/hPwhXpxpSq/v8SNWHgtBf3WN9efN/pkjD0=
 github.com/mholt/archiver/v3 v3.5.1 h1:rDjOBX9JSF5BvoJGvjqK479aL70qh9DIpZCl+k7Clwo=
 github.com/mholt/archiver/v3 v3.5.1/go.mod h1:e3dqJ7H78uzsRSEACH1joayhuSyhnonssnDhppzS1L4=
 github.com/miekg/dns v1.0.14/go.mod h1:W1PPwlIAgtquWBMBEV9nkV9Cazfe8ScdGz/Lj7v3Nrg=

@@ -18,14 +18,14 @@ import (
 )
 
 func NewCommand(in io.Reader, out, errOut io.Writer) (*cobra.Command, output.Output) {
-	rootCmd, rootOts := root.NewCommand(out, errOut)
+	rootCmd, rootOpts := root.NewCommand(out, errOut)
 
-	rootCmd.AddCommand(create.NewCommand(rootOts.Output))
-	rootCmd.AddCommand(push.NewCommand(rootOts.Output))
-	rootCmd.AddCommand(serve.NewCommand(rootOts.Output))
-	rootCmd.AddCommand(importcmd.NewCommand(rootOts.Output))
+	rootCmd.AddCommand(create.NewCommand(rootOpts.Output))
+	rootCmd.AddCommand(push.NewCommand(rootOpts.Output))
+	rootCmd.AddCommand(serve.NewCommand(rootOpts.Output))
+	rootCmd.AddCommand(importcmd.NewCommand(rootOpts.Output))
 
-	return rootCmd, rootOts.Output
+	return rootCmd, rootOpts.Output
 }
 
 func Execute() {

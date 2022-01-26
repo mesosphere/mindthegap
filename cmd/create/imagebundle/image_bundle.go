@@ -52,8 +52,8 @@ func NewCommand(out output.Output) *cobra.Command {
 				out.EndOperation(false)
 				return err
 			}
-			out.V(4).Infof("Images config: %+v", cfg)
 			out.EndOperation(true)
+			out.V(4).Infof("Images config: %+v", cfg)
 
 			out.StartOperation("Creating temporary directory")
 			outputFileAbs, err := filepath.Abs(outputFile)
@@ -84,7 +84,7 @@ func NewCommand(out output.Output) *cobra.Command {
 			}()
 			out.EndOperation(true)
 
-			skopeoRunner, skopeoCleanup := skopeo.NewRunner(out)
+			skopeoRunner, skopeoCleanup := skopeo.NewRunner()
 			defer func() { _ = skopeoCleanup() }()
 
 			for registryName, registryConfig := range cfg {
@@ -98,8 +98,10 @@ func NewCommand(out output.Output) *cobra.Command {
 						skopeo.SrcCredentials(registryConfig.Credentials.Username, registryConfig.Credentials.Password),
 					)
 				} else {
-					err = skopeoRunner.AttemptToLoginToRegistry(context.TODO(), registryName)
+					skopeoStdout, skopeoStderr, err := skopeoRunner.AttemptToLoginToRegistry(context.TODO(), registryName)
 					if err != nil {
+						out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
+						out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
 						return fmt.Errorf("error logging in to registry: %w", err)
 					}
 				}
@@ -113,15 +115,17 @@ func NewCommand(out output.Output) *cobra.Command {
 							),
 						)
 
-						srcImageManifestList, skopeoOutput, err := skopeoRunner.InspectManifest(
+						srcImageManifestList, skopeoStdout, skopeoStderr, err := skopeoRunner.InspectManifest(
 							context.TODO(), fmt.Sprintf("docker://%s", srcImageName),
 						)
 						if err != nil {
-							out.Info(string(skopeoOutput))
 							out.EndOperation(false)
+							out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
+							out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
 							return err
 						}
-						out.V(4).Info(string(skopeoOutput))
+						out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
+						out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
 						destImageManifestList := manifestlist.ManifestList{Versioned: srcImageManifestList.Versioned}
 						platformManifests := make(map[string]manifestlist.ManifestDescriptor, len(srcImageManifestList.Manifests))
 						for _, m := range srcImageManifestList.Manifests {
@@ -145,7 +149,7 @@ func NewCommand(out output.Output) *cobra.Command {
 								}
 							}
 
-							skopeoOutput, err := skopeoRunner.Copy(context.TODO(),
+							skopeoStdout, skopeoStderr, err := skopeoRunner.Copy(context.TODO(),
 								fmt.Sprintf("docker://%s/%s@%s", registryName, imageName, platformManifest.Digest),
 								fmt.Sprintf("docker://%s/%s@%s", reg.Address(), imageName, platformManifest.Digest),
 								append(
@@ -154,15 +158,17 @@ func NewCommand(out output.Output) *cobra.Command {
 								)...,
 							)
 							if err != nil {
-								out.Info(string(skopeoOutput))
 								out.EndOperation(false)
+								out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
+								out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
 								return err
 							}
-							out.V(4).Info(string(skopeoOutput))
+							out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
+							out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
 
 							destImageManifestList.Manifests = append(destImageManifestList.Manifests, platformManifest)
 						}
-						skopeoOutput, err = skopeoRunner.CopyManifest(context.TODO(),
+						skopeoStdout, skopeoStderr, err = skopeoRunner.CopyManifest(context.TODO(),
 							destImageManifestList,
 							fmt.Sprintf("docker://%s/%s:%s", reg.Address(), imageName, imageTag),
 							append(
@@ -171,13 +177,14 @@ func NewCommand(out output.Output) *cobra.Command {
 							)...,
 						)
 						if err != nil {
-							out.Info(string(skopeoOutput))
 							out.EndOperation(false)
+							out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
+							out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
 							return err
 						}
-						out.V(4).Info(string(skopeoOutput))
-
 						out.EndOperation(true)
+						out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
+						out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
 					}
 				}
 			}
