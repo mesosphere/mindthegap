@@ -68,11 +68,13 @@ func NewCommand(out output.Output) *cobra.Command {
 			}()
 			out.EndOperation(true)
 
-			skopeoRunner, skopeoCleanup := skopeo.NewRunner(out)
+			skopeoRunner, skopeoCleanup := skopeo.NewRunner()
 			defer func() { _ = skopeoCleanup() }()
 
-			err = skopeoRunner.AttemptToLoginToRegistry(context.TODO(), destRegistry)
+			skopeoStdout, skopeoStderr, err := skopeoRunner.AttemptToLoginToRegistry(context.TODO(), destRegistry)
 			if err != nil {
+				out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
+				out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
 				return fmt.Errorf("error logging in to target registry: %w", err)
 			}
 
@@ -89,7 +91,7 @@ func NewCommand(out output.Output) *cobra.Command {
 								destRegistry, imageName, imageTag,
 							),
 						)
-						skopeoOutput, err := skopeoRunner.Copy(context.TODO(),
+						skopeoStdout, skopeoStderr, err := skopeoRunner.Copy(context.TODO(),
 							fmt.Sprintf("docker://%s/%s:%s", reg.Address(), imageName, imageTag),
 							fmt.Sprintf("docker://%s/%s:%s", destRegistry, imageName, imageTag),
 							append(
@@ -97,11 +99,13 @@ func NewCommand(out output.Output) *cobra.Command {
 							)...,
 						)
 						if err != nil {
-							out.Info(string(skopeoOutput))
 							out.EndOperation(false)
+							out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
+							out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
 							return err
 						}
-						out.V(4).Info(string(skopeoOutput))
+						out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
+						out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
 						out.EndOperation(true)
 					}
 				}
