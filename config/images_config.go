@@ -81,22 +81,26 @@ func ParseImagesConfigFile(configFile string) (ImagesConfig, error) {
 	return config, nil
 }
 
-func WriteSanitizedConfig(cfg ImagesConfig, fileName string) error {
+func WriteSanitizedImagesConfig(cfg ImagesConfig, fileName string) error {
 	for regName, regConfig := range cfg {
 		regConfig.Credentials = nil
 		cfg[regName] = regConfig
 	}
 
+	return writeYAMLToFile(cfg, fileName)
+}
+
+func writeYAMLToFile(obj interface{}, fileName string) error {
 	f, err := os.Create(fileName)
 	if err != nil {
-		return fmt.Errorf("failed to create file to write sanitized config to: %w", err)
+		return fmt.Errorf("failed to create file to write config to: %w", err)
 	}
 	defer f.Close()
 	enc := yaml.NewEncoder(f)
 	defer enc.Close()
 	enc.SetIndent(2)
-	if err := enc.Encode(cfg); err != nil {
-		return fmt.Errorf("failed to write sanitized config: %w", err)
+	if err := enc.Encode(obj); err != nil {
+		return fmt.Errorf("failed to write config: %w", err)
 	}
 	return nil
 }

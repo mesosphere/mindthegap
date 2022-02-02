@@ -235,7 +235,7 @@ func NewCommand(out output.Output) *cobra.Command {
 				}
 			}
 
-			if err := config.WriteSanitizedConfig(cfg, filepath.Join(tempDir, "images.yaml")); err != nil {
+			if err := config.WriteSanitizedImagesConfig(cfg, filepath.Join(tempDir, "images.yaml")); err != nil {
 				return err
 			}
 
