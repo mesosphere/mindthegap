@@ -58,7 +58,9 @@ func NewCommand(out output.Output) *cobra.Command {
 			out.EndOperation(true)
 
 			out.StartOperation("Starting temporary Docker registry")
-			reg, err := registry.NewRegistry(registry.Config{StorageDirectory: tempDir, ReadOnly: true})
+			reg, err := registry.NewRegistry(
+				registry.Config{StorageDirectory: tempDir, ReadOnly: true},
+			)
 			if err != nil {
 				out.EndOperation(false)
 				return fmt.Errorf("failed to create local Docker registry: %w", err)
@@ -95,7 +97,8 @@ func NewCommand(out output.Output) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&imageBundleFile, "image-bundle", "", "Tarball containing list of images to push")
+	cmd.Flags().
+		StringVar(&imageBundleFile, "image-bundle", "", "Tarball containing list of images to push")
 	_ = cmd.MarkFlagRequired("image-bundle")
 	cmd.Flags().StringVar(&containerdNamespace, "containerd-namespace", "k8s.io",
 		"Containerd namespace to import images into")

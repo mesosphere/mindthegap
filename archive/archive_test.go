@@ -59,8 +59,11 @@ func TestArchiveDirectorySuccess(t *testing.T) {
 		}
 		var buf bytes.Buffer
 		_, err = io.CopyN(&buf, tr, 1024)
-		require.Condition(t,
-			func() (success bool) { return err == nil || err == io.EOF }, "error reading content from tarball")
+		require.Condition(
+			t,
+			func() (success bool) { return err == nil || err == io.EOF },
+			"error reading content from tarball",
+		)
 		archivedContents[hdr.Name] = buf.String()
 	}
 
@@ -70,24 +73,36 @@ func TestArchiveDirectorySuccess(t *testing.T) {
 func TestArchiveDirectoryDestDirNotWritable(t *testing.T) {
 	tmpDir := t.TempDir()
 	notWriteable := filepath.Join(tmpDir, "notwritable")
-	require.NoError(t, os.Mkdir(notWriteable, 0500), "error creating not writable directory")
+	require.NoError(t, os.Mkdir(notWriteable, 0o500), "error creating not writable directory")
 	outputFile := filepath.Join(notWriteable, "out.tar.gz")
-	require.Error(t, archive.ArchiveDirectory("testdata", outputFile), "expected error archiving directory")
+	require.Error(
+		t,
+		archive.ArchiveDirectory("testdata", outputFile),
+		"expected error archiving directory",
+	)
 }
 
 func TestArchiveDirectoryDestFileExists(t *testing.T) {
 	tmpDir := t.TempDir()
 	outputFile := filepath.Join(tmpDir, "out.tar.gz")
-	f, err := os.OpenFile(outputFile, os.O_CREATE, 0400)
+	f, err := os.OpenFile(outputFile, os.O_CREATE, 0o400)
 	require.NoError(t, err, "error creating dummy file")
 	require.NoError(t, f.Close(), "error closing dummy file")
-	require.NoError(t, archive.ArchiveDirectory("testdata", outputFile), "unexpected error archiving directory")
+	require.NoError(
+		t,
+		archive.ArchiveDirectory("testdata", outputFile),
+		"unexpected error archiving directory",
+	)
 }
 
 func TestArchiveDirectoryUnreadableSource(t *testing.T) {
 	tmpDir := t.TempDir()
 	unreadable := filepath.Join(tmpDir, "unreadable")
-	require.NoError(t, os.Mkdir(unreadable, 0100), "error creating unreadable directory")
+	require.NoError(t, os.Mkdir(unreadable, 0o100), "error creating unreadable directory")
 	outputFile := filepath.Join(tmpDir, "out.tar.gz")
-	require.Error(t, archive.ArchiveDirectory(unreadable, outputFile), "expected error archiving directory")
+	require.Error(
+		t,
+		archive.ArchiveDirectory(unreadable, outputFile),
+		"expected error archiving directory",
+	)
 }

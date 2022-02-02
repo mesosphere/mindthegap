@@ -38,10 +38,17 @@ func NewCommand(out output.Output) *cobra.Command {
 				switch {
 				case err == nil:
 					out.EndOperation(false)
-					return fmt.Errorf("%s already exists: specify --overwrite to overwrite existing file", outputFile)
+					return fmt.Errorf(
+						"%s already exists: specify --overwrite to overwrite existing file",
+						outputFile,
+					)
 				case !errors.Is(err, os.ErrNotExist):
 					out.EndOperation(false)
-					return fmt.Errorf("failed to check if output file %s already exists: %w", outputFile, err)
+					return fmt.Errorf(
+						"failed to check if output file %s already exists: %w",
+						outputFile,
+						err,
+					)
 				default:
 					out.EndOperation(true)
 				}
@@ -60,7 +67,10 @@ func NewCommand(out output.Output) *cobra.Command {
 			outputFileAbs, err := filepath.Abs(outputFile)
 			if err != nil {
 				out.EndOperation(false)
-				return fmt.Errorf("failed to determine where to create temporary directory: %w", err)
+				return fmt.Errorf(
+					"failed to determine where to create temporary directory: %w",
+					err,
+				)
 			}
 
 			cleaner := cleanup.NewCleaner()
@@ -100,7 +110,10 @@ func NewCommand(out output.Output) *cobra.Command {
 				if registryConfig.Credentials != nil && registryConfig.Credentials.Username != "" {
 					skopeoOpts = append(
 						skopeoOpts,
-						skopeo.SrcCredentials(registryConfig.Credentials.Username, registryConfig.Credentials.Password),
+						skopeo.SrcCredentials(
+							registryConfig.Credentials.Username,
+							registryConfig.Credentials.Password,
+						),
 					)
 				} else {
 					skopeoStdout, skopeoStderr, err := skopeoRunner.AttemptToLoginToRegistry(context.TODO(), registryName)
@@ -121,7 +134,8 @@ func NewCommand(out output.Output) *cobra.Command {
 						)
 
 						srcImageManifestList, skopeoStdout, skopeoStderr, err := skopeoRunner.InspectManifest(
-							context.TODO(), fmt.Sprintf("docker://%s", srcImageName),
+							context.TODO(),
+							fmt.Sprintf("docker://%s", srcImageName),
 						)
 						if err != nil {
 							out.EndOperation(false)
@@ -131,9 +145,15 @@ func NewCommand(out output.Output) *cobra.Command {
 						}
 						out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
 						out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
-						destImageManifestList := manifestlist.ManifestList{Versioned: srcImageManifestList.Versioned}
-						platformManifests := make(map[string]manifestlist.ManifestDescriptor, len(srcImageManifestList.Manifests))
-						for _, m := range srcImageManifestList.Manifests {
+						destImageManifestList := manifestlist.ManifestList{
+							Versioned: srcImageManifestList.Versioned,
+						}
+						platformManifests := make(
+							map[string]manifestlist.ManifestDescriptor,
+							len(srcImageManifestList.Manifests),
+						)
+						for i := range srcImageManifestList.Manifests {
+							m := srcImageManifestList.Manifests[i]
 							srcManifestPlatform := m.Platform.OS + "/" + m.Platform.Architecture
 							if m.Platform.Variant != "" {
 								srcManifestPlatform += "/" + m.Platform.Variant
@@ -150,16 +170,34 @@ func NewCommand(out output.Output) *cobra.Command {
 								platformManifest, ok = platformManifests[p.String()]
 								if !ok {
 									out.EndOperation(false)
-									return fmt.Errorf("could not find platform %s for image %s", p, srcImageName)
+									return fmt.Errorf(
+										"could not find platform %s for image %s",
+										p,
+										srcImageName,
+									)
 								}
 							}
 
-							skopeoStdout, skopeoStderr, err := skopeoRunner.Copy(context.TODO(),
-								fmt.Sprintf("docker://%s/%s@%s", registryName, imageName, platformManifest.Digest),
-								fmt.Sprintf("docker://%s/%s@%s", reg.Address(), imageName, platformManifest.Digest),
+							skopeoStdout, skopeoStderr, err := skopeoRunner.Copy(
+								context.TODO(),
+								fmt.Sprintf(
+									"docker://%s/%s@%s",
+									registryName,
+									imageName,
+									platformManifest.Digest,
+								),
+								fmt.Sprintf(
+									"docker://%s/%s@%s",
+									reg.Address(),
+									imageName,
+									platformManifest.Digest,
+								),
 								append(
 									skopeoOpts,
-									skopeo.DisableDestTLSVerify(), skopeo.OS(p.os), skopeo.Arch(p.arch), skopeo.Variant(p.variant),
+									skopeo.DisableDestTLSVerify(),
+									skopeo.OS(p.os),
+									skopeo.Arch(p.arch),
+									skopeo.Variant(p.variant),
 								)...,
 							)
 							if err != nil {
@@ -171,7 +209,10 @@ func NewCommand(out output.Output) *cobra.Command {
 							out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
 							out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
 
-							destImageManifestList.Manifests = append(destImageManifestList.Manifests, platformManifest)
+							destImageManifestList.Manifests = append(
+								destImageManifestList.Manifests,
+								platformManifest,
+							)
 						}
 						skopeoStdout, skopeoStderr, err = skopeoRunner.CopyManifest(context.TODO(),
 							destImageManifestList,
@@ -212,10 +253,13 @@ func NewCommand(out output.Output) *cobra.Command {
 	cmd.Flags().StringVar(&configFile, "images-file", "",
 		"File containing list of images to create bundle from, either as YAML configuration or a simple list of images")
 	_ = cmd.MarkFlagRequired("images-file")
-	cmd.Flags().Var(newPlatformSlicesValue([]platform{{os: "linux", arch: "amd64"}}, &platforms), "platform",
-		"platforms to download images (required format: <os>/<arch>[/<variant>])")
-	cmd.Flags().StringVar(&outputFile, "output-file", "images.tar.gz", "Output file to write image bundle to")
-	cmd.Flags().BoolVar(&overwrite, "overwrite", false, "Overwrite image bundle file if it already exists")
+	cmd.Flags().
+		Var(newPlatformSlicesValue([]platform{{os: "linux", arch: "amd64"}}, &platforms), "platform",
+			"platforms to download images (required format: <os>/<arch>[/<variant>])")
+	cmd.Flags().
+		StringVar(&outputFile, "output-file", "images.tar.gz", "Output file to write image bundle to")
+	cmd.Flags().
+		BoolVar(&overwrite, "overwrite", false, "Overwrite image bundle file if it already exists")
 
 	return cmd
 }

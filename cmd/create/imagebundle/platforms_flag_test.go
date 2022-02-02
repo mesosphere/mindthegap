@@ -231,7 +231,11 @@ func TestSSWithComma(t *testing.T) {
 	values := f.Lookup("ps").Value.(*platformSliceValue)
 
 	if len(expected) != len(*values.value) {
-		t.Fatalf("expected number of values to be %d but got: %d", len(expected), len(*values.value))
+		t.Fatalf(
+			"expected number of values to be %d but got: %d",
+			len(expected),
+			len(*values.value),
+		)
 	}
 	for i, v := range *values.value {
 		if expected[i] != v {
@@ -256,7 +260,12 @@ func TestPSAsSliceValue(t *testing.T) {
 		}
 	})
 	expectedPlatform := platform{os: "windows", arch: "arm", variant: "v7"}
-	require.ElementsMatch(t, []platform{expectedPlatform}, ps, "Expected ps to be overwritten with 'windows/arm/v7'")
+	require.ElementsMatch(
+		t,
+		[]platform{expectedPlatform},
+		ps,
+		"Expected ps to be overwritten with 'windows/arm/v7'",
+	)
 }
 
 func TestPSGetSlice(t *testing.T) {
@@ -286,7 +295,11 @@ func TestPSAppend(t *testing.T) {
 	arg2 := fmt.Sprintf(argfmt, in[1])
 	require.NoError(t, f.Parse([]string{arg1, arg2}), "error parsing flags")
 
-	require.NoError(t, f.Lookup("ps").Value.(pflag.SliceValue).Append("windows/i386"), "error appending to platforms")
+	require.NoError(
+		t,
+		f.Lookup("ps").Value.(pflag.SliceValue).Append("windows/i386"),
+		"error appending to platforms",
+	)
 	require.ElementsMatch(t,
 		append(in, "windows/i386"),
 		f.Lookup("ps").Value.(pflag.SliceValue).GetSlice(),

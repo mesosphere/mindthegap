@@ -46,9 +46,9 @@ func AllImages() SkopeoOption {
 	}
 }
 
-func OS(os string) SkopeoOption {
+func OS(opsys string) SkopeoOption {
 	return func() string {
-		return "--override-os=" + os
+		return "--override-os=" + opsys
 	}
 }
 
@@ -109,17 +109,21 @@ func (r *Runner) mustUnpack() {
 		panic(err)
 	}
 	r.unpackedSkopeoPath = filepath.Join(tempDir, "skopeo")
-	//nolint:gosec // Binary must be executable
-	if err = os.WriteFile(r.unpackedSkopeoPath, skopeoBinary, 0700); err != nil {
+	//nolint:gosec // Binary must be executable.
+	if err = os.WriteFile(r.unpackedSkopeoPath, skopeoBinary, 0o700); err != nil {
 		panic(err)
 	}
 	r.unpackedSkopeoPolicyPath = filepath.Join(tempDir, "policy.json")
-	if err = os.WriteFile(r.unpackedSkopeoPolicyPath, defaultSkopeoPolicy, 0400); err != nil {
+	if err = os.WriteFile(r.unpackedSkopeoPolicyPath, defaultSkopeoPolicy, 0o400); err != nil {
 		panic(err)
 	}
 }
 
-func (r *Runner) Copy(ctx context.Context, src, dest string, opts ...SkopeoOption) (stdout, stderr []byte, err error) {
+func (r *Runner) Copy(
+	ctx context.Context,
+	src, dest string,
+	opts ...SkopeoOption,
+) (stdout, stderr []byte, err error) {
 	copyArgs := []string{
 		"copy",
 		"--policy", r.unpackedSkopeoPolicyPath,
@@ -142,7 +146,10 @@ func (r *Runner) InspectManifest(
 
 	rawStdout, rawStderr, err := r.run(ctx, inspectArgs, opts...)
 	if err != nil {
-		return manifestlist.ManifestList{}, rawStdout, rawStderr, fmt.Errorf("failed to read image manifest: %w", err)
+		return manifestlist.ManifestList{}, rawStdout, rawStderr, fmt.Errorf(
+			"failed to read image manifest: %w",
+			err,
+		)
 	}
 
 	var ml manifestlist.ManifestList
@@ -156,7 +163,10 @@ func (r *Runner) InspectManifest(
 	dec = json.NewDecoder(bytes.NewReader(rawStdout))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&m); err != nil {
-		return manifestlist.ManifestList{}, rawStdout, rawStderr, fmt.Errorf("failed to deserialize manifest: %w", err)
+		return manifestlist.ManifestList{}, rawStdout, rawStderr, fmt.Errorf(
+			"failed to deserialize manifest: %w",
+			err,
+		)
 	}
 
 	inspectArgs = []string{
@@ -166,7 +176,10 @@ func (r *Runner) InspectManifest(
 
 	inspectStdout, inspectStderr, err := r.run(ctx, inspectArgs, opts...)
 	if err != nil {
-		return manifestlist.ManifestList{}, inspectStdout, inspectStderr, fmt.Errorf("failed to read image manifest: %w", err)
+		return manifestlist.ManifestList{}, inspectStdout, inspectStderr, fmt.Errorf(
+			"failed to read image manifest: %w",
+			err,
+		)
 	}
 
 	var i inspect.Output
@@ -213,10 +226,18 @@ func (r *Runner) CopyManifest(
 	// for details
 	_ = json.NewEncoder(mf).Encode(manifest)
 
-	return r.Copy(ctx, "dir:"+td, dest, append(opts, func() string { return "--multi-arch=index-only" })...)
+	return r.Copy(
+		ctx,
+		"dir:"+td,
+		dest,
+		append(opts, func() string { return "--multi-arch=index-only" })...)
 }
 
-func (r *Runner) run(ctx context.Context, baseArgs []string, opts ...SkopeoOption) (stdout, stderr []byte, err error) {
+func (r *Runner) run(
+	ctx context.Context,
+	baseArgs []string,
+	opts ...SkopeoOption,
+) (stdout, stderr []byte, err error) {
 	r.unpacked.Do(r.mustUnpack)
 
 	skopeoArgs := make([]string, 0, len(baseArgs)+len(opts))
@@ -238,14 +259,25 @@ func (r *Runner) run(ctx context.Context, baseArgs []string, opts ...SkopeoOptio
 	return stdout, stderrBuf.Bytes(), err
 }
 
-func (r *Runner) AttemptToLoginToRegistry(ctx context.Context, registryName string) (stdout, stderr []byte, err error) {
+func (r *Runner) AttemptToLoginToRegistry(
+	ctx context.Context,
+	registryName string,
+) (stdout, stderr []byte, err error) {
 	var skopeoOpts []SkopeoOption
-	getLoginStdout, getLoginStderr, err := r.run(ctx, []string{"login", "--get-login", registryName}, skopeoOpts...)
+	getLoginStdout, getLoginStderr, err := r.run(
+		ctx,
+		[]string{"login", "--get-login", registryName},
+		skopeoOpts...)
 	if err == nil {
 		return getLoginStdout, getLoginStderr, nil
 	}
-	if err != nil && !strings.Contains(string(getLoginStderr), fmt.Sprintf("not logged into %s", registryName)) {
-		return getLoginStdout, getLoginStderr, fmt.Errorf("failed to check if already logged in to %s: %w", registryName, err)
+	if err != nil &&
+		!strings.Contains(string(getLoginStderr), fmt.Sprintf("not logged into %s", registryName)) {
+		return getLoginStdout, getLoginStderr, fmt.Errorf(
+			"failed to check if already logged in to %s: %w",
+			registryName,
+			err,
+		)
 	}
 
 	stdoutBuf := bytes.NewBuffer(getLoginStdout)
@@ -261,11 +293,23 @@ func (r *Runner) AttemptToLoginToRegistry(ctx context.Context, registryName stri
 	for _, reg := range registryNamesToTry {
 		authConfig, err := configFile.GetAuthConfig(reg)
 		if err != nil {
-			return getLoginStdout, getLoginStderr, fmt.Errorf("failed to get auth config for %s: %w", registryName, err)
+			return getLoginStdout, getLoginStderr, fmt.Errorf(
+				"failed to get auth config for %s: %w",
+				registryName,
+				err,
+			)
 		}
 		if authConfig.Username != "" && authConfig.Password != "" {
-			loginStdout, loginStderr, err := r.run(ctx,
-				[]string{"login", registryName, "--username", authConfig.Username, "--password", authConfig.Password},
+			loginStdout, loginStderr, err := r.run(
+				ctx,
+				[]string{
+					"login",
+					registryName,
+					"--username",
+					authConfig.Username,
+					"--password",
+					authConfig.Password,
+				},
 				skopeoOpts...,
 			)
 			_, _ = stdoutBuf.Write(loginStdout)
@@ -273,7 +317,11 @@ func (r *Runner) AttemptToLoginToRegistry(ctx context.Context, registryName stri
 			if err == nil {
 				return stdoutBuf.Bytes(), stderrBuf.Bytes(), nil
 			}
-			return stdoutBuf.Bytes(), stderrBuf.Bytes(), fmt.Errorf("failed to login to %s: %w", registryName, err)
+			return stdoutBuf.Bytes(), stderrBuf.Bytes(), fmt.Errorf(
+				"failed to login to %s: %w",
+				registryName,
+				err,
+			)
 		}
 	}
 

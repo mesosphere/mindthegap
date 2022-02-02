@@ -90,7 +90,10 @@ func writePlatformsAsCSV(vals []platform) (string, error) {
 func parsePlatformString(s string) (platform, error) {
 	splitVal := strings.Split(s, "/")
 	if len(splitVal) < 2 || len(splitVal) > 3 {
-		return platform{}, fmt.Errorf("invalid platform specification: %s (required format: <os>/<arch>[/<variant>]", s)
+		return platform{}, fmt.Errorf(
+			"invalid platform specification: %s (required format: <os>/<arch>[/<variant>]",
+			s,
+		)
 	}
 	p := platform{os: splitVal[0], arch: splitVal[1]}
 	if len(splitVal) == 3 {
