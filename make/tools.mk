@@ -61,7 +61,7 @@ endif
 endif
 upgrade-tools: export OAUTH_TOKEN=$(GITHUB_API_TOKEN)
 upgrade-tools: ## Upgrades all tools to latest available versions
-upgrade-tools: ; $(info $(M) upgrading all tools to latest available versions)
+upgrade-tools: upgrade-go-tools; $(info $(M) upgrading all tools to latest available versions)
 	grep -Eo '^[^#]\S+' $(REPO_ROOT)/.tool-versions | xargs -I{} bash -ec 'asdf plugin list | grep -E '^{}$$' &>/dev/null || asdf plugin add {}'
 	grep -v '# FREEZE' $(REPO_ROOT)/.tool-versions | \
 		grep -Eo '^[^#]\S+' | \
@@ -71,3 +71,13 @@ upgrade-tools: ; $(info $(M) upgrading all tools to latest available versions)
 				grep -vE "(^Available versions:|-src|-dev|-latest|-stm|[-\\.]rc|-alpha|-beta|[-\\.]pre|-next|(a|b|c)[0-9]+|snapshot|master)" | \
 				tail -1 \
 			)" && asdf install {} $${VERSION} && asdf local {} $${VERSION}'
+
+.PHONY: upgrade-go-tools
+upgrade-go-tools: ## Upgrades all go tools to latest available versions
+upgrade-go-tools: install-tool.golang; $(info $(M) upgrading all go tools to latest available versions)
+	grep -v '# FREEZE' .go-tools | \
+		grep -Eo '^[^#]\S+' | \
+		sed 's/@.\+$$/@latest/' | \
+			xargs -I {} bash -ec '\
+				export LATEST_VERSION=$$(go list -m {}) && \
+				sed -i "s|$${LATEST_VERSION%% *}@.\+$$|$${LATEST_VERSION/ /@}|" .go-tools'
