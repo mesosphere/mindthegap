@@ -124,7 +124,9 @@ func TestParseFile(t *testing.T) {
 			if strings.HasSuffix(tt.name, "in plain text file") {
 				ext = "txt"
 			}
-			got, err := ParseFile(filepath.Join("testdata", strings.ReplaceAll(tt.name, " ", "_")+"."+ext))
+			got, err := ParseFile(
+				filepath.Join("testdata", strings.ReplaceAll(tt.name, " ", "_")+"."+ext),
+			)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ParseFile() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -86,9 +86,9 @@ endif
 
 .PHONY: lint.%
 lint.%: ## Runs golangci-lint for a specific module
-lint.%: install-tool.go.golangci-lint; $(info $(M) running golangci-lint for $* module)
+lint.%: install-tool.go.golangci-lint install-tool.go.golines; $(info $(M) linting $* module)
+	$(if $(filter-out root,$*),cd $* && )golines -w .
 	$(if $(filter-out root,$*),cd $* && )golangci-lint run --fix --config=$(GOLANGCI_CONFIG_FILE)
-	$(if $(filter-out root,$*),cd $* && )go fmt ./...
 	$(if $(filter-out root,$*),cd $* && )go fix ./...
 
 .PHONY: mod-tidy
