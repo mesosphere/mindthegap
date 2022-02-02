@@ -17,7 +17,7 @@ linters:
     - gocritic
     - gocyclo
     - godot
-    - gofmt
+    - gofumpt
     - gosec
     - gosimple
     - govet
@@ -54,6 +54,16 @@ linters-settings:
     check-error-free-encoding: true
   gci:
     local-prefixes: github.com/mesosphere/mindthegap
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+  gofumpt:
+    lang-version: "1.17"
+    extra-rules: true
   lll:
     line-length: 120
 

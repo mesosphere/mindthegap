@@ -73,10 +73,12 @@ func NewCommand(out output.Output) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&imageBundleFile, "image-bundle", "", "Tarball containing list of images to push")
+	cmd.Flags().
+		StringVar(&imageBundleFile, "image-bundle", "", "Tarball containing list of images to push")
 	_ = cmd.MarkFlagRequired("image-bundle")
 	cmd.Flags().StringVar(&listenAddress, "listen-address", "localhost", "Address to list on")
-	cmd.Flags().Uint16Var(&listenPort, "listen-port", 0, "Port to listen on (0 means use any free port)")
+	cmd.Flags().
+		Uint16Var(&listenPort, "listen-port", 0, "Port to listen on (0 means use any free port)")
 	cmd.Flags().StringVar(&tlsCertificate, "tls-cert-file", "", "TLS certificate file")
 	cmd.Flags().StringVar(&tlsKey, "tls-private-key-file", "", "TLS private key file")
 
