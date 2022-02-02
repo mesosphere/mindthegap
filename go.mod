@@ -6,19 +6,19 @@ module github.com/mesosphere/mindthegap
 go 1.17
 
 require (
-	github.com/containers/image/v5 v5.18.0
+	github.com/containers/image/v5 v5.19.0
 	github.com/containers/skopeo v1.5.3-0.20220121202935-4b79ed7d7d46
-	github.com/distribution/distribution/v3 v3.0.0-20220119135727-5f1974ab8b53
+	github.com/distribution/distribution/v3 v3.0.0-20220128175647-b60926597a1b
 	github.com/docker/cli v20.10.12+incompatible
-	github.com/mesosphere/dkp-cli-runtime/core v0.2.3-0.20220126101922-a3bc54b7951e
+	github.com/mesosphere/dkp-cli-runtime/core v0.3.0
 	github.com/mholt/archiver/v3 v3.5.1
-	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
+	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
-	k8s.io/klog/v2 v2.9.0
-	k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b
+	k8s.io/klog/v2 v2.40.1
+	k8s.io/utils v0.0.0-20220127004650-9b3446523e65
 )
 
 require (
@@ -39,7 +39,7 @@ require (
 	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7 // indirect
 	github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
-	github.com/go-logr/logr v0.4.0 // indirect
+	github.com/go-logr/logr v1.2.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/gomodule/redigo v1.8.2 // indirect
@@ -69,7 +69,7 @@ require (
 	github.com/yvasiyarov/newrelic_platform_go v0.0.0-20140908184405-b21fdbd4370f // indirect
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3 // indirect
 	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
-	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
+	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
