@@ -13,6 +13,7 @@ import (
 	"github.com/mholt/archiver/v3"
 	"github.com/spf13/cobra"
 
+	"github.com/mesosphere/mindthegap/cleanup"
 	"github.com/mesosphere/mindthegap/config"
 	"github.com/mesosphere/mindthegap/containerd"
 	"github.com/mesosphere/mindthegap/docker/registry"
@@ -27,13 +28,16 @@ func NewCommand(out output.Output) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "image-bundle",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cleaner := cleanup.NewCleaner()
+			defer cleaner.Cleanup()
+
 			out.StartOperation("Creating temporary directory")
 			tempDir, err := os.MkdirTemp("", ".image-bundle-*")
 			if err != nil {
 				out.EndOperation(false)
 				return fmt.Errorf("failed to create temporary directory: %w", err)
 			}
-			defer os.RemoveAll(tempDir)
+			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempDir) })
 			out.EndOperation(true)
 
 			out.StartOperation("Unarchiving image bundle")
