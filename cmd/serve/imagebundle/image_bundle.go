@@ -47,7 +47,7 @@ func NewCommand(out output.Output) *cobra.Command {
 			}
 			out.EndOperation(true)
 
-			out.StartOperation("Creating temporary Docker registry")
+			out.StartOperation("Creating Docker registry")
 			reg, err := registry.NewRegistry(registry.Config{
 				StorageDirectory: tempDir,
 				ReadOnly:         true,
@@ -74,8 +74,8 @@ func NewCommand(out output.Output) *cobra.Command {
 	}
 
 	cmd.Flags().
-		StringVar(&imageBundleFile, "image-bundle", "", "Tarball containing list of images to push")
-	_ = cmd.MarkFlagRequired("image-bundle")
+		StringVar(&imageBundleFile, "images-bundle", "", "Tarball of images to serve")
+	_ = cmd.MarkFlagRequired("images-bundle")
 	cmd.Flags().StringVar(&listenAddress, "listen-address", "localhost", "Address to list on")
 	cmd.Flags().
 		Uint16Var(&listenPort, "listen-port", 0, "Port to listen on (0 means use any free port)")

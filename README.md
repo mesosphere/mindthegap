@@ -68,7 +68,7 @@ mindthegap serve image-bundle --image-bundle <path/to/images.tar> \
   [--listen-port <listen.port>]
 ```
 
-Start a Docker registry serving the contents of the image bundle. Note that he Docker registry will
+Start a Docker registry serving the contents of the image bundle. Note that the Docker registry will
 be in read-only mode to reflect the source of the data being a static tarball so pushes to this
 registry will fail.
 
@@ -85,7 +85,7 @@ command requires `ctr` to be in the `PATH`.
 
 ### Helm chart bundles
 
-#### Creating a helm chart bundle
+#### Creating a Helm chart bundle
 
 ```shell
 mindthegap create helm-bundle --helm-charts-file <path/to/helm-charts.yaml> \
@@ -98,6 +98,19 @@ Helm charts config file.
 The output file will be a tarball that can be served over HTTP, the Helm charts
 can be pushed to Chartmuseum or to an OCI registry, or it can be untarred and
 the charts used locally via Helm.
+
+#### Serving a Helm chart bundle
+
+```shell
+mindthegap serve helm-bundle --helm-charts-bundle <path/to/helm-charts.tar.gz> \
+  [--listen-address <addr>] \
+  [--list-port <port>] \
+  [--tls-cert-file <path/to/cert/file> --tls-private-key-file <path/to/key/file>]
+```
+
+Start a http server serving the contents of the Helm charts bundle file. If `--listen-address`
+isn't specified, the server will listen on `localhost` only. If `--listen-port` isn't specified,
+the server will listen on a free port which will be output when starting the server.
 
 ## How does it work?
 
