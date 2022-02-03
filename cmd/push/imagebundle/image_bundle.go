@@ -125,7 +125,7 @@ func NewCommand(out output.Output) *cobra.Command {
 	}
 
 	cmd.Flags().
-		StringVar(&imageBundleFile, "image-bundle", "", "Tarball containing list of images to push")
+		StringVar(&imageBundleFile, "image-bundle", "", "Tarball of images to push")
 	_ = cmd.MarkFlagRequired("image-bundle")
 	cmd.Flags().StringVar(&destRegistry, "to-registry", "", "Registry to push images to")
 	_ = cmd.MarkFlagRequired("to-registry")
