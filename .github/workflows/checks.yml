@@ -40,16 +40,11 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Install asdf and tools
-        uses: asdf-vm/actions/install@v1
-
-      - name: Setup python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
+      - name: Install asdf
+        uses: asdf-vm/actions/setup@v1
 
       - uses: pre-commit/action@v2.0.3
         with:
           extra_args: --all-files
         env:
-          SKIP: no-commit-to-branch
+          SKIP: no-commit-to-branch,golangci-lint
