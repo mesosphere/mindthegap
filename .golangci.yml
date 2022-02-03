@@ -1,6 +1,9 @@
 # Copyright 2021 D2iQ, Inc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+run:
+  timeout: 2m
+
 linters:
   disable-all: true
   enable:
