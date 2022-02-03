@@ -21,4 +21,4 @@ openapi_violations.report
 dist/
 .local/
 
-.image-bundle-*
+*.tar.gz

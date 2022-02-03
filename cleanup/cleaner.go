@@ -32,7 +32,7 @@ func (c *cleaner) setupSignalHandling() {
 	go func() {
 		<-ctx.Done()
 		stop()
-		c.doCleanup()
+		c.Cleanup()
 		p, _ := os.FindProcess(os.Getpid())
 		if err := p.Signal(os.Interrupt); err != nil {
 			panic(err)
@@ -41,12 +41,6 @@ func (c *cleaner) setupSignalHandling() {
 }
 
 func (c *cleaner) Cleanup() {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	c.doCleanup()
-}
-
-func (c *cleaner) doCleanup() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	for _, f := range c.cleanups {

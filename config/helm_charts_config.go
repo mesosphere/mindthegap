@@ -13,8 +13,10 @@ import (
 // HelmRepositorySyncConfig contains information about a single repository, read from
 // the source YAML file.
 type HelmRepositorySyncConfig struct {
-	// Charts map charts name to slices with the chart versions
-	Charts map[string][]string
+	// RepoURL is the URL for the repository.
+	RepoURL string `yaml:"repoURL"`
+	// Charts map charts name to slices with the chart versions.
+	Charts map[string][]string `yaml:"charts,omitempty"`
 }
 
 // HelmChartsConfig contains all helm charts information read from the source YAML file.
@@ -39,7 +41,7 @@ func ParseHelmChartsConfigFile(configFile string) (HelmChartsConfig, error) {
 	)
 	dec.KnownFields(true)
 	yamlParseErr = dec.Decode(&config)
-	if yamlParseErr == nil {
+	if yamlParseErr != nil {
 		return HelmChartsConfig{}, fmt.Errorf("failed to parse config file: %w", yamlParseErr)
 	}
 
