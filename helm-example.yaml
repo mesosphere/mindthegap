@@ -1,0 +1,12 @@
+# Copyright 2021 D2iQ, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+repositories:
+  jetstack:
+    repoURL: https://charts.jetstack.io
+    charts:
+      cert-manager:
+      - v1.7.0
+      - v1.6.1
+chartURLs:
+  - ../kommander/.helm-release-packages/kommander-v0.0.0-dev-20220203011855-1d3b9a93.tgz

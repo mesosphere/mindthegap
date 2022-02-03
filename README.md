@@ -13,12 +13,14 @@ image registry.
 
 ## Usage
 
-### Creating an image bundle
+### Image bundles
+
+#### Creating an image bundle
 
 ```shell
 mindthegap create image-bundle --images-file <path/to/images.yaml> \
   --platform <platform> [--platform <platform> ...] \
-  --output-file <path/to/output.tar>
+  [--output-file <path/to/output.tar.gz>]
 ```
 
 See the [example images.yaml](images-example.yaml) for the structure of the
@@ -48,7 +50,7 @@ The output file will be a tarball that can be seeded into a registry,
 or that can be untarred and used as the storage directory for a Docker registry
 served via `registry:2`.
 
-### Pushing an image bundle
+#### Pushing an image bundle
 
 ```shell
 mindthegap push image-bundle --image-bundle <path/to/images.tar> \
@@ -58,7 +60,7 @@ mindthegap push image-bundle --image-bundle <path/to/images.tar> \
 
 All images in the image bundle tar file will be pushed to the target docker registry.
 
-### Serving an image bundle
+#### Serving an image bundle
 
 ```shell
 mindthegap serve image-bundle --image-bundle <path/to/images.tar> \
@@ -70,7 +72,7 @@ Start a Docker registry serving the contents of the image bundle. Note that he D
 be in read-only mode to reflect the source of the data being a static tarball so pushes to this
 registry will fail.
 
-### Importing an image bundle into containerd
+#### Importing an image bundle into containerd
 
 ```shell
 mindthegap import image-bundle --image-bundle <path/to/images.tar> \
@@ -80,6 +82,22 @@ mindthegap import image-bundle --image-bundle <path/to/images.tar> \
 Import the images from the image bundle into containerd in the specified namespace. If
 `--containerd-namespace` is not specified, images will be imported into `k8s.io` namespace. This
 command requires `ctr` to be in the `PATH`.
+
+### Helm chart bundles
+
+#### Creating a helm chart bundle
+
+```shell
+mindthegap create helm-bundle --helm-charts-file <path/to/helm-charts.yaml> \
+  [--output-file <path/to/output.tar.gz>]
+```
+
+See the [example helm-charts.yaml](helm-example.yaml) for the structure of the
+Helm charts config file.
+
+The output file will be a tarball that can be served over HTTP, the Helm charts
+can be pushed to Chartmuseum or to an OCI registry, or it can be untarred and
+the charts used locally via Helm.
 
 ## How does it work?
 

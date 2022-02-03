@@ -104,7 +104,7 @@ func NewRunner() (*Runner, CleanupFunc) {
 }
 
 func (r *Runner) mustUnpack() {
-	tempDir, err := os.MkdirTemp("", "skopeo-*")
+	tempDir, err := os.MkdirTemp("", ".skopeo-*")
 	if err != nil {
 		panic(err)
 	}
