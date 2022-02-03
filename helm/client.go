@@ -44,13 +44,13 @@ func (c *Client) doNotUntarOpt() action.PullOpt {
 	}
 }
 
-func (c *Client) destDir(outputDir string) action.PullOpt {
+func (c *Client) destDirOpt(outputDir string) action.PullOpt {
 	return func(p *action.Pull) {
 		p.DestDir = outputDir
 	}
 }
 
-func (c *Client) tempRepositoryCache() action.PullOpt {
+func (c *Client) tempRepositoryCacheOpt() action.PullOpt {
 	return func(p *action.Pull) {
 		if p.Settings == nil {
 			p.Settings = &cli.EnvSettings{}
@@ -59,7 +59,7 @@ func (c *Client) tempRepositoryCache() action.PullOpt {
 	}
 }
 
-func (c *Client) repoURL(repoURL string) action.PullOpt {
+func (c *Client) repoURLOpt(repoURL string) action.PullOpt {
 	return func(p *action.Pull) {
 		p.RepoURL = repoURL
 	}
@@ -72,9 +72,9 @@ func (c *Client) GetChartFromRepo(
 	pull := action.NewPullWithOpts(
 		action.WithConfig(&action.Configuration{Log: c.out.V(4).Infof}),
 		c.doNotUntarOpt(),
-		c.destDir(outputDir),
-		c.tempRepositoryCache(),
-		c.repoURL(repoURL),
+		c.destDirOpt(outputDir),
+		c.tempRepositoryCacheOpt(),
+		c.repoURLOpt(repoURL),
 	)
 	for _, v := range chartVersions {
 		pull.Version = v
