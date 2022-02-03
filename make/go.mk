@@ -37,17 +37,16 @@ endef
 test: ## Runs go tests for all modules in repository
 test: install-tool.go.gotestsum
 ifneq ($(wildcard $(REPO_ROOT)/go.mod),)
-	$(info $(M) running tests$(if $(GOTEST_RUN), matching "$(GOTEST_RUN)") for root module)
-	$(call go_test)
+test: test.root
 endif
 ifneq ($(words $(GO_SUBMODULES_NO_TOOLS)),0)
-	$(MAKE) $(addprefix test.,$(GO_SUBMODULES_NO_TOOLS:/go.mod=))
+test: $(addprefix test.,$(GO_SUBMODULES_NO_TOOLS:/go.mod=))
 endif
 
 .PHONY: test.%
 test.%: ## Runs go tests for a specific module
-test.%: ; $(info $(M) running tests$(if $(GOTEST_RUN), matching "$(GOTEST_RUN)") for module $*)
-	cd $* && $(call go_test)
+test.%: ; $(info $(M) running tests$(if $(GOTEST_RUN), matching "$(GOTEST_RUN)") for $* module)
+	$(if $(filter-out root,$*),cd $* && )$(call go_test)
 
 .PHONY: integration-test
 integration-test: ## Runs integration tests for all modules in repository
@@ -60,17 +59,16 @@ integration-test.%: ## Runs integration tests for a specific module
 .PHONY: bench
 bench: ## Runs go benchmarks for all modules in repository
 ifneq ($(wildcard $(REPO_ROOT)/go.mod),)
-	$(info $(M) running benchmarks$(if $(GOTEST_RUN), matching "$(GOTEST_RUN)") for root module)
-	go test $(if $(GOTEST_RUN),-run "$(GOTEST_RUN)") -race -cover -bench=. -v ./...
+bench: bench.root
 endif
 ifneq ($(words $(GO_SUBMODULES_NO_TOOLS)),0)
-	$(MAKE) $(addprefix bench.,$(GO_SUBMODULES_NO_TOOLS:/go.mod=))
+bench: $(addprefix bench.,$(GO_SUBMODULES_NO_TOOLS:/go.mod=))
 endif
 
 .PHONY: bench.%
 bench.%: ## Runs go benchmarks for a specific module
-bench.%: ; $(info $(M) running benchmarks$(if $(GOTEST_RUN), matching "$(GOTEST_RUN)") for module $*)
-	cd $* && go test $(if $(GOTEST_RUN),-run "$(GOTEST_RUN)") -race -cover -v ./...
+bench.%: ; $(info $(M) running benchmarks$(if $(GOTEST_RUN), matching "$(GOTEST_RUN)") for $* module)
+	$(if $(filter-out root,$*),cd $* && )go test $(if $(GOTEST_RUN),-run "$(GOTEST_RUN)") -race -cover -v ./...
 
 GOLANGCI_CONFIG_FILE ?= $(wildcard $(REPO_ROOT)/.golangci.y*ml)
 
@@ -92,36 +90,33 @@ lint.%: install-tool.go.golangci-lint install-tool.go.golines; $(info $(M) linti
 	$(if $(filter-out root,$*),cd $* && )go fix ./...
 
 .PHONY: mod-tidy
-mod-tidy:  ## Run go mod tidy for all modules
+mod-tidy: ## Run go mod tidy for all modules
 ifneq ($(wildcard $(REPO_ROOT)/go.mod),)
-	$(info $(M) running go mod tidy for root module)
-	go mod tidy -v -compat=1.17
-	go mod verify
+mod-tidy: mod-tidy.root
 endif
 ifneq ($(words $(ALL_GO_SUBMODULES)),0)
-	$(MAKE) $(addprefix mod-tidy.,$(ALL_GO_SUBMODULES:/go.mod=))
+mod-tidy: $(addprefix mod-tidy.,$(ALL_GO_SUBMODULES:/go.mod=))
 endif
 
 .PHONY: mod-tidy.%
 mod-tidy.%: ## Runs go mod tidy for a specific module
-mod-tidy.%: ; $(info $(M) running go mod tidy for module $*)
-	cd $* && go mod tidy -v -compat=1.17
-	cd $* && go mod verify
+mod-tidy.%: install-tool.golang; $(info $(M) running go mod tidy for $* module)
+	$(if $(filter-out root,$*),cd $* && )go mod tidy -v -compat=1.17
+	$(if $(filter-out root,$*),cd $* && )go mod verify
 
 .PHONY: go-clean
 go-clean: ## Cleans go build, test and modules caches for all modules
 ifneq ($(wildcard $(REPO_ROOT)/go.mod),)
-	$(info $(M) running go clean for root module)
-	go clean -r -i -cache -testcache -modcache
+go-clean: go-clean.root
 endif
 ifneq ($(words $(ALL_GO_SUBMODULES)),0)
-	$(MAKE) $(addprefix go-clean.,$(ALL_GO_SUBMODULES:/go.mod=))
+go-clean: $(addprefix go-clean.,$(ALL_GO_SUBMODULES:/go.mod=))
 endif
 
 .PHONY: go-clean.%
 go-clean.%: ## Cleans go build, test and modules caches for a specific module
-go-clean.%: ; $(info $(M) running go clean for module $*)
-	cd $* && go clean -r -i -cache -testcache -modcache
+go-clean.%: install-tool.golang; $(info $(M) running go clean for $* module)
+	$(if $(filter-out root,$*),cd $* && )go clean -r -i -cache -testcache -modcache
 
 .PHONY: go-generate
 go-generate: ## Runs go generate

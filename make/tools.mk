@@ -18,7 +18,7 @@ endef
 
 .PHONY:
 install-tool.go.%: ## Installs go tools
-install-tool.go.%: ; $(info $(M) installing go tool $*)
+install-tool.go.%: install-tool.golang; $(info $(M) installing go tool $*)
 	$(call install_go_tool,$*)
 endif
 
