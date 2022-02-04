@@ -26,7 +26,8 @@ func NewCommand(out output.Output) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use: "image-bundle",
+		Use:   "image-bundle",
+		Short: "Import images from an image bundle into Containerd",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cleaner := cleanup.NewCleaner()
 			defer cleaner.Cleanup()
