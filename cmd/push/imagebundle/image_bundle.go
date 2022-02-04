@@ -27,7 +27,8 @@ func NewCommand(out output.Output) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use: "image-bundle",
+		Use:   "image-bundle",
+		Short: "Push images from an image bundle into an existing image registry",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cleaner := cleanup.NewCleaner()
 			defer cleaner.Cleanup()

@@ -12,7 +12,8 @@ import (
 
 func NewCommand(out output.Output) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "import",
+		Use:   "import",
+		Short: "Import images from an image bundle into Containerd",
 	}
 
 	cmd.AddCommand(imagebundle.NewCommand(out))

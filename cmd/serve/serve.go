@@ -13,7 +13,8 @@ import (
 
 func NewCommand(out output.Output) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "serve",
+		Use:   "serve",
+		Short: "Serve an image registry or a helm chart repository",
 	}
 
 	cmd.AddCommand(imagebundle.NewCommand(out))

@@ -12,7 +12,8 @@ import (
 
 func NewCommand(out output.Output) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "push",
+		Use:   "push",
+		Short: "Push images from an image bundle into an existing image registry",
 	}
 
 	cmd.AddCommand(imagebundle.NewCommand(out))
