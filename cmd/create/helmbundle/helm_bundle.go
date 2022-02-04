@@ -27,7 +27,8 @@ func NewCommand(out output.Output) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use: "helm-bundle",
+		Use:   "helm-bundle",
+		Short: "Create a tar.gz helm bundle",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !overwrite {
 				out.StartOperation("Checking if output file already exists")

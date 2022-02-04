@@ -30,7 +30,8 @@ func NewCommand(out output.Output) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use: "image-bundle",
+		Use:   "image-bundle",
+		Short: "Create a tar.gz image bundle",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !overwrite {
 				out.StartOperation("Checking if output file already exists")

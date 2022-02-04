@@ -29,7 +29,8 @@ func NewCommand(out output.Output) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use: "helm-bundle",
+		Use:   "helm-bundle",
+		Short: "Serve a helm chart repository",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cleaner := cleanup.NewCleaner()
 			defer cleaner.Cleanup()
