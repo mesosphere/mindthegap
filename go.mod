@@ -6,7 +6,7 @@ module github.com/mesosphere/mindthegap
 go 1.17
 
 require (
-	github.com/containers/image/v5 v5.19.0
+	github.com/containers/image/v5 v5.19.1
 	github.com/containers/skopeo v1.5.3-0.20220121202935-4b79ed7d7d46
 	github.com/distribution/distribution/v3 v3.0.0-20220128175647-b60926597a1b
 	github.com/docker/cli v20.10.12+incompatible
@@ -96,7 +96,7 @@ require (
 	github.com/jmoiron/sqlx v1.3.4 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.14.1 // indirect
+	github.com/klauspost/compress v1.14.2 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
