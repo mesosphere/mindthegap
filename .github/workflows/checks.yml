@@ -15,6 +15,11 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
+        with:
+          lfs: true
+
+      - name: Checkout LFS objects
+        run: git lfs checkout
 
       - name: Install asdf and tools
         uses: asdf-vm/actions/install@v1
