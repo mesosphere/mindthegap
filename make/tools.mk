@@ -24,14 +24,16 @@ endif
 
 ifndef TEAMCITY_VERSION
 ifeq ($(shell command -v asdf),)
-  $(error "This repo requires asdf - see https://asdf-vm.com/#/core-manage-asdf?id=install for instructions to install")
+  $(error "This repo requires asdf - see https://asdf-vm.com/guide/getting-started.html for instructions to install")
 endif
 endif
 
 define install_tool
 	$(if $(1), \
-		asdf plugin list | grep -E '^$(1)$$' &>/dev/null || asdf plugin add $(1), \
-		grep -Eo '^[^#]\S+' $(REPO_ROOT)/.tool-versions | xargs -I{} bash -ec 'asdf plugin list | grep -E '^{}$$' &>/dev/null || asdf plugin add {}' \
+		(asdf plugin list 2>/dev/null | grep -E '^$(1)$$' &>/dev/null) || asdf plugin add $(1), \
+		grep -Eo '^[^#]\S+' $(REPO_ROOT)/.tool-versions | \
+			xargs -I{} bash -ec '(asdf plugin list 2>/dev/null | grep -E "^{}$$" &>/dev/null) || \
+														asdf plugin add {}' \
 	)
 	asdf install $1
 endef
@@ -62,7 +64,9 @@ endif
 upgrade-tools: export OAUTH_TOKEN=$(GITHUB_API_TOKEN)
 upgrade-tools: ## Upgrades all tools to latest available versions
 upgrade-tools: upgrade-go-tools; $(info $(M) upgrading all tools to latest available versions)
-	grep -Eo '^[^#]\S+' $(REPO_ROOT)/.tool-versions | xargs -I{} bash -ec 'asdf plugin list | grep -E '^{}$$' &>/dev/null || asdf plugin add {}'
+	grep -Eo '^[^#]\S+' $(REPO_ROOT)/.tool-versions | \
+						xargs -I{} bash -ec '(asdf plugin list 2>/dev/null | grep -E "^{}$$" &>/dev/null) || \
+																 asdf plugin add {}'
 	grep -v '# FREEZE' $(REPO_ROOT)/.tool-versions | \
 		grep -Eo '^[^#]\S+' | \
 		xargs -I{} bash -ec '\
