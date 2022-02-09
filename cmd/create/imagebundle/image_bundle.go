@@ -134,15 +134,26 @@ func NewCommand(out output.Output) *cobra.Command {
 							),
 						)
 
+						srcSkopeoScheme := "docker://"
 						srcImageManifestList, skopeoStdout, skopeoStderr, err := skopeoRunner.InspectManifest(
-							context.TODO(),
-							fmt.Sprintf("docker://%s", srcImageName),
+							context.Background(),
+							fmt.Sprintf("%s%s", srcSkopeoScheme, srcImageName),
 						)
 						if err != nil {
-							out.EndOperation(false)
-							out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
-							out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
-							return err
+							srcSkopeoScheme = "docker-daemon:"
+							srcDaemonImageManifestList, skopeoDaemonStdout, skopeoDaemonStderr, err := skopeoRunner.InspectManifest(
+								context.Background(),
+								fmt.Sprintf("%s%s", srcSkopeoScheme, srcImageName),
+							)
+							if err != nil {
+								out.EndOperation(false)
+								out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
+								out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
+								return err
+							}
+							srcImageManifestList = srcDaemonImageManifestList
+							skopeoStdout = append(skopeoStdout, skopeoDaemonStdout...)
+							skopeoStderr = append(skopeoStderr, skopeoDaemonStderr...)
 						}
 						out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
 						out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
@@ -179,13 +190,19 @@ func NewCommand(out output.Output) *cobra.Command {
 								}
 							}
 
+							srcImageToCopy := fmt.Sprintf("%s/%s@%s", registryName,
+								imageName,
+								platformManifest.Digest)
+							if srcSkopeoScheme != "docker://" {
+								srcImageToCopy = srcImageName
+							}
+
 							skopeoStdout, skopeoStderr, err := skopeoRunner.Copy(
 								context.TODO(),
 								fmt.Sprintf(
-									"docker://%s/%s@%s",
-									registryName,
-									imageName,
-									platformManifest.Digest,
+									"%s%s",
+									srcSkopeoScheme,
+									srcImageToCopy,
 								),
 								fmt.Sprintf(
 									"docker://%s/%s@%s",
