@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	_ "embed"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -299,16 +300,35 @@ func (r *Runner) AttemptToLoginToRegistry(
 				err,
 			)
 		}
-		if authConfig.Username != "" && authConfig.Password != "" {
+		username := authConfig.Username
+		password := authConfig.Password
+
+		if authConfig.Auth != "" {
+			c, err := base64.StdEncoding.DecodeString(authConfig.Auth)
+			if err != nil {
+				return getLoginStdout, getLoginStderr, fmt.Errorf(
+					"failed to read credentials from Docker config file: %w",
+					err,
+				)
+			}
+			cs := string(c)
+			s := strings.IndexByte(cs, ':')
+			if s >= 0 {
+				username = cs[:s]
+				password = cs[s+1:]
+			}
+		}
+
+		if username != "" && password != "" {
 			loginStdout, loginStderr, err := r.run(
 				ctx,
 				[]string{
 					"login",
 					registryName,
 					"--username",
-					authConfig.Username,
+					username,
 					"--password",
-					authConfig.Password,
+					password,
 				},
 				skopeoOpts...,
 			)
