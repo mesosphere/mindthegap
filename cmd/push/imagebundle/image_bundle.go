@@ -24,6 +24,8 @@ func NewCommand(out output.Output) *cobra.Command {
 		imageBundleFile           string
 		destRegistry              string
 		destRegistrySkipTLSVerify bool
+		destRegistryUsername      string
+		destRegistryPassword      string
 	)
 
 	cmd := &cobra.Command{
@@ -78,18 +80,31 @@ func NewCommand(out output.Output) *cobra.Command {
 			skopeoRunner, skopeoCleanup := skopeo.NewRunner()
 			cleaner.AddCleanupFn(func() { _ = skopeoCleanup() })
 
-			skopeoStdout, skopeoStderr, err := skopeoRunner.AttemptToLoginToRegistry(
-				context.TODO(),
-				destRegistry,
-			)
-			if err != nil {
-				out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
-				out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
-				return fmt.Errorf("error logging in to target registry: %w", err)
+			var skopeoOpts []skopeo.SkopeoOption
+			if destRegistryUsername != "" && destRegistryPassword != "" {
+				skopeoOpts = append(
+					skopeoOpts,
+					skopeo.DestCredentials(
+						destRegistryUsername,
+						destRegistryPassword,
+					),
+				)
+			} else {
+				skopeoStdout, skopeoStderr, err := skopeoRunner.AttemptToLoginToRegistry(
+					context.TODO(),
+					destRegistry,
+				)
+				if err != nil {
+					out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
+					out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
+					return fmt.Errorf("error logging in to target registry: %w", err)
+				}
+				out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
+				out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
 			}
 
 			for _, registryConfig := range cfg {
-				skopeoOpts := []skopeo.SkopeoOption{skopeo.DisableSrcTLSVerify()}
+				skopeoOpts = append(skopeoOpts, skopeo.DisableSrcTLSVerify())
 				if destRegistrySkipTLSVerify {
 					skopeoOpts = append(skopeoOpts, skopeo.DisableDestTLSVerify())
 				}
@@ -132,6 +147,10 @@ func NewCommand(out output.Output) *cobra.Command {
 	_ = cmd.MarkFlagRequired("to-registry")
 	cmd.Flags().BoolVar(&destRegistrySkipTLSVerify, "to-registry-insecure-skip-tls-verify", false,
 		"Skip TLS verification of registry to push images to (use for http registries)")
+	cmd.Flags().StringVar(&destRegistryUsername, "to-registry-username", "",
+		"Username to use to log in to destination registry")
+	cmd.Flags().StringVar(&destRegistryPassword, "to-registry-password", "",
+		"Password to use to log in to destination registry")
 
 	return cmd
 }
