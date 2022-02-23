@@ -125,6 +125,8 @@ func (r *Runner) Copy(
 	src, dest string,
 	opts ...SkopeoOption,
 ) (stdout, stderr []byte, err error) {
+	r.unpacked.Do(r.mustUnpack)
+
 	copyArgs := []string{
 		"copy",
 		"--policy", r.unpackedSkopeoPolicyPath,
@@ -251,6 +253,8 @@ func (r *Runner) run(
 	if klog.V(4).Enabled() {
 		skopeoArgs = append(skopeoArgs, Debug()())
 	}
+
+	klog.V(4).Info("Running skopeo", append([]string{r.unpackedSkopeoPath}, skopeoArgs...))
 
 	//nolint:gosec // Args are valid
 	cmd := exec.CommandContext(ctx, r.unpackedSkopeoPath, skopeoArgs...)
