@@ -56,7 +56,10 @@ linters-settings:
   errchkjson:
     check-error-free-encoding: true
   gci:
-    local-prefixes: github.com/mesosphere/mindthegap
+    sections:
+      - standard
+      - default
+      - prefix(github.com/mesosphere/mindthegap)
   gocritic:
     enabled-tags:
       - diagnostic
