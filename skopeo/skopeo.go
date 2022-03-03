@@ -120,6 +120,14 @@ func (r *Runner) mustUnpack() {
 	}
 }
 
+// Manifest defines a schema2 manifest.
+type Manifest struct {
+	schema2.Manifest
+
+	// Annotations holds image manifest annotations.
+	Annotations map[string]string `json:"annotations"`
+}
+
 func (r *Runner) Copy(
 	ctx context.Context,
 	src, dest string,
@@ -162,7 +170,7 @@ func (r *Runner) InspectManifest(
 		return ml, rawStdout, rawStderr, nil
 	}
 
-	var m schema2.Manifest
+	var m Manifest
 	dec = json.NewDecoder(bytes.NewReader(rawStdout))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&m); err != nil {
