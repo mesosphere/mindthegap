@@ -7,6 +7,13 @@
 
 * Improved log output for manifest errors ([f3d1886](https://github.com/mesosphere/mindthegap/commit/f3d1886db7257f644c21790bd9002e79b9f685a7))
 
+### [0.6.4](https://github.com/mesosphere/mindthegap/compare/v0.6.3...v0.6.4) (2022-03-03)
+
+
+### Bug Fixes
+
+* Improved log output for manifest errors ([f3d1886](https://github.com/mesosphere/mindthegap/commit/f3d1886db7257f644c21790bd9002e79b9f685a7))
+
 ### [0.6.3](https://github.com/mesosphere/mindthegap/compare/v0.6.0...v0.6.3) (2022-03-03)
 
 
