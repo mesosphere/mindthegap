@@ -18,6 +18,7 @@ jobs:
           release-type: go
           package-name: mindthegap
           pull-request-title-pattern: "build${scope}: release${component} ${version}"
+          default-branch: release/v0.6
           # Re-enable once https://github.com/google-github-actions/release-please-action/issues/427
           # is fixed.
           # changelog-type: github
