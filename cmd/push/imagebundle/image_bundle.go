@@ -103,16 +103,25 @@ func NewCommand(out output.Output) *cobra.Command {
 				out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
 			}
 
-			for _, registryConfig := range cfg {
+			// Sort registries for deterministic ordering.
+			regNames := cfg.SortedRegistryNames()
+
+			for _, registryName := range regNames {
+				registryConfig := cfg[registryName]
 				skopeoOpts = append(skopeoOpts, skopeo.DisableSrcTLSVerify())
 				if destRegistrySkipTLSVerify {
 					skopeoOpts = append(skopeoOpts, skopeo.DisableDestTLSVerify())
 				}
-				for imageName, imageTags := range registryConfig.Images {
+
+				// Sort images for deterministic ordering.
+				imageNames := registryConfig.SortedImageNames()
+
+				for _, imageName := range imageNames {
+					imageTags := registryConfig.Images[imageName]
 					for _, imageTag := range imageTags {
 						out.StartOperation(
-							fmt.Sprintf("Copying %s/%s:%s to %s/%s:%s",
-								reg.Address(), imageName, imageTag,
+							fmt.Sprintf("Copying %s/%s:%s (from bundle) to %s/%s:%s",
+								registryName, imageName, imageTag,
 								destRegistry, imageName, imageTag,
 							),
 						)

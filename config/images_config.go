@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/containers/image/v5/types"
@@ -26,8 +27,26 @@ type RegistrySyncConfig struct {
 	Credentials *types.DockerAuthConfig `yaml:"credentials,omitempty"`
 }
 
+func (rsc RegistrySyncConfig) SortedImageNames() []string {
+	imageNames := make([]string, 0, len(rsc.Images))
+	for regName := range rsc.Images {
+		imageNames = append(imageNames, regName)
+	}
+	sort.Strings(imageNames)
+	return imageNames
+}
+
 // ImagesConfig contains all registries information read from the source YAML file.
 type ImagesConfig map[string]RegistrySyncConfig
+
+func (ic ImagesConfig) SortedRegistryNames() []string {
+	regNames := make([]string, 0, len(ic))
+	for regName := range ic {
+		regNames = append(regNames, regName)
+	}
+	sort.Strings(regNames)
+	return regNames
+}
 
 func ParseImagesConfigFile(configFile string) (ImagesConfig, error) {
 	f, yamlParseErr := os.Open(configFile)
