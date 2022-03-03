@@ -16,7 +16,7 @@ jobs:
         id: release-please
         with:
           release-type: go
-          package-name: containerd-auto-configurer
+          package-name: mindthegap
           pull-request-title-pattern: "build${scope}: release${component} ${version}"
           # Re-enable once https://github.com/google-github-actions/release-please-action/issues/427
           # is fixed.
