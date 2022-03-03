@@ -148,11 +148,15 @@ func NewCommand(out output.Output) *cobra.Command {
 							fmt.Sprintf("%s%s", srcSkopeoScheme, srcImageName),
 						)
 						if err != nil {
+							out.V(4).
+								Infof("error reading manifest from registry (%v), trying local docker daemon", err)
 							srcSkopeoScheme = "docker-daemon:"
 							srcDaemonImageManifestList, skopeoDaemonStdout, skopeoDaemonStderr, err := skopeoRunner.InspectManifest(
 								context.Background(),
 								fmt.Sprintf("%s%s", srcSkopeoScheme, srcImageName),
 							)
+							skopeoStdout = append(skopeoStdout, skopeoDaemonStdout...)
+							skopeoStderr = append(skopeoStderr, skopeoDaemonStderr...)
 							if err != nil {
 								out.EndOperation(false)
 								out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
@@ -160,8 +164,6 @@ func NewCommand(out output.Output) *cobra.Command {
 								return err
 							}
 							srcImageManifestList = srcDaemonImageManifestList
-							skopeoStdout = append(skopeoStdout, skopeoDaemonStdout...)
-							skopeoStderr = append(skopeoStderr, skopeoDaemonStderr...)
 						}
 						out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
 						out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
