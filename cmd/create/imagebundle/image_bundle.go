@@ -103,7 +103,11 @@ func NewCommand(out output.Output) *cobra.Command {
 			skopeoRunner, skopeoCleanup := skopeo.NewRunner()
 			cleaner.AddCleanupFn(func() { _ = skopeoCleanup() })
 
-			for registryName, registryConfig := range cfg {
+			// Sort registries for deterministic ordering.
+			regNames := cfg.SortedRegistryNames()
+
+			for _, registryName := range regNames {
+				registryConfig := cfg[registryName]
 				var skopeoOpts []skopeo.SkopeoOption
 				if registryConfig.TLSVerify != nil && !*registryConfig.TLSVerify {
 					skopeoOpts = append(skopeoOpts, skopeo.DisableSrcTLSVerify())
@@ -125,7 +129,11 @@ func NewCommand(out output.Output) *cobra.Command {
 					}
 				}
 
-				for imageName, imageTags := range registryConfig.Images {
+				// Sort images for deterministic ordering.
+				imageNames := registryConfig.SortedImageNames()
+
+				for _, imageName := range imageNames {
+					imageTags := registryConfig.Images[imageName]
 					for _, imageTag := range imageTags {
 						srcImageName := fmt.Sprintf("%s/%s:%s", registryName, imageName, imageTag)
 						out.StartOperation(
