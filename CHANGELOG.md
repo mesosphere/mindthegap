@@ -7,6 +7,13 @@
 
 * Handle annotated image manifests ([94589c9](https://github.com/mesosphere/mindthegap/commit/94589c9cb553330ab6166e6f66a212d18332423a))
 
+### [0.6.5](https://github.com/mesosphere/mindthegap/compare/v0.6.4...v0.6.5) (2022-03-03)
+
+
+### Bug Fixes
+
+* Handle annotated image manifests ([94589c9](https://github.com/mesosphere/mindthegap/commit/94589c9cb553330ab6166e6f66a212d18332423a))
+
 ### [0.6.4](https://github.com/mesosphere/mindthegap/compare/v0.6.3...v0.6.4) (2022-03-03)
 
 
