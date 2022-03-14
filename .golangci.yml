@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 run:
-  timeout: 2m
+  timeout: 3m
 
 linters:
   disable-all: true
@@ -56,7 +56,10 @@ linters-settings:
   errchkjson:
     check-error-free-encoding: true
   gci:
-    local-prefixes: github.com/mesosphere/mindthegap
+    sections:
+      - Standard
+      - Default
+      - Prefix(github.com/mesosphere/mindthegap)
   gocritic:
     enabled-tags:
       - diagnostic
