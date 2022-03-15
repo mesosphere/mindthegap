@@ -11,6 +11,8 @@ import (
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 	"github.com/spf13/cobra"
+	"helm.sh/helm/v3/pkg/action"
+	"k8s.io/utils/pointer"
 
 	"github.com/mesosphere/mindthegap/archive"
 	"github.com/mesosphere/mindthegap/cleanup"
@@ -115,9 +117,21 @@ func NewCommand(out output.Output) *cobra.Command {
 							repoConfig.RepoURL,
 						),
 					)
-					if err := helmClient.GetChartFromRepo(tempDir, repoConfig.RepoURL, chartName, chartVersions...); err != nil {
-						out.EndOperation(false)
-						return fmt.Errorf("failed to create Helm chart bundle: %v", err)
+					var opts []action.PullOpt
+					if repoConfig.Username != "" {
+						opts = append(
+							opts,
+							helm.UsernamePasswordOpt(repoConfig.Username, repoConfig.Password),
+						)
+					}
+					if !pointer.BoolDeref(repoConfig.TLSVerify, true) {
+						opts = append(opts, helm.InsecureSkipTLSverifyOpt())
+					}
+					for _, chartVersion := range chartVersions {
+						if err := helmClient.GetChartFromRepo(tempDir, repoConfig.RepoURL, chartName, chartVersion, opts...); err != nil {
+							out.EndOperation(false)
+							return fmt.Errorf("failed to create Helm chart bundle: %v", err)
+						}
 					}
 					out.EndOperation(true)
 				}

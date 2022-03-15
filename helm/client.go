@@ -38,60 +38,86 @@ func NewClient(out output.Output) (*Client, CleanupFunc) {
 	}
 }
 
-func (c *Client) doNotUntarOpt() action.PullOpt {
+func DoNotUntarOpt() action.PullOpt {
 	return func(p *action.Pull) {
 		p.Untar = false
 	}
 }
 
-func (c *Client) destDirOpt(outputDir string) action.PullOpt {
+func DestDirOpt(outputDir string) action.PullOpt {
 	return func(p *action.Pull) {
 		p.DestDir = outputDir
 	}
 }
 
-func (c *Client) tempRepositoryCacheOpt() action.PullOpt {
+func TempRepositoryCacheOpt(tempDir string) action.PullOpt {
 	return func(p *action.Pull) {
 		if p.Settings == nil {
 			p.Settings = &cli.EnvSettings{}
 		}
-		p.Settings.RepositoryCache = c.tempDir
+		p.Settings.RepositoryCache = tempDir
 	}
 }
 
-func (c *Client) repoURLOpt(repoURL string) action.PullOpt {
+func RepoURLOpt(repoURL string) action.PullOpt {
 	return func(p *action.Pull) {
 		p.RepoURL = repoURL
 	}
 }
 
+func ChartVersionOpt(chartVersion string) action.PullOpt {
+	return func(p *action.Pull) {
+		p.Version = chartVersion
+	}
+}
+
+func UsernamePasswordOpt(username, password string) action.PullOpt {
+	return func(p *action.Pull) {
+		p.Username = username
+		p.Password = password
+	}
+}
+
+func InsecureSkipTLSverifyOpt() action.PullOpt {
+	return func(p *action.Pull) {
+		p.InsecureSkipTLSverify = true
+	}
+}
+
+func CAFileOpt(caFile string) action.PullOpt {
+	return func(p *action.Pull) {
+		p.CaFile = caFile
+	}
+}
+
 func (c *Client) GetChartFromRepo(
-	outputDir, repoURL, chartName string,
-	chartVersions ...string,
+	outputDir, repoURL, chartName, chartVersion string,
+	extraPullOpts ...action.PullOpt,
 ) error {
 	pull := action.NewPullWithOpts(
-		action.WithConfig(&action.Configuration{Log: c.out.V(4).Infof}),
-		c.doNotUntarOpt(),
-		c.destDirOpt(outputDir),
-		c.tempRepositoryCacheOpt(),
-		c.repoURLOpt(repoURL),
+		append(
+			extraPullOpts,
+			action.WithConfig(&action.Configuration{Log: c.out.V(4).Infof}),
+			DoNotUntarOpt(),
+			DestDirOpt(outputDir),
+			TempRepositoryCacheOpt(c.tempDir),
+			RepoURLOpt(repoURL),
+			ChartVersionOpt(chartVersion),
+		)...,
 	)
-	for _, v := range chartVersions {
-		pull.Version = v
-		helmOutput, err := pull.Run(chartName)
-		if err != nil {
-			return fmt.Errorf(
-				"failed to fetch chart %s:%s from %s: %w, output:\n\n%s",
-				chartName,
-				chartVersions,
-				repoURL,
-				err,
-				helmOutput,
-			)
-		}
-		if helmOutput != "" {
-			c.out.V(4).Info(helmOutput)
-		}
+	helmOutput, err := pull.Run(chartName)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to fetch chart %s:%s from %s: %w, output:\n\n%s",
+			chartName,
+			chartVersion,
+			repoURL,
+			err,
+			helmOutput,
+		)
+	}
+	if helmOutput != "" {
+		c.out.V(4).Info(helmOutput)
 	}
 
 	return nil

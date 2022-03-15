@@ -22,7 +22,7 @@ type RegistrySyncConfig struct {
 	// Images map images name to slices with the images' references (tags, digests)
 	Images map[string][]string
 	// TLS verification mode (enabled by default)
-	TLSVerify *bool `yaml:"tls-verify,omitempty"`
+	TLSVerify *bool `yaml:"tlsVerify,omitempty"`
 	// Username and password used to authenticate with the registry
 	Credentials *types.DockerAuthConfig `yaml:"credentials,omitempty"`
 }

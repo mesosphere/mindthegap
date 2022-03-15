@@ -1,0 +1,33 @@
+# Copyright 2021 D2iQ, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+repositories:
+  test.repository.io:
+    charts:
+      test-chart:
+        - v1.2.3
+        - v2.4.6
+        - v3.6.9
+      test-chart2:
+        - v3.6.9
+        - v4.8.12
+        - v5.10.15
+      test-chart3:
+        - v6.12.18
+        - v7.14.21
+        - v8.16.24
+  test.repository2.io:
+    charts:
+      test-chart:
+        - v1.2.31
+        - v2.4.61
+        - v3.6.91
+      test-chart5:
+        - v3.6.92
+        - v4.8.122
+        - v5.10.152
+      test-chart6:
+        - v63.126.189
+        - v73.146.219
+        - v8.16.243

@@ -2,7 +2,3 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ---
-test.registry.io:
-  tlsVerify: false
-test.registry2.io:
-  tlsVerify: true

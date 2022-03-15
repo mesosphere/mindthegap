@@ -3,4 +3,4 @@
 
 ---
 test.registry.io:
-  tls-verify: false
+  tlsVerify: false
