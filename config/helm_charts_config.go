@@ -15,6 +15,12 @@ import (
 type HelmRepositorySyncConfig struct {
 	// RepoURL is the URL for the repository.
 	RepoURL string `yaml:"repoURL"`
+	// Username holds the username for the repository.
+	Username string `yaml:"username,omitempty"`
+	// Password holds the password for the repository.
+	Password string `yaml:"password,omitempty"`
+	// TLS verification mode (enabled by default)
+	TLSVerify *bool `yaml:"tlsVerify,omitempty"`
 	// Charts map charts name to slices with the chart versions.
 	Charts map[string][]string `yaml:"charts,omitempty"`
 }
