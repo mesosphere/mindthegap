@@ -4,7 +4,9 @@
 GORELEASER_PARALLELISM ?= $(shell nproc --ignore=1)
 GORELEASER_DEBUG ?= false
 
+ifndef GORELEASER_CURRENT_TAG
 export GORELEASER_CURRENT_TAG=$(GIT_TAG)
+endif
 
 .PHONY: build-snapshot
 build-snapshot: ## Builds a snapshot with goreleaser
@@ -23,7 +25,8 @@ release: dockerauth install-tool.goreleaser ; $(info $(M) building release $*)
 	goreleaser --debug=$(GORELEASER_DEBUG) \
 		release \
 		--rm-dist \
-		--parallelism=$(GORELEASER_PARALLELISM)
+		--parallelism=$(GORELEASER_PARALLELISM) \
+		$(GORELEASER_FLAGS)
 
 .PHONY: release-snapshot
 release-snapshot: ## Builds a snapshot release with goreleaser

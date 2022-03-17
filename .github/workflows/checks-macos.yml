@@ -1,0 +1,52 @@
+# Copyright 2021 D2iQ, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+name: build-on-macos
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-run:
+    runs-on: macos-latest
+    steps:
+      - uses: ConorMacBride/install-package@v1
+        with:
+          brew: bash coreutils findutils
+
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+
+      - name: Checkout LFS objects
+        run: git lfs checkout
+
+      - name: Install asdf and tools
+        uses: asdf-vm/actions/install@v1
+
+      - name: Create dummy tag
+        run: |
+          git tag v0.0.0-dummy
+
+      - name: Create empty changelog
+        run: |
+          echo > /tmp/changelog
+
+      - name: Build
+        run: |
+          make release
+        env:
+          GORELEASER_FLAGS: --skip-publish --release-notes /tmp/changelog --skip-validate
+
+      - name: Run binary
+        run: |
+          ./dist/mindthegap_darwin_all/mindthegap
