@@ -27,6 +27,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
         with:
+          fetch-depth: 0
           lfs: true
 
       - name: Checkout LFS objects
@@ -35,24 +36,17 @@ jobs:
       - name: Install asdf and tools
         uses: asdf-vm/actions/install@v1
 
-      - name: Create dummy tag
-        run: |
-          git tag v0.0.0-dummy
-
-      - name: Create empty changelog
-        run: |
-          echo > /tmp/changelog
-
       - name: Build
         run: |
           make release
         env:
-          GORELEASER_FLAGS: --skip-publish --release-notes /tmp/changelog --skip-validate
+          GORELEASER_FLAGS: --skip-publish --skip-validate
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run binary
         run: |
-          ./dist/mindthegap_darwin_all/mindthegap
+          ./dist/mindthegap_darwin_amd64/mindthegap
 
       - name: Check if universal binary is upx packed
         run: |
-          upx -l ./dist/mindthegap_darwin_all/mindthegap
+          upx -l ./dist/mindthegap_darwin_amd64/mindthegap
