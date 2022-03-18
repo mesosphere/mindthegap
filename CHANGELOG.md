@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.6.6](https://github.com/mesosphere/mindthegap/compare/v0.6.5...v0.6.6) (2022-03-18)
+
+
+### Build System
+
+* release 0.6.6 ([f02e941](https://github.com/mesosphere/mindthegap/commit/f02e94143d1b1ebd5df3b2caa5a5b629f4975770))
+
 ### [0.6.5](https://github.com/mesosphere/mindthegap/compare/v0.6.4...v0.6.5) (2022-03-03)
 
 
