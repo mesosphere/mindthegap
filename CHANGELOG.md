@@ -1,5 +1,17 @@
 # Changelog
 
+### [0.6.7](https://github.com/mesosphere/mindthegap/compare/v0.6.6...v0.6.7) (2022-03-18)
+
+
+### Bug Fixes
+
+* Do not upx pack darwin binaries ([4cfa2b5](https://github.com/mesosphere/mindthegap/commit/4cfa2b577e42c56e5345177cc18a5f103f2327b7))
+
+
+### Build System
+
+* release 0.6.7 ([7a464e7](https://github.com/mesosphere/mindthegap/commit/7a464e7bec0427a3799367508fba03e4e7420fbd))
+
 ### [0.6.6](https://github.com/mesosphere/mindthegap/compare/v0.6.5...v0.6.6) (2022-03-18)
 
 
