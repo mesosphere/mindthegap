@@ -46,7 +46,3 @@ jobs:
       - name: Run binary
         run: |
           ./dist/mindthegap_darwin_amd64/mindthegap
-
-      - name: Check if universal binary is upx packed
-        run: |
-          upx -l ./dist/mindthegap_darwin_amd64/mindthegap
