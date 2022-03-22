@@ -1,5 +1,17 @@
 # Changelog
 
+### [0.6.8](https://github.com/mesosphere/mindthegap/compare/v0.6.7...v0.6.8) (2022-03-22)
+
+
+### Features
+
+* Auto-create ECR registries if they do not exist ([#79](https://github.com/mesosphere/mindthegap/issues/79)) ([aa40c38](https://github.com/mesosphere/mindthegap/commit/aa40c38361b8491e1dce03fa8709d2599d1d0584))
+
+
+### Build System
+
+* release 0.6.8 ([aaa2a53](https://github.com/mesosphere/mindthegap/commit/aaa2a53ff363284c173b92436d718f3d504ed652))
+
 ### [0.6.7](https://github.com/mesosphere/mindthegap/compare/v0.6.6...v0.6.7) (2022-03-18)
 
 
