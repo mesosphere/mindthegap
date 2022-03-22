@@ -15,6 +15,7 @@ import (
 
 	"github.com/mesosphere/mindthegap/cleanup"
 	"github.com/mesosphere/mindthegap/config"
+	"github.com/mesosphere/mindthegap/docker/ecr"
 	"github.com/mesosphere/mindthegap/docker/registry"
 	"github.com/mesosphere/mindthegap/skopeo"
 )
@@ -26,6 +27,7 @@ func NewCommand(out output.Output) *cobra.Command {
 		destRegistrySkipTLSVerify bool
 		destRegistryUsername      string
 		destRegistryPassword      string
+		ecrLifecyclePolicy        string
 	)
 
 	cmd := &cobra.Command{
@@ -103,49 +105,25 @@ func NewCommand(out output.Output) *cobra.Command {
 				out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
 			}
 
-			// Sort registries for deterministic ordering.
-			regNames := cfg.SortedRegistryNames()
-
-			for _, registryName := range regNames {
-				registryConfig := cfg[registryName]
-				skopeoOpts = append(skopeoOpts, skopeo.DisableSrcTLSVerify())
-				if destRegistrySkipTLSVerify {
-					skopeoOpts = append(skopeoOpts, skopeo.DisableDestTLSVerify())
-				}
-
-				// Sort images for deterministic ordering.
-				imageNames := registryConfig.SortedImageNames()
-
-				for _, imageName := range imageNames {
-					imageTags := registryConfig.Images[imageName]
-					for _, imageTag := range imageTags {
-						out.StartOperation(
-							fmt.Sprintf("Copying %s/%s:%s (from bundle) to %s/%s:%s",
-								registryName, imageName, imageTag,
-								destRegistry, imageName, imageTag,
-							),
-						)
-						skopeoStdout, skopeoStderr, err := skopeoRunner.Copy(context.TODO(),
-							fmt.Sprintf("docker://%s/%s:%s", reg.Address(), imageName, imageTag),
-							fmt.Sprintf("docker://%s/%s:%s", destRegistry, imageName, imageTag),
-							append(
-								skopeoOpts, skopeo.All(),
-							)...,
-						)
-						if err != nil {
-							out.EndOperation(false)
-							out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
-							out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
-							return err
-						}
-						out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
-						out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
-						out.EndOperation(true)
-					}
-				}
+			// Determine type of destination registry.
+			var prePushFuncs []prePushFunc
+			if ecr.IsECRRegistry(destRegistry) {
+				prePushFuncs = append(
+					prePushFuncs,
+					ecr.EnsureRepositoryExistsFunc(ecrLifecyclePolicy),
+				)
 			}
 
-			return nil
+			return pushImages(
+				cfg,
+				reg.Address(),
+				destRegistry,
+				skopeoOpts,
+				destRegistrySkipTLSVerify,
+				out,
+				skopeoRunner,
+				prePushFuncs...,
+			)
 		},
 	}
 
@@ -160,6 +138,72 @@ func NewCommand(out output.Output) *cobra.Command {
 		"Username to use to log in to destination registry")
 	cmd.Flags().StringVar(&destRegistryPassword, "to-registry-password", "",
 		"Password to use to log in to destination registry")
+	cmd.Flags().StringVar(&ecrLifecyclePolicy, "ecr-lifecycle-policy-file", "",
+		"File containing ECR lifecycle policy for newly created repositories "+
+			"(only applies if target registry is hosted on ECR, ignored otherwise)")
 
 	return cmd
+}
+
+type prePushFunc func(destRegistry, imageName string, imageTags ...string) error
+
+func pushImages(
+	cfg config.ImagesConfig,
+	sourceRegistry, destRegistry string,
+	skopeoOpts []skopeo.SkopeoOption,
+	destRegistrySkipTLSVerify bool,
+	out output.Output,
+	skopeoRunner *skopeo.Runner,
+	prePushFuncs ...prePushFunc,
+) error {
+	// Sort registries for deterministic ordering.
+	regNames := cfg.SortedRegistryNames()
+
+	for _, registryName := range regNames {
+		registryConfig := cfg[registryName]
+		skopeoOpts = append(skopeoOpts, skopeo.DisableSrcTLSVerify())
+		if destRegistrySkipTLSVerify {
+			skopeoOpts = append(skopeoOpts, skopeo.DisableDestTLSVerify())
+		}
+
+		// Sort images for deterministic ordering.
+		imageNames := registryConfig.SortedImageNames()
+
+		for _, imageName := range imageNames {
+			imageTags := registryConfig.Images[imageName]
+
+			for _, prePush := range prePushFuncs {
+				if err := prePush(destRegistry, imageName, imageTags...); err != nil {
+					return fmt.Errorf("pre-push func failed: %w", err)
+				}
+			}
+
+			for _, imageTag := range imageTags {
+				out.StartOperation(
+					fmt.Sprintf("Copying %s/%s:%s (from bundle) to %s/%s:%s",
+						registryName, imageName, imageTag,
+						destRegistry, imageName, imageTag,
+					),
+				)
+				skopeoStdout, skopeoStderr, err := skopeoRunner.Copy(context.TODO(),
+					fmt.Sprintf("docker://%s/%s:%s", sourceRegistry, imageName, imageTag),
+					fmt.Sprintf("docker://%s/%s:%s", destRegistry, imageName, imageTag),
+					append(
+						skopeoOpts, skopeo.All(),
+					)...,
+				)
+				if err != nil {
+					out.EndOperation(false)
+					out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
+					out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
+					return err
+				}
+				out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
+				out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
+				out.EndOperation(true)
+			}
+		}
+	}
+
+	return nil
 }
