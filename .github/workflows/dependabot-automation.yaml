@@ -42,7 +42,7 @@ jobs:
         run: |
           git add .
           if output=$(git status --porcelain) && [ ! -z "$output" ]; then
-            git commit --message "build: Fix go modules on dependabot PR [DEPENDABOT SKIP]"
+            git commit --message "build: Fix go modules on dependabot PR"
             git push
           fi
 
