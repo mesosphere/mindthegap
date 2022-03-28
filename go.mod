@@ -13,7 +13,7 @@ require (
 	github.com/distribution/distribution/v3 v3.0.0-20220208183205-a4d9db5a884b
 	github.com/docker/cli v20.10.13+incompatible
 	github.com/hashicorp/go-getter v1.5.11
-	github.com/mesosphere/dkp-cli-runtime/core v0.4.0
+	github.com/mesosphere/dkp-cli-runtime/core v0.5.1
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/spf13/cobra v1.4.0
@@ -77,7 +77,7 @@ require (
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
 	github.com/go-errors/errors v1.0.1 // indirect
-	github.com/go-logr/logr v1.2.2 // indirect
+	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.5 // indirect
 	github.com/go-openapi/swag v0.19.14 // indirect
