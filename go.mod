@@ -11,7 +11,7 @@ require (
 	github.com/containers/image/v5 v5.20.0
 	github.com/containers/skopeo v1.7.0
 	github.com/distribution/distribution/v3 v3.0.0-20220208183205-a4d9db5a884b
-	github.com/docker/cli v20.10.13+incompatible
+	github.com/docker/cli v20.10.14+incompatible
 	github.com/mesosphere/dkp-cli-runtime/core v0.5.1
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
