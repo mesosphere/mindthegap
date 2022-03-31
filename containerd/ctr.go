@@ -11,37 +11,19 @@ import (
 
 type CtrOption func() string
 
-func ImportImage(ctx context.Context, src, tag, containerdNamespace string) ([]byte, error) {
+func ImportImageArchive(
+	ctx context.Context,
+	archivePath, containerdNamespace string,
+) ([]byte, error) {
 	baseArgs := []string{"-n", containerdNamespace}
 	//nolint:gosec // Args are fine.
 	cmd := exec.CommandContext(
 		ctx,
 		"ctr",
-		append(baseArgs, []string{"images", "pull", "--plain-http", src}...)...)
+		append(baseArgs, []string{"images", "import", "--no-unpack", archivePath}...)...)
 	cmdOutput, err := cmd.CombinedOutput()
 	if err != nil {
-		return cmdOutput, fmt.Errorf("failed to pull image from temporary docker registry: %w", err)
-	}
-
-	if tag != "" {
-		//nolint:gosec // Args are fine.
-		cmd = exec.CommandContext(
-			ctx,
-			"ctr",
-			append(baseArgs, []string{"images", "tag", "--force", src, tag}...)...)
-		tagOutput, err := cmd.CombinedOutput()
-		cmdOutput = append(cmdOutput, tagOutput...)
-		if err != nil {
-			return cmdOutput, fmt.Errorf("failed to tag image: %w", err)
-		}
-
-		//nolint:gosec // Args are fine.
-		cmd = exec.CommandContext(ctx, "ctr", append(baseArgs, []string{"images", "rm", src}...)...)
-		rmOutput, err := cmd.CombinedOutput()
-		cmdOutput = append(cmdOutput, rmOutput...)
-		if err != nil {
-			return cmdOutput, fmt.Errorf("failed to tag image: %w", err)
-		}
+		return cmdOutput, fmt.Errorf("failed to import image(s) from image archive: %w", err)
 	}
 
 	return cmdOutput, nil

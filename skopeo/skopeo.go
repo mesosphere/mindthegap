@@ -77,6 +77,12 @@ func All() SkopeoOption {
 	}
 }
 
+func IndexOnly() SkopeoOption {
+	return func() string {
+		return "--multi-arch=index-only"
+	}
+}
+
 func SrcCredentials(username, password string) SkopeoOption {
 	return func() string {
 		return fmt.Sprintf("--src-creds=%s:%s", username, password)
@@ -86,6 +92,12 @@ func SrcCredentials(username, password string) SkopeoOption {
 func DestCredentials(username, password string) SkopeoOption {
 	return func() string {
 		return fmt.Sprintf("--dest-creds=%s:%s", username, password)
+	}
+}
+
+func PreserveDigests() SkopeoOption {
+	return func() string {
+		return "--preserve-digests"
 	}
 }
 
@@ -130,7 +142,6 @@ func (r *Runner) Copy(
 	copyArgs := []string{
 		"copy",
 		"--policy", r.unpackedSkopeoPolicyPath,
-		"--preserve-digests",
 		src,
 		dest,
 	}
@@ -233,7 +244,8 @@ func (r *Runner) CopyManifest(
 		ctx,
 		"dir:"+td,
 		dest,
-		append(opts, func() string { return "--multi-arch=index-only" })...)
+		append(opts, PreserveDigests(), IndexOnly())...,
+	)
 }
 
 func (r *Runner) run(

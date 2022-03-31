@@ -10,10 +10,11 @@ import (
 	"path/filepath"
 
 	"github.com/hashicorp/go-getter"
-	"github.com/mesosphere/dkp-cli-runtime/core/output"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/repo"
+
+	"github.com/mesosphere/dkp-cli-runtime/core/output"
 )
 
 type Client struct {
