@@ -7,9 +7,10 @@ import (
 	"io"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/mesosphere/dkp-cli-runtime/core/cmd/root"
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
-	"github.com/spf13/cobra"
 
 	"github.com/mesosphere/mindthegap/cmd/create"
 	"github.com/mesosphere/mindthegap/cmd/importcmd"

@@ -59,6 +59,7 @@ linters-settings:
     sections:
       - Standard
       - Default
+      - Prefix(github.com/mesosphere)
       - Prefix(github.com/mesosphere/mindthegap)
   gocritic:
     enabled-tags:

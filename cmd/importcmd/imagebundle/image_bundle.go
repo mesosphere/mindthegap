@@ -9,14 +9,16 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/mesosphere/dkp-cli-runtime/core/output"
 	"github.com/mholt/archiver/v3"
 	"github.com/spf13/cobra"
+
+	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
 	"github.com/mesosphere/mindthegap/cleanup"
 	"github.com/mesosphere/mindthegap/config"
 	"github.com/mesosphere/mindthegap/containerd"
 	"github.com/mesosphere/mindthegap/docker/registry"
+	"github.com/mesosphere/mindthegap/skopeo"
 )
 
 func NewCommand(out output.Output) *cobra.Command {
@@ -74,14 +76,42 @@ func NewCommand(out output.Output) *cobra.Command {
 			}()
 			out.EndOperation(true)
 
+			skopeoRunner, skopeoCleanup := skopeo.NewRunner()
+			cleaner.AddCleanupFn(func() { _ = skopeoCleanup() })
+
+			ociExportsTempDir, err := os.MkdirTemp("", ".oci-exports-*")
+			if err != nil {
+				return fmt.Errorf("failed to create temporary directory for OCI exports: %w", err)
+			}
+			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(ociExportsTempDir) })
+
 			for registryName, registryConfig := range cfg {
 				for imageName, imageTags := range registryConfig.Images {
 					for _, imageTag := range imageTags {
 						srcImageName := fmt.Sprintf("%s/%s:%s", reg.Address(), imageName, imageTag)
 						destImageName := fmt.Sprintf("%s/%s:%s", registryName, imageName, imageTag)
+
 						out.StartOperation(fmt.Sprintf("Importing %s", destImageName))
-						ctrOutput, err := containerd.ImportImage(
-							context.TODO(), srcImageName, destImageName, containerdNamespace,
+
+						exportTarball := filepath.Join(ociExportsTempDir, "oci-export.tar")
+
+						skopeoStdout, skopeoStderr, err := skopeoRunner.Copy(context.TODO(),
+							fmt.Sprintf("docker://%s", srcImageName),
+							fmt.Sprintf("oci-archive:%s:%s", exportTarball, destImageName),
+							skopeo.All(),
+							skopeo.DisableSrcTLSVerify(),
+						)
+						if err != nil {
+							out.EndOperation(false)
+							out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
+							out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
+							return err
+						}
+						out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
+						out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
+
+						ctrOutput, err := containerd.ImportImageArchive(
+							context.TODO(), exportTarball, containerdNamespace,
 						)
 						if err != nil {
 							out.Info(string(ctrOutput))
@@ -89,6 +119,9 @@ func NewCommand(out output.Output) *cobra.Command {
 							return err
 						}
 						out.V(4).Info(string(ctrOutput))
+
+						_ = os.Remove(exportTarball)
+
 						out.EndOperation(true)
 					}
 				}

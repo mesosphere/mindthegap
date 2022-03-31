@@ -10,10 +10,11 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/mesosphere/dkp-cli-runtime/core/output"
 	"github.com/mholt/archiver/v3"
 	"github.com/phayes/freeport"
 	"github.com/spf13/cobra"
+
+	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
 	"github.com/mesosphere/mindthegap/cleanup"
 	"github.com/mesosphere/mindthegap/httpfs"

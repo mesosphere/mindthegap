@@ -11,8 +11,9 @@ import (
 	"path/filepath"
 
 	"github.com/distribution/distribution/v3/manifest/manifestlist"
-	"github.com/mesosphere/dkp-cli-runtime/core/output"
 	"github.com/spf13/cobra"
+
+	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
 	"github.com/mesosphere/mindthegap/archive"
 	"github.com/mesosphere/mindthegap/cleanup"
@@ -224,6 +225,7 @@ func NewCommand(out output.Output) *cobra.Command {
 									skopeo.OS(p.os),
 									skopeo.Arch(p.arch),
 									skopeo.Variant(p.variant),
+									skopeo.PreserveDigests(),
 								)...,
 							)
 							if err != nil {
