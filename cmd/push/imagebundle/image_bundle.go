@@ -9,9 +9,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/mesosphere/dkp-cli-runtime/core/output"
 	"github.com/mholt/archiver/v3"
 	"github.com/spf13/cobra"
+
+	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
 	"github.com/mesosphere/mindthegap/cleanup"
 	"github.com/mesosphere/mindthegap/config"
@@ -82,7 +83,9 @@ func NewCommand(out output.Output) *cobra.Command {
 			skopeoRunner, skopeoCleanup := skopeo.NewRunner()
 			cleaner.AddCleanupFn(func() { _ = skopeoCleanup() })
 
-			var skopeoOpts []skopeo.SkopeoOption
+			skopeoOpts := []skopeo.SkopeoOption{
+				skopeo.PreserveDigests(),
+			}
 			if destRegistryUsername != "" && destRegistryPassword != "" {
 				skopeoOpts = append(
 					skopeoOpts,
