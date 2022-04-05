@@ -34,7 +34,7 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X 'github.com/mesosphere/dkp-cli-runtime/core/cmd/version.buildDate={{ .CommitDate }}'
+      - -X 'github.com/mesosphere/dkp-cli-runtime/core/cmd/version.commitDate={{ .CommitDate }}'
       - -X 'github.com/mesosphere/dkp-cli-runtime/core/cmd/version.gitCommit={{ .FullCommit }}'
       - -X 'github.com/mesosphere/dkp-cli-runtime/core/cmd/version.gitTreeState={{ .Env.GIT_TREE_STATE }}'
       - -X 'github.com/mesosphere/dkp-cli-runtime/core/cmd/version.gitVersion=v{{ trimprefix .Version "v" }}'
