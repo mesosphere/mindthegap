@@ -1,0 +1,40 @@
+# Copyright 2021 D2iQ, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+name: release-please-main
+
+on:
+  push:
+    branches:
+      - release/v0.6
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/release-please-action@v3
+        id: release-please
+        with:
+          release-type: go
+          package-name: mindthegap
+          pull-request-title-pattern: 'build${scope}: release${component} ${version}'
+
+      - if: ${{ steps.release-please.outputs.release_created }}
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - if: ${{ steps.release-please.outputs.release_created }}
+        name: Checkout LFS objects
+        run: git lfs checkout
+
+      - if: ${{ steps.release-please.outputs.release_created }}
+        name: Install asdf and tools
+        uses: asdf-vm/actions/install@v1
+
+      - if: ${{ steps.release-please.outputs.release_created }}
+        name: Release
+        run: make release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
