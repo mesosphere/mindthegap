@@ -17,6 +17,7 @@ endif
 
 define go_test
 	gotestsum \
+		--jsonfile test.json \
 		--junitfile junit-report.xml \
 		--junitfile-testsuite-name=relative \
 		--junitfile-testcase-classname=short \
