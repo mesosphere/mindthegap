@@ -1,7 +1,7 @@
 # Copyright 2021 D2iQ, Inc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-name: release-please-main
+name: release-please-v0.6.x
 
 on:
   push:
@@ -17,6 +17,7 @@ jobs:
         with:
           release-type: go
           package-name: mindthegap
+          default-branch: release/v0.6
           pull-request-title-pattern: 'build${scope}: release${component} ${version}'
 
       - if: ${{ steps.release-please.outputs.release_created }}
