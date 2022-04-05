@@ -6,14 +6,14 @@ name: checks
 on:
   push:
     branches:
-      - main
+      - release/v0.6
   pull_request:
     types:
       - opened
       - synchronize
       - reopened
     branches:
-      - main
+      - release/v0.6
 
 permissions:
   contents: read
