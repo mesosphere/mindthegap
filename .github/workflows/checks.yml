@@ -28,7 +28,7 @@ jobs:
           check-latest: true
 
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Run unit tests
         run: go test -v -json -coverprofile coverage.txt -covermode=atomic ./... > test.json
@@ -48,7 +48,7 @@ jobs:
           check-latest: true
 
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install asdf
         uses: asdf-vm/actions/setup@v1
