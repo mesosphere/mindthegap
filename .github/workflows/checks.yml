@@ -30,6 +30,9 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
+      - name: Install asdf
+        uses: asdf-vm/actions/setup@v1
+
       - name: Run unit tests
         run: make test
 
