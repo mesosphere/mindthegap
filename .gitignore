@@ -10,6 +10,7 @@ dist
 coverage.out
 coverage.html
 
+test.json
 junit-report.xml
 openapi_violations.report
 
