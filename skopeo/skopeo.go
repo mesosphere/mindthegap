@@ -29,6 +29,12 @@ var defaultSkopeoPolicy []byte
 
 type SkopeoOption func() string
 
+func DisableTLSVerify() SkopeoOption {
+	return func() string {
+		return "--tls-verify=false"
+	}
+}
+
 func DisableSrcTLSVerify() SkopeoOption {
 	return func() string {
 		return "--src-tls-verify=false"
@@ -98,6 +104,19 @@ func DestCredentials(username, password string) SkopeoOption {
 func PreserveDigests() SkopeoOption {
 	return func() string {
 		return "--preserve-digests"
+	}
+}
+
+func Format(format string) SkopeoOption {
+	switch format {
+	case manifestlist.OCISchemaVersion.MediaType:
+		format = "oci"
+	case manifestlist.SchemaVersion.MediaType:
+		format = "v2s2"
+	}
+
+	return func() string {
+		return fmt.Sprintf("--format=%s", format)
 	}
 }
 
@@ -240,7 +259,7 @@ func (r *Runner) CopyManifest(
 
 	mf, err := os.Create(filepath.Join(td, "manifest.json"))
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create manifest.jsin file: %w", err)
+		return nil, nil, fmt.Errorf("failed to create manifest.json file: %w", err)
 	}
 	defer mf.Close()
 

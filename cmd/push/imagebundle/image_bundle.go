@@ -188,11 +188,23 @@ func pushImages(
 						destRegistry, imageName, imageTag,
 					),
 				)
-				skopeoStdout, skopeoStderr, err := skopeoRunner.Copy(context.TODO(),
-					fmt.Sprintf("docker://%s/%s:%s", sourceRegistry, imageName, imageTag),
+
+				sourceImage := fmt.Sprintf("docker://%s/%s:%s", sourceRegistry, imageName, imageTag)
+				srcML, skopeoStdout, skopeoStderr, err := skopeoRunner.InspectManifest(
+					context.TODO(), sourceImage, skopeo.DisableTLSVerify(),
+				)
+				if err != nil {
+					out.EndOperation(false)
+					out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
+					out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
+					return err
+				}
+
+				skopeoStdout, skopeoStderr, err = skopeoRunner.Copy(context.TODO(),
+					sourceImage,
 					fmt.Sprintf("docker://%s/%s:%s", destRegistry, imageName, imageTag),
 					append(
-						skopeoOpts, skopeo.All(),
+						skopeoOpts, skopeo.All(), skopeo.Format(srcML.Versioned.MediaType),
 					)...,
 				)
 				if err != nil {
