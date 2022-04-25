@@ -147,6 +147,7 @@ func NewCommand(out output.Output) *cobra.Command {
 						srcImageManifestList, skopeoStdout, skopeoStderr, err := skopeoRunner.InspectManifest(
 							context.Background(),
 							fmt.Sprintf("%s%s", srcSkopeoScheme, srcImageName),
+							skopeo.NoTags(),
 						)
 						if err != nil {
 							out.V(4).
