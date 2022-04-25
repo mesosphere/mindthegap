@@ -77,6 +77,12 @@ func All() SkopeoOption {
 	}
 }
 
+func NoTags() SkopeoOption {
+	return func() string {
+		return "--no-tags"
+	}
+}
+
 func IndexOnly() SkopeoOption {
 	return func() string {
 		return "--multi-arch=index-only"
