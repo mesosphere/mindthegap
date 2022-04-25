@@ -47,4 +47,4 @@ jobs:
 
       - name: Run binary
         run: |
-          ./dist/mindthegap_darwin_amd64/mindthegap
+          ./dist/mindthegap_darwin_amd64_v1/mindthegap
