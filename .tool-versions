@@ -1,5 +1,5 @@
 golangci-lint 1.45.2
-goreleaser 1.7.0
-golang 1.17.8 # FREEZE until golangci-lint fully supports go 1.18
+goreleaser 1.8.3
+golang 1.17.9 # FREEZE until golangci-lint fully supports go 1.18
 pre-commit 2.17.0
 upx 3.96
