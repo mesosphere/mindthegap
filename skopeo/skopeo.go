@@ -238,13 +238,14 @@ func (r *Runner) CopyManifest(
 
 	mf, err := os.Create(filepath.Join(td, "manifest.json"))
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create manifest.jsin file: %w", err)
+		return nil, nil, fmt.Errorf("failed to create manifest.json file: %w", err)
 	}
 	defer mf.Close()
 
-	// No need to check error - safe to enscode this type. See https://github.com/breml/errchkjson#safe
-	// for details
-	_ = json.NewEncoder(mf).Encode(manifest)
+	err = json.NewEncoder(mf).Encode(manifest)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to JSON encode manifest: %w", err)
+	}
 
 	return r.Copy(
 		ctx,
