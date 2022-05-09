@@ -3,6 +3,7 @@
 
 run:
   timeout: 3m
+  go: '1.17'
 
 linters:
   disable-all: true
