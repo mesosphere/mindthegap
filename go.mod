@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.17.4
 	github.com/containers/image/v5 v5.21.1
 	github.com/containers/skopeo v1.8.0
-	github.com/distribution/distribution/v3 v3.0.0-20220208183205-a4d9db5a884b
+	github.com/distribution/distribution/v3 v3.0.0-20220505155552-985711c1f414
 	github.com/docker/cli v20.10.15+incompatible
 	github.com/hashicorp/go-getter v1.5.11
 	github.com/mesosphere/dkp-cli-runtime/core v0.5.1
@@ -40,7 +40,7 @@ require (
 	github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d // indirect
 	github.com/andybalholm/brotli v1.0.1 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
-	github.com/aws/aws-sdk-go v1.42.27 // indirect
+	github.com/aws/aws-sdk-go v1.43.16 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.16.3 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.0 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.4 // indirect
