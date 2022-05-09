@@ -3,7 +3,7 @@
 
 module github.com/mesosphere/mindthegap/skopeo-static
 
-go 1.17
+go 1.18
 
 require github.com/containers/skopeo v1.8.0
 
