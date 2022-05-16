@@ -11,7 +11,7 @@ require (
 	github.com/containers/image/v5 v5.21.1
 	github.com/containers/skopeo v1.8.0
 	github.com/distribution/distribution/v3 v3.0.0-20220505155552-985711c1f414
-	github.com/docker/cli v20.10.15+incompatible
+	github.com/docker/cli v20.10.16+incompatible
 	github.com/hashicorp/go-getter v1.5.11
 	github.com/mesosphere/dkp-cli-runtime/core v0.5.1
 	github.com/mholt/archiver/v3 v3.5.1
