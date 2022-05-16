@@ -6,7 +6,7 @@ module github.com/mesosphere/mindthegap
 go 1.18
 
 require (
-	github.com/aws/aws-sdk-go-v2/config v1.15.4
+	github.com/aws/aws-sdk-go-v2/config v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.17.4
 	github.com/containers/image/v5 v5.21.1
 	github.com/containers/skopeo v1.8.0
