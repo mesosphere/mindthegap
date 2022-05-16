@@ -1,5 +1,5 @@
-golangci-lint 1.46.0
+golangci-lint 1.46.1
 goreleaser 1.8.3
-golang 1.18.1
+golang 1.18.2
 pre-commit 2.19.0
 upx 3.96
