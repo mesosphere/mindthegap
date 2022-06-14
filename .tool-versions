@@ -1,6 +1,6 @@
-golangci-lint 1.46.1
-goreleaser 1.8.3
-golang 1.18.2
-helm 3.8.2
+golangci-lint 1.46.2
+goreleaser 1.9.2
+golang 1.18.3
+helm 3.9.0
 pre-commit 2.19.0
 upx 3.96
