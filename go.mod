@@ -10,9 +10,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.17.6
 	github.com/containers/image/v5 v5.21.1
 	github.com/containers/skopeo v1.8.0
-	github.com/distribution/distribution/v3 v3.0.0-20220505155552-985711c1f414
+	github.com/distribution/distribution/v3 v3.0.0-20220612151901-b5e2f3f33dbc
 	github.com/docker/cli v20.10.17+incompatible
-	github.com/hashicorp/go-getter v1.6.1
+	github.com/hashicorp/go-getter v1.6.2
 	github.com/mesosphere/dkp-cli-runtime/core v0.5.1
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
