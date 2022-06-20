@@ -13,7 +13,7 @@ require (
 	github.com/distribution/distribution/v3 v3.0.0-20220612151901-b5e2f3f33dbc
 	github.com/docker/cli v20.10.17+incompatible
 	github.com/hashicorp/go-getter v1.6.2
-	github.com/mesosphere/dkp-cli-runtime/core v0.5.1
+	github.com/mesosphere/dkp-cli-runtime/core v0.5.2
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/spf13/cobra v1.4.0
