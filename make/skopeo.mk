@@ -4,7 +4,6 @@
 .PHONY: skopeo.build
 skopeo.build:  ## Builds the skopeo static binary
 skopeo.build: skopeo/static/skopeo-$(GOOS)-$(GOARCH)$(if $(filter $(GOOS),windows),.exe)
-	$(MAKE) upx UPX_TARGET=skopeo/static/skopeo-$(GOOS)-$(GOARCH)$(if $(filter $(GOOS),windows),.exe)
 
 .PHONY: skopeo.build.all
 skopeo.build.all:
