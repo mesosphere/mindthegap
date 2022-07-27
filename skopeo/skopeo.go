@@ -19,6 +19,7 @@ import (
 	"github.com/containers/skopeo/cmd/skopeo/inspect"
 	"github.com/distribution/distribution/v3"
 	"github.com/distribution/distribution/v3/manifest/manifestlist"
+	"github.com/distribution/distribution/v3/manifest/ocischema"
 	"github.com/distribution/distribution/v3/manifest/schema2"
 	"github.com/docker/cli/cli/config"
 	"k8s.io/klog/v2"
@@ -179,7 +180,7 @@ func (r *Runner) InspectManifest(
 		return ml, rawStdout, rawStderr, nil
 	}
 
-	var m schema2.Manifest
+	var m ocischema.Manifest
 	dec = json.NewDecoder(bytes.NewReader(rawStdout))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&m); err != nil {
