@@ -1,3 +1,3 @@
-github.com/oligot/go-mod-upgrade@v0.8.0
+github.com/oligot/go-mod-upgrade@v0.9.0
 gotest.tools/gotestsum@v1.8.1
-github.com/segmentio/golines@v0.10.0
+github.com/segmentio/golines@v0.11.0
