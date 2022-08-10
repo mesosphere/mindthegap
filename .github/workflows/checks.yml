@@ -48,6 +48,9 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
+      - name: Install asdf
+        uses: asdf-vm/actions/setup@v1
+
       - name: Ensure dummy skopeo files
         run: make ensure-static-skopeo
 
