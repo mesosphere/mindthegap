@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
+
+
+### Bug Fixes
+
+* Remedy potential slowloris attack ([47a8362](https://github.com/mesosphere/mindthegap/commit/47a836238d67b25738beb4a91bd0d56fa8f39c35))
+* Remove skopeo static builds from git-lfs ([703cfe0](https://github.com/mesosphere/mindthegap/commit/703cfe0f6c9a437b127c37f8eff249965e4ebd9b))
+
+
+### Build System
+
+* release v0.18.0 ([29aed52](https://github.com/mesosphere/mindthegap/commit/29aed52bd735057fbddb80d32df5ab6f05db3f04))
+
 ## [0.17.2](https://github.com/mesosphere/mindthegap/compare/v0.17.1...v0.17.2) (2022-07-27)
 
 
