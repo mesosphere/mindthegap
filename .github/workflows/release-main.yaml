@@ -18,9 +18,7 @@ jobs:
           release-type: go
           package-name: mindthegap
           pull-request-title-pattern: "build${scope}: release${component} ${version}"
-          # Re-enable once https://github.com/google-github-actions/release-please-action/issues/427
-          # is fixed.
-          # changelog-type: github
+          changelog-notes-type: github
 
       - if: ${{ steps.release-please.outputs.release_created }}
         uses: actions/checkout@v3
