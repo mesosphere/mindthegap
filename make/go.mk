@@ -36,7 +36,7 @@ endef
 
 .PHONY: test
 test: ## Runs go tests for all modules in repository
-test: install-tool.go.gotestsum
+test: install-tool.go.gotestsum go-generate
 ifneq ($(wildcard $(REPO_ROOT)/go.mod),)
 test: test.root
 endif
