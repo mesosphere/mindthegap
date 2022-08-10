@@ -18,7 +18,7 @@ endef
 
 .PHONY:
 install-tool.go.%: ## Installs go tools
-install-tool.go.%: install-tool.golang; $(info $(M) installing go tool $*)
+install-tool.go.%: install-tool.golang ensure-static-skopeo; $(info $(M) installing go tool $*)
 	$(call install_go_tool,$*)
 endif
 
@@ -78,7 +78,7 @@ upgrade-tools: upgrade-go-tools; $(info $(M) upgrading all tools to latest avail
 
 .PHONY: upgrade-go-tools
 upgrade-go-tools: ## Upgrades all go tools to latest available versions
-upgrade-go-tools: install-tool.golang; $(info $(M) upgrading all go tools to latest available versions)
+upgrade-go-tools: install-tool.golang ensure-static-skopeo; $(info $(M) upgrading all go tools to latest available versions)
 	grep -v '# FREEZE' .go-tools | \
 		grep -Eo '^[^#]\S+' | \
 		sed 's/@.\+$$/@latest/' | \
