@@ -34,8 +34,7 @@ jobs:
       uses: asdf-vm/actions/install@v1
 
     - name: Build
-      run: |
-        make build-snapshot
+      run: make build-snapshot
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
