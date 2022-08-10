@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.15.15
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.17.6
 	github.com/containers/image/v5 v5.22.0
-	github.com/containers/skopeo v1.8.0
+	github.com/containers/skopeo v1.9.2
 	github.com/distribution/distribution/v3 v3.0.0-20220725133111-4bf3547399eb
 	github.com/docker/cli v20.10.17+incompatible
 	github.com/hashicorp/go-getter v1.6.2
