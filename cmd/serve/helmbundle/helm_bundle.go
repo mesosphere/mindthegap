@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/mholt/archiver/v3"
 	"github.com/phayes/freeport"
@@ -64,8 +65,9 @@ func NewCommand(out output.Output) *cobra.Command {
 			}
 			addr := net.JoinHostPort(listenAddress, strconv.Itoa(int(listenPort)))
 			srv := &http.Server{
-				Addr:    addr,
-				Handler: http.FileServer(httpfs.DisableDirListingFS(tempDir)),
+				Addr:              addr,
+				Handler:           http.FileServer(httpfs.DisableDirListingFS(tempDir)),
+				ReadHeaderTimeout: 1 * time.Second,
 			}
 			out.EndOperation(true)
 			scheme := "http"
