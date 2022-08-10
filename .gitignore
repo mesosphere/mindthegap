@@ -23,3 +23,5 @@ dist/
 .local/
 
 *.tar.gz
+
+/skopeo/static/
