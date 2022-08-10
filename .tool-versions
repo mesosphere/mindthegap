@@ -3,4 +3,3 @@ goreleaser 1.9.2
 golang 1.18.3
 helm 3.9.0
 pre-commit 2.19.0
-upx 3.96
