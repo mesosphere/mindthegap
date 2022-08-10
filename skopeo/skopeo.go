@@ -25,6 +25,8 @@ import (
 	"k8s.io/klog/v2"
 )
 
+//go:generate bash -ec "cd ../ && make skopeo.build"
+
 //go:embed default-policy.json
 var defaultSkopeoPolicy []byte
 

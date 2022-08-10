@@ -1,6 +1,0 @@
-skopeo/static/skopeo-windows-amd64.exe filter=lfs diff=lfs merge=lfs -text
-skopeo/static/skopeo-windows-arm64.exe filter=lfs diff=lfs merge=lfs -text
-skopeo/static/skopeo-darwin-amd64 filter=lfs diff=lfs merge=lfs -text
-skopeo/static/skopeo-darwin-arm64 filter=lfs diff=lfs merge=lfs -text
-skopeo/static/skopeo-linux-amd64 filter=lfs diff=lfs merge=lfs -text
-skopeo/static/skopeo-linux-arm64 filter=lfs diff=lfs merge=lfs -text
