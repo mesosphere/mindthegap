@@ -1,8 +1,15 @@
 # Copyright 2021 D2iQ, Inc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+.PHONY: ensure-static-skopeo
+ensure-static-skopeo: ## Ensures that there are static skopeo files are present to not break build
+ensure-static-skopeo:
+	mkdir -p skopeo/static/
+	touch skopeo/static/skopeo-{linux,darwin}-{amd64,arm64}
+	touch skopeo/static/skopeo-windows-{amd64,arm64}.exe
+
 .PHONY: skopeo.build
-skopeo.build:  ## Builds the skopeo static binary
+skopeo.build: ## Builds the skopeo static binary
 skopeo.build: skopeo/static/skopeo-$(GOOS)-$(GOARCH)$(if $(filter $(GOOS),windows),.exe)
 
 .PHONY: skopeo.build.all
