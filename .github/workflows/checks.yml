@@ -40,24 +40,29 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
+      - name: Output required tool versions
+        id: tool-versions
+        run: |
+          echo "::set-output name=go::$(grep -E '^golang ' .tool-versions | cut -d' ' -f2)"
+          echo "::set-output name=golangci-lint::v$(grep -E '^golangci-lint ' .tool-versions | cut -d' ' -f2)"
+
       - uses: actions/setup-go@v3
         with:
-          go-version: '1.18'
+          go-version: ${{ steps.tool-versions.outputs.go }}
           check-latest: true
 
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Install asdf
-        uses: asdf-vm/actions/setup@v1
-
       - name: Ensure dummy skopeo files
         run: make ensure-static-skopeo
+        env:
+          SKIP_ASDF_CHECK: 1
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: latest
+          version: ${{ steps.tool-versions.outputs.golangci-lint }}
           only-new-issues: ${{ github.event_name == 'pull_request' }}
 
   pre-commit:
@@ -69,10 +74,7 @@ jobs:
       - name: Install asdf
         uses: asdf-vm/actions/setup@v1
 
-      - name: Ensure dummy skopeo files
-        run: make ensure-static-skopeo
-
-      - uses: pre-commit/action@v2.0.3
+      - uses: pre-commit/action@v3.0.0
         with:
           extra_args: --all-files
         env:

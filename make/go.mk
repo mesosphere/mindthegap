@@ -36,7 +36,6 @@ endef
 
 .PHONY: test
 test: ## Runs go tests for all modules in repository
-test: install-tool.go.gotestsum ensure-static-skopeo
 ifneq ($(wildcard $(REPO_ROOT)/go.mod),)
 test: test.root
 endif
@@ -46,22 +45,21 @@ endif
 
 .PHONY: test.%
 test.%: ## Runs go tests for a specific module
-test.%: ensure-static-skopeo; $(info $(M) running tests$(if $(GOTEST_RUN), matching "$(GOTEST_RUN)") for $* module)
+test.%: install-tool.go.gotestsum ensure-static-skopeo; $(info $(M) running tests$(if $(GOTEST_RUN), matching "$(GOTEST_RUN)") for $* module)
 	$(if $(filter-out root,$*),cd $* && )$(call go_test)
 
 .PHONY: integration-test
 integration-test: ## Runs integration tests for all modules in repository
-integration-test: ensure-static-skopeo
+integration-test:
 	$(MAKE) GOTEST_RUN=Integration test
 
 .PHONY: integration-test.%
 integration-test.%: ## Runs integration tests for a specific module
-integration-test.%: ensure-static-skopeo
+integration-test.%:
 	$(MAKE) GOTEST_RUN=Integration test.$*
 
 .PHONY: bench
 bench: ## Runs go benchmarks for all modules in repository
-bench: ensure-static-skopeo
 ifneq ($(wildcard $(REPO_ROOT)/go.mod),)
 bench: bench.root
 endif
@@ -78,7 +76,6 @@ GOLANGCI_CONFIG_FILE ?= $(wildcard $(REPO_ROOT)/.golangci.y*ml)
 
 .PHONY: lint
 lint: ## Runs golangci-lint for all modules in repository
-lint: install-tool.golangci-lint go-generate
 ifneq ($(wildcard $(REPO_ROOT)/go.mod),)
 lint: lint.root
 endif
@@ -95,7 +92,6 @@ lint.%: install-tool.golangci-lint install-tool.go.golines ensure-static-skopeo;
 
 .PHONY: mod-tidy
 mod-tidy: ## Run go mod tidy for all modules
-mod-tidy: ensure-static-skopeo
 ifneq ($(wildcard $(REPO_ROOT)/go.mod),)
 mod-tidy: mod-tidy.root
 endif

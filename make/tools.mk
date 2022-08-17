@@ -22,7 +22,7 @@ install-tool.go.%: install-tool.golang ensure-static-skopeo; $(info $(M) install
 	$(call install_go_tool,$*)
 endif
 
-ifndef TEAMCITY_VERSION
+ifndef SKIP_ASDF_CHECK
 ifeq ($(shell command -v asdf),)
   $(error "This repo requires asdf - see https://asdf-vm.com/guide/getting-started.html for instructions to install")
 endif
