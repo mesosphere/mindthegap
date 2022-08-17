@@ -40,11 +40,6 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Output required tool versions
-        id: tool-versions
-        run: |
-          echo "::set-output name=go::$(grep -E '^golang ' .tool-versions | cut -d' ' -f2)"
-          echo "::set-output name=golangci-lint::v$(grep -E '^golangci-lint ' .tool-versions | cut -d' ' -f2)"
 
       - uses: actions/setup-go@v3
         with:
@@ -53,6 +48,12 @@ jobs:
 
       - name: Check out code
         uses: actions/checkout@v3
+
+      - name: Output required tool versions
+        id: tool-versions
+        run: |
+          echo "::set-output name=go::$(grep -E '^golang ' .tool-versions | cut -d' ' -f2)"
+          echo "::set-output name=golangci-lint::v$(grep -E '^golangci-lint ' .tool-versions | cut -d' ' -f2)"
 
       - name: Ensure dummy skopeo files
         run: make ensure-static-skopeo
