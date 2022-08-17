@@ -30,7 +30,7 @@ jobs:
       with:
         languages: ${{ matrix.language }}
 
-    - name: Install asdf and tools
+    - name: Install tools via asdf
       uses: asdf-vm/actions/install@v1
 
     - name: Build

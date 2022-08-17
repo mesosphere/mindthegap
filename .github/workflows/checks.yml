@@ -40,7 +40,6 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-
       - uses: actions/setup-go@v3
         with:
           go-version: ${{ steps.tool-versions.outputs.go }}
@@ -77,6 +76,6 @@ jobs:
 
       - uses: pre-commit/action@v3.0.0
         with:
-          extra_args: --all-files
+          extra_args: --all-files --show-diff-on-failure
         env:
           SKIP: no-commit-to-branch,golangci-lint
