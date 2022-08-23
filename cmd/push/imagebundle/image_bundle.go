@@ -9,11 +9,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/mholt/archiver/v3"
 	"github.com/spf13/cobra"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
+	"github.com/mesosphere/mindthegap/archive"
 	"github.com/mesosphere/mindthegap/cleanup"
 	"github.com/mesosphere/mindthegap/config"
 	"github.com/mesosphere/mindthegap/docker/ecr"
@@ -48,7 +48,7 @@ func NewCommand(out output.Output) *cobra.Command {
 			out.EndOperation(true)
 
 			out.StartOperation("Unarchiving image bundle")
-			err = archiver.Unarchive(imageBundleFile, tempDir)
+			err = archive.UnarchiveToDirectory(imageBundleFile, tempDir)
 			if err != nil {
 				out.EndOperation(false)
 				return fmt.Errorf("failed to unarchive image bundle: %w", err)

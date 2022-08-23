@@ -26,7 +26,38 @@ func ArchiveDirectory(dir, outputFile string) error {
 		return fmt.Errorf("failed to create archive: %w", err)
 	}
 	if err := os.Rename(tempTarArchive, outputFile); err != nil {
-		return fmt.Errorf("failed to rename temporary tar bundle to output file: %w", err)
+		return fmt.Errorf("failed to rename temporary archive to output file: %w", err)
 	}
+	return nil
+}
+
+func UnarchiveToDirectory(archive, destDir string) error {
+	tarArchive, err := os.Open(archive)
+	if err != nil {
+		return fmt.Errorf("failed to open archive for extraction: %w", err)
+	}
+	defer tarArchive.Close()
+
+	archiverByExtension, err := archiver.ByExtension(archive)
+	if err != nil {
+		return fmt.Errorf("failed to identify archive format: %w", err)
+	}
+
+	unarc, ok := archiverByExtension.(archiver.Unarchiver)
+	if !ok {
+		return fmt.Errorf("not an valid archive extension")
+	}
+
+	switch t := unarc.(type) {
+	case *archiver.TarGz:
+		t.OverwriteExisting = true
+	case *archiver.Tar:
+		t.OverwriteExisting = true
+	}
+
+	if err := unarc.Unarchive(archive, destDir); err != nil {
+		return fmt.Errorf("failed to unarchive bundle: %w", err)
+	}
+
 	return nil
 }
