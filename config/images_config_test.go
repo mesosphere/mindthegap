@@ -137,3 +137,152 @@ func TestParseImagesFile(t *testing.T) {
 		})
 	}
 }
+
+func TestMergeConfig(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		a, b ImagesConfig
+		want ImagesConfig
+	}{{
+		name: "empty",
+		want: nil,
+	}, {
+		name: "empty to merge",
+		a: ImagesConfig{
+			"a": RegistrySyncConfig{
+				Images: map[string][]string{"1": {"v1"}},
+			},
+		},
+		want: ImagesConfig{
+			"a": RegistrySyncConfig{
+				Images: map[string][]string{"1": {"v1"}},
+			},
+		},
+	}, {
+		name: "empty from merge",
+		b: ImagesConfig{
+			"a": RegistrySyncConfig{
+				Images: map[string][]string{"1": {"v1"}},
+			},
+		},
+		want: ImagesConfig{
+			"a": RegistrySyncConfig{
+				Images: map[string][]string{"1": {"v1"}},
+			},
+		},
+	}, {
+		name: "distinct registries",
+		a: ImagesConfig{
+			"a": RegistrySyncConfig{
+				Images: map[string][]string{"1": {"v1"}},
+			},
+		},
+		b: ImagesConfig{
+			"b": RegistrySyncConfig{
+				Images: map[string][]string{"2": {"v2"}},
+			},
+		},
+		want: ImagesConfig{
+			"a": RegistrySyncConfig{
+				Images: map[string][]string{"1": {"v1"}},
+			},
+			"b": RegistrySyncConfig{
+				Images: map[string][]string{"2": {"v2"}},
+			},
+		},
+	}, {
+		name: "duplicate registries with same configuration",
+		a: ImagesConfig{
+			"a": RegistrySyncConfig{
+				Images: map[string][]string{"1": {"v1"}},
+			},
+		},
+		b: ImagesConfig{
+			"a": RegistrySyncConfig{
+				Images: map[string][]string{"1": {"v1"}},
+			},
+		},
+		want: ImagesConfig{
+			"a": RegistrySyncConfig{
+				Images: map[string][]string{"1": {"v1"}},
+			},
+		},
+	}, {
+		name: "duplicate registries with extra tags",
+		a: ImagesConfig{
+			"a": RegistrySyncConfig{
+				Images: map[string][]string{"1": {"v1"}},
+			},
+		},
+		b: ImagesConfig{
+			"a": RegistrySyncConfig{
+				Images: map[string][]string{"1": {"v1", "v2"}},
+			},
+		},
+		want: ImagesConfig{
+			"a": RegistrySyncConfig{
+				Images: map[string][]string{"1": {"v1", "v2"}},
+			},
+		},
+	}, {
+		name: "duplicate registries with extra image",
+		a: ImagesConfig{
+			"a": RegistrySyncConfig{
+				Images: map[string][]string{"1": {"v1", "v3"}},
+			},
+		},
+		b: ImagesConfig{
+			"a": RegistrySyncConfig{
+				Images: map[string][]string{
+					"1": {"v1", "v2"},
+					"2": {"v3"},
+				},
+			},
+		},
+		want: ImagesConfig{
+			"a": RegistrySyncConfig{
+				Images: map[string][]string{
+					"1": {"v1", "v2", "v3"},
+					"2": {"v3"},
+				},
+			},
+		},
+	}, {
+		name: "duplicate registries with extra image",
+		a: ImagesConfig{
+			"a": RegistrySyncConfig{
+				Images: map[string][]string{
+					"1": {"v1", "v3"},
+					"2": {"v3"},
+				},
+			},
+		},
+		b: ImagesConfig{
+			"a": RegistrySyncConfig{
+				Images: map[string][]string{
+					"1": {"v1", "v2", "v4"},
+				},
+			},
+		},
+		want: ImagesConfig{
+			"a": RegistrySyncConfig{
+				Images: map[string][]string{
+					"1": {"v1", "v2", "v3", "v4"},
+					"2": {"v3"},
+				},
+			},
+		},
+	}}
+
+	for ti := range tests {
+		tt := tests[ti]
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := tt.a.Merge(tt.b)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Merge() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
