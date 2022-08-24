@@ -1,7 +1,7 @@
 // Copyright 2021 D2iQ, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-package cmd
+package root
 
 import (
 	"io"
@@ -12,10 +12,10 @@ import (
 	"github.com/mesosphere/dkp-cli-runtime/core/cmd/root"
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
-	"github.com/mesosphere/mindthegap/cmd/create"
-	"github.com/mesosphere/mindthegap/cmd/importcmd"
-	"github.com/mesosphere/mindthegap/cmd/push"
-	"github.com/mesosphere/mindthegap/cmd/serve"
+	"github.com/mesosphere/mindthegap/cmd/mindthegap/create"
+	"github.com/mesosphere/mindthegap/cmd/mindthegap/importcmd"
+	"github.com/mesosphere/mindthegap/cmd/mindthegap/push"
+	"github.com/mesosphere/mindthegap/cmd/mindthegap/serve"
 )
 
 func NewCommand(in io.Reader, out, errOut io.Writer) (*cobra.Command, output.Output) {

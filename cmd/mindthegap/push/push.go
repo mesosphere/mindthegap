@@ -8,7 +8,7 @@ import (
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
-	"github.com/mesosphere/mindthegap/cmd/push/imagebundle"
+	"github.com/mesosphere/mindthegap/cmd/mindthegap/push/imagebundle"
 )
 
 func NewCommand(out output.Output) *cobra.Command {
