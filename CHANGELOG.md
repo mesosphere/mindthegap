@@ -1,5 +1,22 @@
 # Changelog
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: Serve multiple bundles by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/165
+* feat: Import multiple image bundles by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/167
+* feat: Push multiple image bundles by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/169
+### Fixes 🔧
+* fix: Write out merged image bundle config when serving by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/168
+### Other Changes
+* build(deps): bump helm.sh/helm/v3 from 3.9.2 to 3.9.3 by @dependabot in https://github.com/mesosphere/mindthegap/pull/163
+* build(deps): bump github.com/aws/aws-sdk-go-v2/service/ecr from 1.17.11 to 1.17.12 by @dependabot in https://github.com/mesosphere/mindthegap/pull/162
+* build(deps): bump github.com/aws/aws-sdk-go-v2/config from 1.15.17 to 1.17.1 by @dependabot in https://github.com/mesosphere/mindthegap/pull/164
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v0.18.0...v0.19.0
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
