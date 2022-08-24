@@ -46,6 +46,8 @@ func NewCommand(out output.Output) *cobra.Command {
 
 			sort.Strings(imageBundleFiles)
 
+			// This will hold the merged config from all the image bundles which will be used to import
+			// all the images from all the bundles.
 			var cfg config.ImagesConfig
 
 			// Just in case users specify the same bundle twice, keep a track of
@@ -65,6 +67,7 @@ func NewCommand(out output.Output) *cobra.Command {
 				}
 				out.EndOperation(true)
 
+				// Parse the config from this image bundle.
 				out.StartOperation("Parsing image bundle config")
 				bundleCfg, err := config.ParseImagesConfigFile(
 					filepath.Join(tempDir, "images.yaml"),
@@ -76,6 +79,7 @@ func NewCommand(out output.Output) *cobra.Command {
 				out.V(4).Infof("Images config: %+v", bundleCfg)
 				out.EndOperation(true)
 
+				// Merge the config from this image bundle with any existing image bundle config.
 				cfg = cfg.Merge(bundleCfg)
 			}
 
@@ -106,6 +110,7 @@ func NewCommand(out output.Output) *cobra.Command {
 			}
 			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(ociExportsTempDir) })
 
+			// Import the images from the merged bundle config.
 			for registryName, registryConfig := range cfg {
 				for imageName, imageTags := range registryConfig.Images {
 					for _, imageTag := range imageTags {
