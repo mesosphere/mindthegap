@@ -6,28 +6,29 @@ package imagebundle
 import (
 	"fmt"
 	"os"
+	"sort"
 
-	"github.com/mholt/archiver/v3"
 	"github.com/spf13/cobra"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
+	"github.com/mesosphere/mindthegap/archive"
 	"github.com/mesosphere/mindthegap/cleanup"
 	"github.com/mesosphere/mindthegap/docker/registry"
 )
 
 func NewCommand(out output.Output) *cobra.Command {
 	var (
-		imageBundleFile string
-		listenAddress   string
-		listenPort      uint16
-		tlsCertificate  string
-		tlsKey          string
+		imageBundleFiles []string
+		listenAddress    string
+		listenPort       uint16
+		tlsCertificate   string
+		tlsKey           string
 	)
 
 	cmd := &cobra.Command{
 		Use:   "image-bundle",
-		Short: "Serve an image registry",
+		Short: "Serve an image registry from image bundles",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cleaner := cleanup.NewCleaner()
 			defer cleaner.Cleanup()
@@ -41,13 +42,26 @@ func NewCommand(out output.Output) *cobra.Command {
 
 			out.EndOperation(true)
 
-			out.StartOperation("Unarchiving image bundle")
-			err = archiver.Unarchive(imageBundleFile, tempDir)
-			if err != nil {
-				out.EndOperation(false)
-				return fmt.Errorf("failed to unarchive image bundle: %w", err)
+			sort.Strings(imageBundleFiles)
+
+			// Just in case users specify the same bundle twice, keep a track of
+			// files that have been extracted already so we only extract each of them once.
+			extractedBundles := make(map[string]struct{}, len(imageBundleFiles))
+
+			for _, imageBundleFile := range imageBundleFiles {
+				if _, ok := extractedBundles[imageBundleFile]; ok {
+					continue
+				}
+				extractedBundles[imageBundleFile] = struct{}{}
+
+				out.StartOperation(fmt.Sprintf("Unarchiving image bundle %q", imageBundleFile))
+				err = archive.UnarchiveToDirectory(imageBundleFile, tempDir)
+				if err != nil {
+					out.EndOperation(false)
+					return fmt.Errorf("failed to unarchive image bundle: %w", err)
+				}
+				out.EndOperation(true)
 			}
-			out.EndOperation(true)
 
 			out.StartOperation("Creating Docker registry")
 			reg, err := registry.NewRegistry(registry.Config{
@@ -76,7 +90,7 @@ func NewCommand(out output.Output) *cobra.Command {
 	}
 
 	cmd.Flags().
-		StringVar(&imageBundleFile, "images-bundle", "", "Tarball of images to serve")
+		StringSliceVar(&imageBundleFiles, "images-bundle", nil, "Tarball of images to serve")
 	_ = cmd.MarkFlagRequired("images-bundle")
 	cmd.Flags().StringVar(&listenAddress, "listen-address", "localhost", "Address to list on")
 	cmd.Flags().

@@ -11,12 +11,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/mholt/archiver/v3"
 	"github.com/phayes/freeport"
 	"github.com/spf13/cobra"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
+	"github.com/mesosphere/mindthegap/archive"
 	"github.com/mesosphere/mindthegap/cleanup"
 	"github.com/mesosphere/mindthegap/httpfs"
 )
@@ -47,7 +47,7 @@ func NewCommand(out output.Output) *cobra.Command {
 			out.EndOperation(true)
 
 			out.StartOperation("Unarchiving Helm chart bundle")
-			err = archiver.Unarchive(helmBundleFile, tempDir)
+			err = archive.UnarchiveToDirectory(helmBundleFile, tempDir)
 			if err != nil {
 				out.EndOperation(false)
 				return fmt.Errorf("failed to unarchive Helm chart bundle: %w", err)

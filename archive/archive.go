@@ -26,7 +26,7 @@ func ArchiveDirectory(dir, outputFile string) error {
 		return fmt.Errorf("failed to create archive: %w", err)
 	}
 	if err := os.Rename(tempTarArchive, outputFile); err != nil {
-		return fmt.Errorf("failed to rename temporary tar bundle to output file: %w", err)
+		return fmt.Errorf("failed to rename temporary archive to output file: %w", err)
 	}
 	return nil
 }

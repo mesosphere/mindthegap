@@ -53,6 +53,7 @@ log:
 )
 
 func Test_registryConfiguration_withoutTLS(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		StorageDirectory: "/tmp",
 		Host:             "0.0.0.0",
@@ -66,6 +67,7 @@ func Test_registryConfiguration_withoutTLS(t *testing.T) {
 }
 
 func Test_registryConfiguration_withTLS(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		StorageDirectory: "/tmp",
 		Host:             "0.0.0.0",
