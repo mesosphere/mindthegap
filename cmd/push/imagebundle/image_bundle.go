@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/spf13/cobra"
 
@@ -23,7 +24,7 @@ import (
 
 func NewCommand(out output.Output) *cobra.Command {
 	var (
-		imageBundleFile           string
+		imageBundleFiles          []string
 		destRegistry              string
 		destRegistrySkipTLSVerify bool
 		destRegistryUsername      string
@@ -47,22 +48,43 @@ func NewCommand(out output.Output) *cobra.Command {
 			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempDir) })
 			out.EndOperation(true)
 
-			out.StartOperation("Unarchiving image bundle")
-			err = archive.UnarchiveToDirectory(imageBundleFile, tempDir)
-			if err != nil {
-				out.EndOperation(false)
-				return fmt.Errorf("failed to unarchive image bundle: %w", err)
-			}
-			out.EndOperation(true)
+			sort.Strings(imageBundleFiles)
 
-			out.StartOperation("Parsing image bundle config")
-			cfg, err := config.ParseImagesConfigFile(filepath.Join(tempDir, "images.yaml"))
-			if err != nil {
-				out.EndOperation(false)
-				return err
+			var cfg config.ImagesConfig
+
+			// Just in case users specify the same bundle twice, keep a track of
+			// files that have been extracted already so we only extract each of them once.
+			extractedBundles := make(map[string]struct{}, len(imageBundleFiles))
+
+			for _, imageBundleFile := range imageBundleFiles {
+				if _, ok := extractedBundles[imageBundleFile]; ok {
+					continue
+				}
+				extractedBundles[imageBundleFile] = struct{}{}
+
+				out.StartOperation(fmt.Sprintf("Unarchiving image bundle %q", imageBundleFile))
+				err = archive.UnarchiveToDirectory(imageBundleFile, tempDir)
+				if err != nil {
+					out.EndOperation(false)
+					return fmt.Errorf("failed to unarchive image bundle: %w", err)
+				}
+				out.EndOperation(true)
+
+				out.StartOperation("Parsing image bundle config")
+				bundleCfg, err := config.ParseImagesConfigFile(
+					filepath.Join(tempDir, "images.yaml"),
+				)
+				if err != nil {
+					out.EndOperation(false)
+					return err
+				}
+				out.V(4).Infof("Images config: %+v", bundleCfg)
+				out.EndOperation(true)
+
+				cfg = cfg.Merge(bundleCfg)
 			}
-			out.V(4).Infof("Images config: %+v", cfg)
-			out.EndOperation(true)
+
+			out.V(4).Infof("Merged images config: %+v", cfg)
 
 			out.StartOperation("Starting temporary Docker registry")
 			reg, err := registry.NewRegistry(
@@ -96,7 +118,7 @@ func NewCommand(out output.Output) *cobra.Command {
 				)
 			} else {
 				skopeoStdout, skopeoStderr, err := skopeoRunner.AttemptToLoginToRegistry(
-					context.TODO(),
+					context.Background(),
 					destRegistry,
 				)
 				if err != nil {
@@ -131,7 +153,7 @@ func NewCommand(out output.Output) *cobra.Command {
 	}
 
 	cmd.Flags().
-		StringVar(&imageBundleFile, "image-bundle", "", "Tarball of images to push")
+		StringSliceVar(&imageBundleFiles, "image-bundle", nil, "Tarball containing list of images to push")
 	_ = cmd.MarkFlagRequired("image-bundle")
 	cmd.Flags().StringVar(&destRegistry, "to-registry", "", "Registry to push images to")
 	_ = cmd.MarkFlagRequired("to-registry")

@@ -59,6 +59,7 @@ func NewCommand(out output.Output) *cobra.Command {
 					continue
 				}
 				extractedBundles[imageBundleFile] = struct{}{}
+
 				out.StartOperation(fmt.Sprintf("Unarchiving image bundle %q", imageBundleFile))
 				err = archive.UnarchiveToDirectory(imageBundleFile, tempDir)
 				if err != nil {
@@ -158,7 +159,7 @@ func NewCommand(out output.Output) *cobra.Command {
 	}
 
 	cmd.Flags().
-		StringSliceVar(&imageBundleFiles, "image-bundle", nil, "Tarball containing list of images to push")
+		StringSliceVar(&imageBundleFiles, "image-bundle", nil, "Tarball containing list of images to import")
 	_ = cmd.MarkFlagRequired("image-bundle")
 	cmd.Flags().StringVar(&containerdNamespace, "containerd-namespace", "k8s.io",
 		"Containerd namespace to import images into")
