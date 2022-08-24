@@ -7,15 +7,13 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
-	"sort"
 
 	"github.com/spf13/cobra"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
-	"github.com/mesosphere/mindthegap/archive"
 	"github.com/mesosphere/mindthegap/cleanup"
+	"github.com/mesosphere/mindthegap/cmd/utils"
 	"github.com/mesosphere/mindthegap/config"
 	"github.com/mesosphere/mindthegap/docker/ecr"
 	"github.com/mesosphere/mindthegap/docker/registry"
@@ -48,43 +46,10 @@ func NewCommand(out output.Output) *cobra.Command {
 			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempDir) })
 			out.EndOperation(true)
 
-			sort.Strings(imageBundleFiles)
-
-			var cfg config.ImagesConfig
-
-			// Just in case users specify the same bundle twice, keep a track of
-			// files that have been extracted already so we only extract each of them once.
-			extractedBundles := make(map[string]struct{}, len(imageBundleFiles))
-
-			for _, imageBundleFile := range imageBundleFiles {
-				if _, ok := extractedBundles[imageBundleFile]; ok {
-					continue
-				}
-				extractedBundles[imageBundleFile] = struct{}{}
-
-				out.StartOperation(fmt.Sprintf("Unarchiving image bundle %q", imageBundleFile))
-				err = archive.UnarchiveToDirectory(imageBundleFile, tempDir)
-				if err != nil {
-					out.EndOperation(false)
-					return fmt.Errorf("failed to unarchive image bundle: %w", err)
-				}
-				out.EndOperation(true)
-
-				out.StartOperation("Parsing image bundle config")
-				bundleCfg, err := config.ParseImagesConfigFile(
-					filepath.Join(tempDir, "images.yaml"),
-				)
-				if err != nil {
-					out.EndOperation(false)
-					return err
-				}
-				out.V(4).Infof("Images config: %+v", bundleCfg)
-				out.EndOperation(true)
-
-				cfg = cfg.Merge(bundleCfg)
+			cfg, err := utils.ExtractBundles(tempDir, out, imageBundleFiles...)
+			if err != nil {
+				return err
 			}
-
-			out.V(4).Infof("Merged images config: %+v", cfg)
 
 			out.StartOperation("Starting temporary Docker registry")
 			reg, err := registry.NewRegistry(
