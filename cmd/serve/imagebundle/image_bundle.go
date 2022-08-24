@@ -28,7 +28,7 @@ func NewCommand(out output.Output) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "image-bundle",
-		Short: "Serve an image registry",
+		Short: "Serve an image registry from image bundles",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cleaner := cleanup.NewCleaner()
 			defer cleaner.Cleanup()
@@ -44,12 +44,16 @@ func NewCommand(out output.Output) *cobra.Command {
 
 			sort.Strings(imageBundleFiles)
 
+			// Just in case users specify the same bundle twice, keep a track of
+			// files that have been extracted already so we only extract each of them once.
 			extractedBundles := make(map[string]struct{}, len(imageBundleFiles))
 
 			for _, imageBundleFile := range imageBundleFiles {
 				if _, ok := extractedBundles[imageBundleFile]; ok {
 					continue
 				}
+				extractedBundles[imageBundleFile] = struct{}{}
+
 				out.StartOperation(fmt.Sprintf("Unarchiving image bundle %q", imageBundleFile))
 				err = archive.UnarchiveToDirectory(imageBundleFile, tempDir)
 				if err != nil {
@@ -57,7 +61,6 @@ func NewCommand(out output.Output) *cobra.Command {
 					return fmt.Errorf("failed to unarchive image bundle: %w", err)
 				}
 				out.EndOperation(true)
-				extractedBundles[imageBundleFile] = struct{}{}
 			}
 
 			out.StartOperation("Creating Docker registry")

@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"io"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -19,19 +18,10 @@ import (
 )
 
 func TestArchiveDirectorySuccess(t *testing.T) {
-	testDataDir := "testdata"
-	testDataContents := map[string]string{}
-	err := filepath.WalkDir(testDataDir, func(path string, d fs.DirEntry, _ error) error {
-		if d.IsDir() {
-			return nil
-		}
-		contents, err := os.ReadFile(path)
-		require.NoErrorf(t, err, "error reading test data file %s", path)
-		rel, err := filepath.Rel(testDataDir, path)
-		require.NoError(t, err, "error getting relative path for test data")
-		testDataContents[rel] = string(contents)
-		return nil
-	})
+	t.Parallel()
+	testDataDir := filepath.Join("testdata", "archivetest")
+	testDataContents, err := walkDirContentsToMap(testDataDir)
+	require.NoError(t, err)
 	require.NoError(t, err, "error walking test data directory")
 
 	tmpDir := t.TempDir()
@@ -71,6 +61,7 @@ func TestArchiveDirectorySuccess(t *testing.T) {
 }
 
 func TestArchiveDirectoryDestDirNotWritable(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	notWriteable := filepath.Join(tmpDir, "notwritable")
 	require.NoError(t, os.Mkdir(notWriteable, 0o500), "error creating not writable directory")
@@ -83,6 +74,7 @@ func TestArchiveDirectoryDestDirNotWritable(t *testing.T) {
 }
 
 func TestArchiveDirectoryDestFileExists(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	outputFile := filepath.Join(tmpDir, "out.tar.gz")
 	f, err := os.OpenFile(outputFile, os.O_CREATE, 0o400)
@@ -96,6 +88,7 @@ func TestArchiveDirectoryDestFileExists(t *testing.T) {
 }
 
 func TestArchiveDirectoryUnreadableSource(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	unreadable := filepath.Join(tmpDir, "unreadable")
 	require.NoError(t, os.Mkdir(unreadable, 0o100), "error creating unreadable directory")
