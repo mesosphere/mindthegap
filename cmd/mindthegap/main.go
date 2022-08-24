@@ -7,11 +7,11 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/mesosphere/mindthegap/cmd"
+	"github.com/mesosphere/mindthegap/cmd/mindthegap/root"
 )
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
-	cmd.Execute()
+	root.Execute()
 }

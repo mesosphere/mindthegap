@@ -25,6 +25,7 @@ release:
 
 builds:
   - id: mindthegap
+    dir: ./cmd/mindthegap
     env:
       - CGO_ENABLED=0
     flags:
@@ -60,6 +61,8 @@ archives:
     format_overrides:
       - goos: windows
         format: zip
+    builds:
+      - mindthegap
 checksum:
   name_template: 'checksums.txt'
 snapshot:
