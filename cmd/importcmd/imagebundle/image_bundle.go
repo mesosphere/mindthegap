@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/spf13/cobra"
 
@@ -23,13 +24,13 @@ import (
 
 func NewCommand(out output.Output) *cobra.Command {
 	var (
-		imageBundleFile     string
+		imageBundleFiles    []string
 		containerdNamespace string
 	)
 
 	cmd := &cobra.Command{
 		Use:   "image-bundle",
-		Short: "Import images from an image bundle into Containerd",
+		Short: "Import images from image bundles into Containerd",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cleaner := cleanup.NewCleaner()
 			defer cleaner.Cleanup()
@@ -43,22 +44,46 @@ func NewCommand(out output.Output) *cobra.Command {
 			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempDir) })
 			out.EndOperation(true)
 
-			out.StartOperation("Unarchiving image bundle")
-			err = archive.UnarchiveToDirectory(imageBundleFile, tempDir)
-			if err != nil {
-				out.EndOperation(false)
-				return fmt.Errorf("failed to unarchive image bundle: %w", err)
-			}
-			out.EndOperation(true)
+			sort.Strings(imageBundleFiles)
 
-			out.StartOperation("Parsing image bundle config")
-			cfg, err := config.ParseImagesConfigFile(filepath.Join(tempDir, "images.yaml"))
-			if err != nil {
-				out.EndOperation(false)
-				return err
+			// This will hold the merged config from all the image bundles which will be used to import
+			// all the images from all the bundles.
+			var cfg config.ImagesConfig
+
+			// Just in case users specify the same bundle twice, keep a track of
+			// files that have been extracted already so we only extract each of them once.
+			extractedBundles := make(map[string]struct{}, len(imageBundleFiles))
+
+			for _, imageBundleFile := range imageBundleFiles {
+				if _, ok := extractedBundles[imageBundleFile]; ok {
+					continue
+				}
+				extractedBundles[imageBundleFile] = struct{}{}
+				out.StartOperation(fmt.Sprintf("Unarchiving image bundle %q", imageBundleFile))
+				err = archive.UnarchiveToDirectory(imageBundleFile, tempDir)
+				if err != nil {
+					out.EndOperation(false)
+					return fmt.Errorf("failed to unarchive image bundle: %w", err)
+				}
+				out.EndOperation(true)
+
+				// Parse the config from this image bundle.
+				out.StartOperation("Parsing image bundle config")
+				bundleCfg, err := config.ParseImagesConfigFile(
+					filepath.Join(tempDir, "images.yaml"),
+				)
+				if err != nil {
+					out.EndOperation(false)
+					return err
+				}
+				out.V(4).Infof("Images config: %+v", bundleCfg)
+				out.EndOperation(true)
+
+				// Merge the config from this image bundle with any existing image bundle config.
+				cfg = cfg.Merge(bundleCfg)
 			}
-			out.V(4).Infof("Images config: %+v", cfg)
-			out.EndOperation(true)
+
+			out.V(4).Infof("Merged images config: %+v", cfg)
 
 			out.StartOperation("Starting temporary Docker registry")
 			reg, err := registry.NewRegistry(
@@ -85,6 +110,7 @@ func NewCommand(out output.Output) *cobra.Command {
 			}
 			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(ociExportsTempDir) })
 
+			// Import the images from the merged bundle config.
 			for registryName, registryConfig := range cfg {
 				for imageName, imageTags := range registryConfig.Images {
 					for _, imageTag := range imageTags {
@@ -132,7 +158,7 @@ func NewCommand(out output.Output) *cobra.Command {
 	}
 
 	cmd.Flags().
-		StringVar(&imageBundleFile, "image-bundle", "", "Tarball containing list of images to push")
+		StringSliceVar(&imageBundleFiles, "image-bundle", nil, "Tarball containing list of images to push")
 	_ = cmd.MarkFlagRequired("image-bundle")
 	cmd.Flags().StringVar(&containerdNamespace, "containerd-namespace", "k8s.io",
 		"Containerd namespace to import images into")

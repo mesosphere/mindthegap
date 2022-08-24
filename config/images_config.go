@@ -14,6 +14,7 @@ import (
 	"github.com/containers/image/v5/types"
 	"github.com/distribution/distribution/v3/reference"
 	"gopkg.in/yaml.v3"
+	"k8s.io/utils/pointer"
 )
 
 // RegistrySyncConfig contains information about a single registry, read from
@@ -36,8 +37,91 @@ func (rsc RegistrySyncConfig) SortedImageNames() []string {
 	return imageNames
 }
 
+func (rsc RegistrySyncConfig) Clone() RegistrySyncConfig {
+	images := make(map[string][]string, len(rsc.Images))
+	for k, v := range rsc.Images {
+		images[k] = append([]string{}, v...)
+	}
+
+	var tlsVerify *bool = nil
+	if rsc.TLSVerify != nil {
+		tlsVerify = pointer.Bool(*rsc.TLSVerify)
+	}
+
+	var creds *types.DockerAuthConfig = nil
+	if rsc.Credentials != nil {
+		creds = &types.DockerAuthConfig{
+			IdentityToken: rsc.Credentials.IdentityToken,
+			Username:      rsc.Credentials.Username,
+			Password:      rsc.Credentials.Password,
+		}
+	}
+
+	return RegistrySyncConfig{
+		Images:      images,
+		TLSVerify:   tlsVerify,
+		Credentials: creds,
+	}
+}
+
 // ImagesConfig contains all registries information read from the source YAML file.
 type ImagesConfig map[string]RegistrySyncConfig
+
+func (ic ImagesConfig) Merge(cfg ImagesConfig) ImagesConfig {
+	if ic == nil && cfg == nil {
+		return nil
+	}
+
+	merged := make(ImagesConfig, len(ic)+len(cfg))
+
+	for k, v := range ic {
+		merged[k] = v.Clone()
+	}
+
+	for k, v := range cfg {
+		cloned := v.Clone()
+
+		f, ok := merged[k]
+
+		if !ok {
+			merged[k] = cloned
+			continue
+		}
+
+		f.Credentials = cloned.Credentials
+		f.TLSVerify = cloned.TLSVerify
+
+		for img, tags := range cloned.Images {
+			fImg, ok := f.Images[img]
+
+			if !ok {
+				f.Images[img] = tags
+				continue
+			}
+
+			for _, tag := range tags {
+				if !sliceContains(fImg, tag) {
+					fImg = append(fImg, tag)
+				}
+			}
+
+			sort.Strings(fImg)
+			f.Images[img] = fImg
+		}
+	}
+
+	return merged
+}
+
+func sliceContains(sl []string, s string) bool {
+	for _, v := range sl {
+		if v == s {
+			return true
+		}
+	}
+
+	return false
+}
 
 func (ic ImagesConfig) SortedRegistryNames() []string {
 	regNames := make([]string, 0, len(ic))
