@@ -53,8 +53,33 @@ builds:
           env:
             - GOOS={{ .Os }}
             - GOARCH={{ .Arch }}
+  - id: kindthegap
+    dir: ./cmd/kindthegap
+    binary: kindthegap
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s
+      - -w
+      - -X 'github.com/mesosphere/dkp-cli-runtime/core/cmd/version.commitDate={{ .CommitDate }}'
+      - -X 'github.com/mesosphere/dkp-cli-runtime/core/cmd/version.gitCommit={{ .FullCommit }}'
+      - -X 'github.com/mesosphere/dkp-cli-runtime/core/cmd/version.gitTreeState={{ .Env.GIT_TREE_STATE }}'
+      - -X 'github.com/mesosphere/dkp-cli-runtime/core/cmd/version.gitVersion=v{{ trimprefix .Version "v" }}'
+      - -X 'github.com/mesosphere/dkp-cli-runtime/core/cmd/version.major={{ .Major }}'
+      - -X 'github.com/mesosphere/dkp-cli-runtime/core/cmd/version.minor={{ .Minor }}'
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    mod_timestamp: '{{ .CommitTimestamp }}'
 archives:
-  - name_template: '{{ .ProjectName }}_v{{trimprefix .Version "v"}}_{{ .Os }}_{{ .Arch }}'
+  - id: mindthegap
+    name_template: 'mindthegap_v{{trimprefix .Version "v"}}_{{ .Os }}_{{ .Arch }}'
   # This is a hack documented in https://github.com/goreleaser/goreleaser/blob/df0216d5855e9283d2106fb5acdb0e7b528a56e8/www/docs/customization/archive.md#packaging-only-the-binaries
     files:
       - none*
@@ -63,6 +88,23 @@ archives:
         format: zip
     builds:
       - mindthegap
+  - id: kindthegap
+    name_template: 'kindthegap_v{{trimprefix .Version "v"}}_{{ .Os }}_{{ .Arch }}'
+  # This is a hack documented in https://github.com/goreleaser/goreleaser/blob/df0216d5855e9283d2106fb5acdb0e7b528a56e8/www/docs/customization/archive.md#packaging-only-the-binaries
+    files:
+      - none*
+    format_overrides:
+      - goos: windows
+        format: zip
+    builds:
+      - kindthegap
+  - name_template: 'all_v{{trimprefix .Version "v"}}_{{ .Os }}_{{ .Arch }}'
+  # This is a hack documented in https://github.com/goreleaser/goreleaser/blob/df0216d5855e9283d2106fb5acdb0e7b528a56e8/www/docs/customization/archive.md#packaging-only-the-binaries
+    files:
+      - none*
+    format_overrides:
+      - goos: windows
+        format: zip
 checksum:
   name_template: 'checksums.txt'
 snapshot:
