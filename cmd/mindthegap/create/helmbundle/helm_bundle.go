@@ -31,7 +31,7 @@ func NewCommand(out output.Output) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "helm-bundle",
-		Short: "Create a tar.gz helm bundle",
+		Short: "Create a helm bundle",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !overwrite {
 				out.StartOperation("Checking if output file already exists")
@@ -172,7 +172,7 @@ func NewCommand(out output.Output) *cobra.Command {
 		"YAML file containing configuration of Helm charts to create bundle from")
 	_ = cmd.MarkFlagRequired("helm-charts-file")
 	cmd.Flags().
-		StringVar(&outputFile, "output-file", "helm-charts.tar.gz", "Output file to write Helm charts bundle to")
+		StringVar(&outputFile, "output-file", "helm-charts.tar", "Output file to write Helm charts bundle to")
 	cmd.Flags().
 		BoolVar(&overwrite, "overwrite", false, "Overwrite Helm charts bundle file if it already exists")
 

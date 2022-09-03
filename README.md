@@ -20,7 +20,7 @@ image registry.
 ```shell
 mindthegap create image-bundle --images-file <path/to/images.yaml> \
   --platform <platform> [--platform <platform> ...] \
-  [--output-file <path/to/output.tar.gz>]
+  [--output-file <path/to/output.tar>]
 ```
 
 See the [example images.yaml](images-example.yaml) for the structure of the
@@ -89,7 +89,7 @@ command requires `ctr` to be in the `PATH`.
 
 ```shell
 mindthegap create helm-bundle --helm-charts-file <path/to/helm-charts.yaml> \
-  [--output-file <path/to/output.tar.gz>]
+  [--output-file <path/to/output.tar>]
 ```
 
 See the [example helm-charts.yaml](helm-example.yaml) for the structure of the
@@ -102,7 +102,7 @@ the charts used locally via Helm.
 #### Serving a Helm chart bundle
 
 ```shell
-mindthegap serve helm-bundle --helm-charts-bundle <path/to/helm-charts.tar.gz> \
+mindthegap serve helm-bundle --helm-charts-bundle <path/to/helm-charts.tar> \
   [--listen-address <addr>] \
   [--list-port <port>] \
   [--tls-cert-file <path/to/cert/file> --tls-private-key-file <path/to/key/file>]

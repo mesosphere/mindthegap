@@ -32,7 +32,7 @@ func NewCommand(out output.Output) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "image-bundle",
-		Short: "Create a tar.gz image bundle",
+		Short: "Create an image bundle",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !overwrite {
 				out.StartOperation("Checking if output file already exists")
@@ -286,7 +286,7 @@ func NewCommand(out output.Output) *cobra.Command {
 		Var(newPlatformSlicesValue([]platform{{os: "linux", arch: "amd64"}}, &platforms), "platform",
 			"platforms to download images (required format: <os>/<arch>[/<variant>])")
 	cmd.Flags().
-		StringVar(&outputFile, "output-file", "images.tar.gz", "Output file to write image bundle to")
+		StringVar(&outputFile, "output-file", "images.tar", "Output file to write image bundle to")
 	cmd.Flags().
 		BoolVar(&overwrite, "overwrite", false, "Overwrite image bundle file if it already exists")
 
