@@ -15,7 +15,7 @@ import (
 func NewCommand(out output.Output) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create an tar.gz image or helm bundle",
+		Short: "Create an image or helm bundle",
 	}
 
 	cmd.AddCommand(imagebundle.NewCommand(out))

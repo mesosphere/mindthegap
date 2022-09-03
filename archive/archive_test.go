@@ -60,6 +60,47 @@ func TestArchiveDirectorySuccess(t *testing.T) {
 	require.Equal(t, testDataContents, archivedContents, "incorrect tarball contents")
 }
 
+func TestArchiveDirectoryToTarSuccess(t *testing.T) {
+	t.Parallel()
+	testDataDir := filepath.Join("testdata", "archivetest")
+	testDataContents, err := walkDirContentsToMap(testDataDir)
+	require.NoError(t, err)
+	require.NoError(t, err, "error walking test data directory")
+
+	tmpDir := t.TempDir()
+	outputFile := filepath.Join(tmpDir, "out.tar")
+	require.NoError(t, archive.ArchiveDirectory(testDataDir, outputFile),
+		"error archiving directory")
+	require.FileExists(t, outputFile, "archive file should exist")
+	f, err := os.Open(outputFile)
+	require.NoError(t, err, "error opening tarball for reading")
+	defer f.Close()
+
+	archivedContents := make(map[string]string, len(testDataContents))
+
+	tr := tar.NewReader(f)
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break // End of archive
+		}
+		require.NoError(t, err, "error reading listing from tarball")
+		if hdr.FileInfo().IsDir() {
+			continue
+		}
+		var buf bytes.Buffer
+		_, err = io.CopyN(&buf, tr, 1024)
+		require.Condition(
+			t,
+			func() (success bool) { return err == nil || err == io.EOF },
+			"error reading content from tarball",
+		)
+		archivedContents[hdr.Name] = buf.String()
+	}
+
+	require.Equal(t, testDataContents, archivedContents, "incorrect tarball contents")
+}
+
 func TestArchiveDirectoryDestDirNotWritable(t *testing.T) {
 	t.Parallel()
 	tmpDir := t.TempDir()
