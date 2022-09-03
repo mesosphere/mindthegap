@@ -5,6 +5,7 @@ package utils
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 
@@ -18,12 +19,17 @@ func ExtractBundles(
 	dest string,
 	out output.Output,
 	imageBundleFiles ...string,
-) (config.ImagesConfig, error) {
+) (config.ImagesConfig, config.HelmChartsConfig, error) {
 	sort.Strings(imageBundleFiles)
 
-	// This will hold the merged config from all the image bundles which will be used to import
-	// all the images from all the bundles.
-	var cfg config.ImagesConfig
+	var (
+		// This will hold the merged config from all the image bundles which will be used to import
+		// all the images from all the bundles.
+		imagesCfg config.ImagesConfig
+		// This will hold the merged config from all the Helm chart bundles which will be used to import
+		// all the Helm charts from all the bundles.
+		helmChartsCfg config.HelmChartsConfig
+	)
 
 	// Just in case users specify the same bundle twice, keep a track of
 	// files that have been extracted already so we only extract each of them once.
@@ -39,25 +45,44 @@ func ExtractBundles(
 		err := archive.UnarchiveToDirectory(imageBundleFile, dest)
 		if err != nil {
 			out.EndOperation(false)
-			return config.ImagesConfig{}, fmt.Errorf("failed to unarchive image bundle: %w", err)
+			return config.ImagesConfig{}, config.HelmChartsConfig{}, fmt.Errorf(
+				"failed to unarchive image bundle: %w",
+				err,
+			)
 		}
 		out.EndOperation(true)
 
-		out.StartOperation("Parsing image bundle config")
-		bundleCfg, err := config.ParseImagesConfigFile(
-			filepath.Join(dest, "images.yaml"),
-		)
-		if err != nil {
-			out.EndOperation(false)
-			return config.ImagesConfig{}, err
-		}
-		out.V(4).Infof("Images config: %+v", bundleCfg)
-		out.EndOperation(true)
+		imagesCfgFile := filepath.Join(dest, "images.yaml")
+		if _, err := os.Lstat(imagesCfgFile); err == nil {
+			out.StartOperation("Parsing image bundle config")
+			imageBundleCfg, err := config.ParseImagesConfigFile(imagesCfgFile)
+			if err != nil {
+				out.EndOperation(false)
+				return config.ImagesConfig{}, config.HelmChartsConfig{}, err
+			}
+			out.V(4).Infof("Images config: %+v", imageBundleCfg)
+			out.EndOperation(true)
 
-		cfg = cfg.Merge(bundleCfg)
+			imagesCfg = imagesCfg.Merge(imageBundleCfg)
+		}
+
+		helmChartsCfgFile := filepath.Join(dest, "charts.yaml")
+		if _, err := os.Lstat(helmChartsCfgFile); err == nil {
+			out.StartOperation("Parsing Helm charts bundle config")
+			helmChartsBundleCfg, err := config.ParseHelmChartsConfigFile(helmChartsCfgFile)
+			if err != nil {
+				out.EndOperation(false)
+				return config.ImagesConfig{}, config.HelmChartsConfig{}, err
+			}
+			out.V(4).Infof("Helm charts config: %+v", helmChartsBundleCfg)
+			out.EndOperation(true)
+
+			helmChartsCfg = helmChartsCfg.Merge(helmChartsBundleCfg)
+		}
 	}
 
-	out.V(4).Infof("Merged images config: %+v", cfg)
+	out.V(4).Infof("Merged images config: %+v", imagesCfg)
+	out.V(4).Infof("Merged Helm charts config: %+v", helmChartsCfg)
 
-	return cfg, nil
+	return imagesCfg, helmChartsCfg, nil
 }

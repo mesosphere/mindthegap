@@ -9,4 +9,4 @@ repositories:
       - v1.7.0
       - v1.6.1
 chartURLs:
-  - ../kommander/.helm-release-packages/kommander-v0.0.0-dev-20220203011855-1d3b9a93.tgz
+  - ../kommander/.helm-release-packages/kommander-v0.0.0-dev-20220804040010-5ac9bb8f-SNAPSHOT-1252187ad.tgz

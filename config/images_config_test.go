@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"k8s.io/utils/pointer"
 )
 
@@ -280,9 +281,7 @@ func TestMergeConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got := tt.a.Merge(tt.b)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Merge() = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

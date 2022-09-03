@@ -42,7 +42,7 @@ func NewCommand(out output.Output) *cobra.Command {
 			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempDir) })
 			out.EndOperation(true)
 
-			cfg, err := utils.ExtractBundles(tempDir, out, imageBundleFiles...)
+			cfg, _, err := utils.ExtractBundles(tempDir, out, imageBundleFiles...)
 			if err != nil {
 				return err
 			}

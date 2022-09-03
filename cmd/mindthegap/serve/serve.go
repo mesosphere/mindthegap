@@ -15,7 +15,7 @@ import (
 func NewCommand(out output.Output) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "serve",
-		Short: "Serve an image registry or a helm chart repository",
+		Short: "Serve image or Helm chart bundles from an OCI registry",
 	}
 
 	cmd.AddCommand(imagebundle.NewCommand(out))

@@ -8,15 +8,17 @@ import (
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
+	"github.com/mesosphere/mindthegap/cmd/mindthegap/push/helmbundle"
 	"github.com/mesosphere/mindthegap/cmd/mindthegap/push/imagebundle"
 )
 
 func NewCommand(out output.Output) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "push",
-		Short: "Push images from an image bundle into an existing image registry",
+		Short: "Push images from an image or Helm chart bundle into an existing OCI registry",
 	}
 
 	cmd.AddCommand(imagebundle.NewCommand(out))
+	cmd.AddCommand(helmbundle.NewCommand(out))
 	return cmd
 }

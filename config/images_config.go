@@ -30,8 +30,8 @@ type RegistrySyncConfig struct {
 
 func (rsc RegistrySyncConfig) SortedImageNames() []string {
 	imageNames := make([]string, 0, len(rsc.Images))
-	for regName := range rsc.Images {
-		imageNames = append(imageNames, regName)
+	for imgName := range rsc.Images {
+		imageNames = append(imageNames, imgName)
 	}
 	sort.Strings(imageNames)
 	return imageNames
@@ -187,6 +187,7 @@ func ParseImagesConfigFile(configFile string) (ImagesConfig, error) {
 func WriteSanitizedImagesConfig(cfg ImagesConfig, fileName string) error {
 	for regName, regConfig := range cfg {
 		regConfig.Credentials = nil
+		regConfig.TLSVerify = nil
 		cfg[regName] = regConfig
 	}
 

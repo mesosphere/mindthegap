@@ -29,7 +29,7 @@ func NewCommand(out output.Output) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "image-bundle",
-		Short: "Serve an image registry from image bundles",
+		Short: "Serve an OCI registry from image bundles",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cleaner := cleanup.NewCleaner()
 			defer cleaner.Cleanup()
@@ -43,7 +43,7 @@ func NewCommand(out output.Output) *cobra.Command {
 
 			out.EndOperation(true)
 
-			cfg, err := utils.ExtractBundles(tempDir, out, imageBundleFiles...)
+			cfg, _, err := utils.ExtractBundles(tempDir, out, imageBundleFiles...)
 			if err != nil {
 				return err
 			}
@@ -82,7 +82,7 @@ func NewCommand(out output.Output) *cobra.Command {
 	cmd.Flags().
 		StringSliceVar(&imageBundleFiles, "images-bundle", nil, "Tarball of images to serve")
 	_ = cmd.MarkFlagRequired("images-bundle")
-	cmd.Flags().StringVar(&listenAddress, "listen-address", "localhost", "Address to list on")
+	cmd.Flags().StringVar(&listenAddress, "listen-address", "localhost", "Address to listen on")
 	cmd.Flags().
 		Uint16Var(&listenPort, "listen-port", 0, "Port to listen on (0 means use any free port)")
 	cmd.Flags().StringVar(&tlsCertificate, "tls-cert-file", "", "TLS certificate file")
