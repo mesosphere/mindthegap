@@ -22,7 +22,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.9.4
 	k8s.io/apimachinery v0.24.2
-	k8s.io/klog/v2 v2.70.1
+	k8s.io/klog/v2 v2.80.0
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
 )
 
