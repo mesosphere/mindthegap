@@ -3,10 +3,17 @@
 
 package ecr
 
-import "regexp"
+import (
+	"net/url"
+	"regexp"
+)
 
 var ecrRegistryRegexp = regexp.MustCompile(`\.dkr\.ecr\.[^.]+\.amazonaws\.com$`)
 
 func IsECRRegistry(registryAddress string) bool {
-	return ecrRegistryRegexp.MatchString(registryAddress)
+	u, err := url.Parse(registryAddress)
+	if err != nil {
+		return false
+	}
+	return ecrRegistryRegexp.MatchString(u.Hostname())
 }

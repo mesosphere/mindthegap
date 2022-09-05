@@ -11,11 +11,17 @@ import (
 
 	"github.com/hashicorp/go-getter"
 	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
+	"helm.sh/helm/v3/pkg/registry"
 	"helm.sh/helm/v3/pkg/repo"
+	"k8s.io/klog/v2"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 )
+
+const OCIScheme = registry.OCIScheme
 
 type Client struct {
 	tempDir string
@@ -94,7 +100,7 @@ func CAFileOpt(caFile string) action.PullOpt {
 func (c *Client) GetChartFromRepo(
 	outputDir, repoURL, chartName, chartVersion string,
 	extraPullOpts ...action.PullOpt,
-) error {
+) (string, error) {
 	pull := action.NewPullWithOpts(
 		append(
 			extraPullOpts,
@@ -108,7 +114,7 @@ func (c *Client) GetChartFromRepo(
 	)
 	helmOutput, err := pull.Run(chartName)
 	if err != nil {
-		return fmt.Errorf(
+		return "", fmt.Errorf(
 			"failed to fetch chart %s:%s from %s: %w, output:\n\n%s",
 			chartName,
 			chartVersion,
@@ -121,10 +127,10 @@ func (c *Client) GetChartFromRepo(
 		c.out.V(4).Info(helmOutput)
 	}
 
-	return nil
+	return filepath.Join(outputDir, fmt.Sprintf("%s-%s.tgz", chartName, chartVersion)), nil
 }
 
-func (c *Client) GetChartFromURL(outputDir, chartURL, workingDir string) error {
+func (c *Client) GetChartFromURL(outputDir, chartURL, workingDir string) (string, error) {
 	getters := make(map[string]getter.Getter, len(getter.Getters))
 	for scheme, getter := range getter.Getters {
 		getters[scheme] = getter
@@ -135,7 +141,7 @@ func (c *Client) GetChartFromURL(outputDir, chartURL, workingDir string) error {
 
 	u, err := url.Parse(chartURL)
 	if err != nil {
-		return fmt.Errorf("invalid chart URL: %w", err)
+		return "", fmt.Errorf("invalid chart URL: %w", err)
 	}
 	q := u.Query()
 	q.Set("archive", "false")
@@ -150,9 +156,9 @@ func (c *Client) GetChartFromURL(outputDir, chartURL, workingDir string) error {
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("failed to fetch chart from %s: %w", chartURL, err)
+		return "", fmt.Errorf("failed to fetch chart from %s: %w", chartURL, err)
 	}
-	return nil
+	return filepath.Join(outputDir, filepath.Base(chartURL)), nil
 }
 
 func (c *Client) CreateHelmRepoIndex(dir string) error {
@@ -164,4 +170,40 @@ func (c *Client) CreateHelmRepoIndex(dir string) error {
 		return fmt.Errorf("failed to write Helm repo index file: %w", err)
 	}
 	return nil
+}
+
+func (c *Client) PushHelmChartToOCIRegistry(src, ociDest string) error {
+	registryClient, err := registry.NewClient(registry.ClientOptDebug(klog.V(4).Enabled()))
+	if err != nil {
+		return fmt.Errorf("failed to create registry client for Helm chart push: %w", err)
+	}
+
+	push := action.NewPushWithOpts(action.WithPushConfig(&action.Configuration{
+		RegistryClient: registryClient,
+	}))
+
+	helmOutput, err := push.Run(src, ociDest)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to push chart %s to %s: %w, output:\n\n%s",
+			src,
+			ociDest,
+			err,
+			helmOutput,
+		)
+	}
+
+	if helmOutput != "" {
+		c.out.V(4).Info(helmOutput)
+	}
+
+	return nil
+}
+
+func LoadChart(chartPath string) (*chart.Chart, error) {
+	chrt, err := loader.Load(chartPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load chart: %w", err)
+	}
+	return chrt, nil
 }

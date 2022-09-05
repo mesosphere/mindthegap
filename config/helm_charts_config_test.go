@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"k8s.io/utils/pointer"
 )
 
@@ -134,6 +135,200 @@ func TestParseHelmChartsFile(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ParseFile() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestMergeHelmConfig(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		a, b HelmChartsConfig
+		want HelmChartsConfig
+	}{
+		{
+			name: "empty",
+			want: HelmChartsConfig{},
+		},
+		{
+			name: "empty to merge",
+			a: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"a": {
+						Charts: map[string][]string{"1": {"v1"}},
+					},
+				},
+			},
+			want: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"a": {
+						Charts: map[string][]string{"1": {"v1"}},
+					},
+				},
+			},
+		},
+		{
+			name: "empty from merge",
+			b: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"a": {
+						Charts: map[string][]string{"1": {"v1"}},
+					},
+				},
+			},
+			want: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"a": {
+						Charts: map[string][]string{"1": {"v1"}},
+					},
+				},
+			},
+		},
+		{
+			name: "distinct repositories",
+			a: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"a": {
+						Charts: map[string][]string{"1": {"v1"}},
+					},
+				},
+			},
+			b: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"b": {
+						Charts: map[string][]string{"2": {"v2"}},
+					},
+				},
+			},
+			want: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"a": {
+						Charts: map[string][]string{"1": {"v1"}},
+					},
+					"b": {
+						Charts: map[string][]string{"2": {"v2"}},
+					},
+				},
+			},
+		},
+		{
+			name: "duplicate repositories with same configuration",
+			a: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"a": {
+						Charts: map[string][]string{"1": {"v1"}},
+					},
+				},
+			},
+			b: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"a": {
+						Charts: map[string][]string{"1": {"v1"}},
+					},
+				},
+			},
+			want: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"a": {
+						Charts: map[string][]string{"1": {"v1"}},
+					},
+				},
+			},
+		},
+		{
+			name: "duplicate repositories with extra versions",
+			a: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"a": {
+						Charts: map[string][]string{"1": {"v1"}},
+					},
+				},
+			},
+			b: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"a": {
+						Charts: map[string][]string{"1": {"v1", "v2"}},
+					},
+				},
+			},
+			want: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"a": {
+						Charts: map[string][]string{"1": {"v1", "v2"}},
+					},
+				},
+			},
+		},
+		{
+			name: "duplicate registries with extra image",
+			a: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"a": {
+						Charts: map[string][]string{"1": {"v1", "v3"}},
+					},
+				},
+			},
+			b: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"a": {
+						Charts: map[string][]string{
+							"1": {"v1", "v2"},
+							"2": {"v3"},
+						},
+					},
+				},
+			},
+			want: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"a": {
+						Charts: map[string][]string{
+							"1": {"v1", "v2", "v3"},
+							"2": {"v3"},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "duplicate repositories with extra chart",
+			a: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"a": {
+						Charts: map[string][]string{
+							"1": {"v1", "v3"},
+							"2": {"v3"},
+						},
+					},
+				},
+			},
+			b: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"a": {
+						Charts: map[string][]string{
+							"1": {"v1", "v2", "v4"},
+						},
+					},
+				},
+			},
+			want: HelmChartsConfig{
+				Repositories: map[string]HelmRepositorySyncConfig{
+					"a": {
+						Charts: map[string][]string{
+							"1": {"v1", "v2", "v3", "v4"},
+							"2": {"v3"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for ti := range tests {
+		tt := tests[ti]
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := tt.a.Merge(tt.b)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

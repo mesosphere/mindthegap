@@ -69,7 +69,7 @@ func NewCommand(out output.Output) *cobra.Command {
 				return err
 			}
 
-			out.StartOperation("Creating temporary directory")
+			out.StartOperation("Creating temporary OCI registry directory")
 			outputFileAbs, err := filepath.Abs(outputFile)
 			if err != nil {
 				out.EndOperation(false)
@@ -82,16 +82,16 @@ func NewCommand(out output.Output) *cobra.Command {
 			cleaner := cleanup.NewCleaner()
 			defer cleaner.Cleanup()
 
-			tempDir, err := os.MkdirTemp(filepath.Dir(outputFileAbs), ".helm-bundle-*")
+			tempRegistryDir, err := os.MkdirTemp(filepath.Dir(outputFileAbs), ".helm-bundle-*")
 			if err != nil {
 				out.EndOperation(false)
-				return fmt.Errorf("failed to create temporary directory: %w", err)
+				return fmt.Errorf("failed to create temporary directory for OCI registry: %w", err)
 			}
-			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempDir) })
+			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempRegistryDir) })
 			out.EndOperation(true)
 
 			out.StartOperation("Starting temporary OCI registry")
-			reg, err := registry.NewRegistry(registry.Config{StorageDirectory: tempDir})
+			reg, err := registry.NewRegistry(registry.Config{StorageDirectory: tempRegistryDir})
 			if err != nil {
 				out.EndOperation(false)
 				return fmt.Errorf("failed to create local OCI registry: %w", err)
@@ -104,8 +104,23 @@ func NewCommand(out output.Output) *cobra.Command {
 			}()
 			out.EndOperation(true)
 
+			out.StartOperation("Creating temporary chart storage directory")
+
+			tempHelmChartStorageDir, err := os.MkdirTemp("", ".helm-bundle-temp-storage-*")
+			if err != nil {
+				out.EndOperation(false)
+				return fmt.Errorf(
+					"failed to create temporary directory for Helm chart storage: %w",
+					err,
+				)
+			}
+			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempHelmChartStorageDir) })
+			out.EndOperation(true)
+
 			helmClient, helmCleanup := helm.NewClient(out)
 			cleaner.AddCleanupFn(func() { _ = helmCleanup() })
+
+			ociAddress := fmt.Sprintf("%s://%s/charts", helm.OCIScheme, reg.Address())
 
 			for repoName, repoConfig := range cfg.Repositories {
 				for chartName, chartVersions := range repoConfig.Charts {
@@ -129,36 +144,91 @@ func NewCommand(out output.Output) *cobra.Command {
 						opts = append(opts, helm.InsecureSkipTLSverifyOpt())
 					}
 					for _, chartVersion := range chartVersions {
-						if err := helmClient.GetChartFromRepo(tempDir, repoConfig.RepoURL, chartName, chartVersion, opts...); err != nil {
+						downloaded, err := helmClient.GetChartFromRepo(
+							tempHelmChartStorageDir,
+							repoConfig.RepoURL,
+							chartName,
+							chartVersion,
+							opts...,
+						)
+						if err != nil {
 							out.EndOperation(false)
 							return fmt.Errorf("failed to create Helm chart bundle: %v", err)
 						}
+
+						if err := helmClient.PushHelmChartToOCIRegistry(
+							downloaded, ociAddress,
+						); err != nil {
+							out.EndOperation(false)
+							return fmt.Errorf(
+								"failed to push Helm chart to temporary registry: %w",
+								err,
+							)
+						}
+
+						// Best effort cleanup of downloaded chart, will be cleaned up when the cleaner deletes the temporary
+						// directory anyway.
+						_ = os.Remove(downloaded)
 					}
 					out.EndOperation(true)
 				}
 			}
 			for _, chartURL := range cfg.ChartURLs {
 				out.StartOperation(fmt.Sprintf("Fetching Helm chart from URL %s", chartURL))
-				if err := helmClient.GetChartFromURL(tempDir, chartURL, filepath.Dir(configFileAbs)); err != nil {
+				downloaded, err := helmClient.GetChartFromURL(
+					tempRegistryDir,
+					chartURL,
+					filepath.Dir(configFileAbs),
+				)
+				if err != nil {
 					out.EndOperation(false)
 					return fmt.Errorf("failed to create Helm chart bundle: %v", err)
 				}
+
+				chrt, err := helm.LoadChart(downloaded)
+				if err != nil {
+					out.EndOperation(false)
+					return fmt.Errorf(
+						"failed to extract Helm chart details from local chart: %w",
+						err,
+					)
+				}
+
+				_, ok := cfg.Repositories["local"]
+				if !ok {
+					cfg.Repositories["local"] = config.HelmRepositorySyncConfig{
+						Charts: make(map[string][]string, 1),
+					}
+				}
+				_, ok = cfg.Repositories["local"].Charts[chrt.Name()]
+				if !ok {
+					cfg.Repositories["local"].Charts[chrt.Name()] = make([]string, 0, 1)
+				}
+				cfg.Repositories["local"].Charts[chrt.Name()] = append(
+					cfg.Repositories["local"].Charts[chrt.Name()],
+					chrt.Metadata.Version,
+				)
+
+				if err := helmClient.PushHelmChartToOCIRegistry(
+					downloaded, ociAddress,
+				); err != nil {
+					out.EndOperation(false)
+					return fmt.Errorf("failed to push Helm chart to temporary registry: %w", err)
+				}
+
+				// Best effort cleanup of downloaded chart, will be cleaned up when the cleaner deletes the temporary
+				// directory anyway.
+				_ = os.Remove(downloaded)
+
 				out.EndOperation(true)
 			}
 
-			out.StartOperation("Creating Helm repository index")
-			if err := helmClient.CreateHelmRepoIndex(tempDir); err != nil {
-				out.EndOperation(false)
-				return fmt.Errorf("failed to create Helm chart bundle: %v", err)
-			}
-			out.EndOperation(true)
-
-			if err := config.WriteHelmChartsConfig(cfg, filepath.Join(tempDir, "charts.yaml")); err != nil {
+			if err := config.WriteSanitizedHelmChartsConfig(cfg, filepath.Join(tempRegistryDir, "charts.yaml")); err != nil {
 				return err
 			}
 
 			out.StartOperation(fmt.Sprintf("Archiving Helm charts to %s", outputFile))
-			if err := archive.ArchiveDirectory(tempDir, outputFile); err != nil {
+			if err := archive.ArchiveDirectory(tempRegistryDir, outputFile); err != nil {
 				out.EndOperation(false)
 				return fmt.Errorf("failed to create Helm charts bundle tarball: %w", err)
 			}

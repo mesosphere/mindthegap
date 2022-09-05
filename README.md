@@ -9,7 +9,7 @@
 
 `mindthegap` provides utilities to manage air-gapped image bundles, both
 creating image bundles and seeding images from a bundle into an existing
-image registry.
+OCI registry.
 
 ## Usage
 
@@ -95,9 +95,9 @@ mindthegap create helm-bundle --helm-charts-file <path/to/helm-charts.yaml> \
 See the [example helm-charts.yaml](helm-example.yaml) for the structure of the
 Helm charts config file.
 
-The output file will be a tarball that can be served over HTTP, the Helm charts
-can be pushed to Chartmuseum or to an OCI registry, or it can be untarred and
-the charts used locally via Helm.
+The output file will be a tarball that can be seeded into a registry,
+or that can be untarred and used as the storage directory for a Docker registry
+served via `registry:2`.
 
 #### Serving a Helm chart bundle
 
@@ -108,9 +108,9 @@ mindthegap serve helm-bundle --helm-charts-bundle <path/to/helm-charts.tar> \
   [--tls-cert-file <path/to/cert/file> --tls-private-key-file <path/to/key/file>]
 ```
 
-Start a http server serving the contents of the Helm charts bundle file. If `--listen-address`
-isn't specified, the server will listen on `localhost` only. If `--listen-port` isn't specified,
-the server will listen on a free port which will be output when starting the server.
+Start a Docker registry serving the contents of the image bundle. Note that the Docker registry will
+be in read-only mode to reflect the source of the data being a static tarball so pushes to this
+registry will fail.
 
 ## How does it work?
 

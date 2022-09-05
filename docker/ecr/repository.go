@@ -17,10 +17,10 @@ import (
 )
 
 func EnsureRepositoryExistsFunc(ecrLifecyclePolicy string) func(
-	_, imageName string, _ ...string,
+	_, repositoryName string, _ ...string,
 ) error {
 	return func(
-		_, imageName string, _ ...string,
+		_, repositoryName string, _ ...string,
 	) error {
 		cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-west-2"))
 		if err != nil {
@@ -32,7 +32,7 @@ func EnsureRepositoryExistsFunc(ecrLifecyclePolicy string) func(
 		repos, err := svc.DescribeRepositories(
 			context.TODO(),
 			&ecr.DescribeRepositoriesInput{
-				RepositoryNames: []string{imageName},
+				RepositoryNames: []string{repositoryName},
 			},
 		)
 		repoNotExistsErr := &types.RepositoryNotFoundException{}
@@ -46,7 +46,7 @@ func EnsureRepositoryExistsFunc(ecrLifecyclePolicy string) func(
 		_, err = svc.CreateRepository(
 			context.TODO(),
 			&ecr.CreateRepositoryInput{
-				RepositoryName:             &imageName,
+				RepositoryName:             &repositoryName,
 				ImageScanningConfiguration: &types.ImageScanningConfiguration{ScanOnPush: true},
 			},
 		)
@@ -68,7 +68,7 @@ func EnsureRepositoryExistsFunc(ecrLifecyclePolicy string) func(
 		_, err = svc.PutLifecyclePolicy(
 			context.TODO(),
 			&ecr.PutLifecyclePolicyInput{
-				RepositoryName:      &imageName,
+				RepositoryName:      &repositoryName,
 				LifecyclePolicyText: pointer.String(string(ecrLifecyclePolicyText)),
 			},
 		)

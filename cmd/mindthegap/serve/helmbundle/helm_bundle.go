@@ -5,34 +5,31 @@ package helmbundle
 
 import (
 	"fmt"
-	"net"
-	"net/http"
 	"os"
-	"strconv"
-	"time"
+	"path/filepath"
 
-	"github.com/phayes/freeport"
 	"github.com/spf13/cobra"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
-	"github.com/mesosphere/mindthegap/archive"
 	"github.com/mesosphere/mindthegap/cleanup"
-	"github.com/mesosphere/mindthegap/httpfs"
+	"github.com/mesosphere/mindthegap/cmd/mindthegap/utils"
+	"github.com/mesosphere/mindthegap/config"
+	"github.com/mesosphere/mindthegap/docker/registry"
 )
 
 func NewCommand(out output.Output) *cobra.Command {
 	var (
-		helmBundleFile string
-		listenAddress  string
-		listenPort     uint16
-		tlsCertificate string
-		tlsKey         string
+		helmBundleFiles []string
+		listenAddress   string
+		listenPort      uint16
+		tlsCertificate  string
+		tlsKey          string
 	)
 
 	cmd := &cobra.Command{
 		Use:   "helm-bundle",
-		Short: "Serve a helm chart repository",
+		Short: "Serve a Helm chart repository in an OCI registry from Helm chart bundles",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cleaner := cleanup.NewCleaner()
 			defer cleaner.Cleanup()
@@ -46,43 +43,36 @@ func NewCommand(out output.Output) *cobra.Command {
 
 			out.EndOperation(true)
 
-			out.StartOperation("Unarchiving Helm chart bundle")
-			err = archive.UnarchiveToDirectory(helmBundleFile, tempDir)
+			_, cfg, err := utils.ExtractBundles(tempDir, out, helmBundleFiles...)
+			if err != nil {
+				return err
+			}
+
+			// Write out the merged image bundle config to the target directory for completeness.
+			if err := config.WriteSanitizedHelmChartsConfig(cfg, filepath.Join(tempDir, "charts.yaml")); err != nil {
+				return err
+			}
+
+			out.StartOperation("Creating Docker registry")
+			reg, err := registry.NewRegistry(registry.Config{
+				StorageDirectory: tempDir,
+				ReadOnly:         true,
+				Host:             listenAddress,
+				Port:             listenPort,
+				TLS: registry.TLS{
+					Certificate: tlsCertificate,
+					Key:         tlsKey,
+				},
+			})
 			if err != nil {
 				out.EndOperation(false)
-				return fmt.Errorf("failed to unarchive Helm chart bundle: %w", err)
+				return fmt.Errorf("failed to create local Docker registry: %w", err)
 			}
 			out.EndOperation(true)
-
-			out.StartOperation("Creating http server")
-			if listenPort == 0 {
-				freePort, err := freeport.GetFreePort()
-				if err != nil {
-					out.EndOperation(false)
-					return fmt.Errorf("failed to find a free port: %w", err)
-				}
-				listenPort = uint16(freePort)
-			}
-			addr := net.JoinHostPort(listenAddress, strconv.Itoa(int(listenPort)))
-			srv := &http.Server{
-				Addr:              addr,
-				Handler:           http.FileServer(httpfs.DisableDirListingFS(tempDir)),
-				ReadHeaderTimeout: 1 * time.Second,
-			}
-			out.EndOperation(true)
-			scheme := "http"
-			if tlsCertificate != "" && tlsKey != "" {
-				scheme = "https"
-			}
-
-			out.Infof("Serving Helm charts at %s://%s", scheme, addr)
-			if tlsCertificate != "" && tlsKey != "" {
-				err = srv.ListenAndServeTLS(tlsCertificate, tlsKey)
-			} else {
-				err = srv.ListenAndServe()
-			}
-			if err != nil {
-				return fmt.Errorf("failed to start http server: %w", err)
+			out.Infof("Listening on %s\n", reg.Address())
+			if err := reg.ListenAndServe(); err != nil {
+				out.Error(err, "error serving Docker registry")
+				os.Exit(2)
 			}
 
 			return nil
@@ -90,9 +80,9 @@ func NewCommand(out output.Output) *cobra.Command {
 	}
 
 	cmd.Flags().
-		StringVar(&helmBundleFile, "helm-charts-bundle", "", "Tarball of Helm charts to serve")
-	_ = cmd.MarkFlagRequired("helm-charts-bundle")
-	cmd.Flags().StringVar(&listenAddress, "listen-address", "localhost", "Address to list on")
+		StringSliceVar(&helmBundleFiles, "helm-bundle", nil, "Tarball of Helm charts to serve")
+	_ = cmd.MarkFlagRequired("helm-bundle")
+	cmd.Flags().StringVar(&listenAddress, "listen-address", "localhost", "Address to listen on")
 	cmd.Flags().
 		Uint16Var(&listenPort, "listen-port", 0, "Port to listen on (0 means use any free port)")
 	cmd.Flags().StringVar(&tlsCertificate, "tls-cert-file", "", "TLS certificate file")

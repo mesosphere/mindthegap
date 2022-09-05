@@ -1,7 +1,7 @@
 // Copyright 2021 D2iQ, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-package imagebundle
+package helmbundle
 
 import (
 	"context"
@@ -22,23 +22,22 @@ import (
 
 func NewCommand(out output.Output) *cobra.Command {
 	var (
-		imageBundleFiles          []string
-		destRegistry              string
+		helmBundleFiles           []string
+		destRepository            string
 		destRegistrySkipTLSVerify bool
-		destRegistryUsername      string
-		destRegistryPassword      string
-		ecrLifecyclePolicy        string
+		destRepositoryUsername    string
+		destRepositoryPassword    string
 	)
 
 	cmd := &cobra.Command{
-		Use:   "image-bundle",
-		Short: "Push images from an image bundle into an existing OCI registry",
+		Use:   "helm-bundle",
+		Short: "Push images from a Helm chart bundle into an existing OCI registry",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cleaner := cleanup.NewCleaner()
 			defer cleaner.Cleanup()
 
 			out.StartOperation("Creating temporary directory")
-			tempDir, err := os.MkdirTemp("", ".image-bundle-*")
+			tempDir, err := os.MkdirTemp("", ".helm-bundle-*")
 			if err != nil {
 				out.EndOperation(false)
 				return fmt.Errorf("failed to create temporary directory: %w", err)
@@ -46,7 +45,7 @@ func NewCommand(out output.Output) *cobra.Command {
 			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempDir) })
 			out.EndOperation(true)
 
-			cfg, _, err := utils.ExtractBundles(tempDir, out, imageBundleFiles...)
+			_, cfg, err := utils.ExtractBundles(tempDir, out, helmBundleFiles...)
 			if err != nil {
 				return err
 			}
@@ -73,18 +72,18 @@ func NewCommand(out output.Output) *cobra.Command {
 			skopeoOpts := []skopeo.SkopeoOption{
 				skopeo.PreserveDigests(),
 			}
-			if destRegistryUsername != "" && destRegistryPassword != "" {
+			if destRepositoryUsername != "" && destRepositoryPassword != "" {
 				skopeoOpts = append(
 					skopeoOpts,
 					skopeo.DestCredentials(
-						destRegistryUsername,
-						destRegistryPassword,
+						destRepositoryUsername,
+						destRepositoryPassword,
 					),
 				)
 			} else {
 				skopeoStdout, skopeoStderr, err := skopeoRunner.AttemptToLoginToRegistry(
 					context.Background(),
-					destRegistry,
+					destRepository,
 				)
 				if err != nil {
 					out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
@@ -97,17 +96,17 @@ func NewCommand(out output.Output) *cobra.Command {
 
 			// Determine type of destination registry.
 			var prePushFuncs []prePushFunc
-			if ecr.IsECRRegistry(destRegistry) {
+			if ecr.IsECRRegistry(destRepository) {
 				prePushFuncs = append(
 					prePushFuncs,
-					ecr.EnsureRepositoryExistsFunc(ecrLifecyclePolicy),
+					ecr.EnsureRepositoryExistsFunc(""),
 				)
 			}
 
-			return pushImages(
+			return pushOCIArtifacts(
 				cfg,
-				reg.Address(),
-				destRegistry,
+				fmt.Sprintf("%s/charts", reg.Address()),
+				destRepository,
 				skopeoOpts,
 				destRegistrySkipTLSVerify,
 				out,
@@ -118,66 +117,64 @@ func NewCommand(out output.Output) *cobra.Command {
 	}
 
 	cmd.Flags().
-		StringSliceVar(&imageBundleFiles, "image-bundle", nil, "Tarball containing list of images to push")
-	_ = cmd.MarkFlagRequired("image-bundle")
-	cmd.Flags().StringVar(&destRegistry, "to-registry", "", "Registry to push images to")
-	_ = cmd.MarkFlagRequired("to-registry")
-	cmd.Flags().BoolVar(&destRegistrySkipTLSVerify, "to-registry-insecure-skip-tls-verify", false,
-		"Skip TLS verification of registry to push images to (use for http registries)")
-	cmd.Flags().StringVar(&destRegistryUsername, "to-registry-username", "",
-		"Username to use to log in to destination registry")
-	cmd.Flags().StringVar(&destRegistryPassword, "to-registry-password", "",
-		"Password to use to log in to destination registry")
-	cmd.Flags().StringVar(&ecrLifecyclePolicy, "ecr-lifecycle-policy-file", "",
-		"File containing ECR lifecycle policy for newly created repositories "+
-			"(only applies if target registry is hosted on ECR, ignored otherwise)")
+		StringSliceVar(&helmBundleFiles, "helm-bundle", nil, "Tarball containing list of Helm charts to push")
+	_ = cmd.MarkFlagRequired("helm-bundle")
+	cmd.Flags().StringVar(&destRepository, "to-repository", "", "Repository to push images to")
+	_ = cmd.MarkFlagRequired("to-repository")
+	cmd.Flags().BoolVar(&destRegistrySkipTLSVerify, "to-repository-insecure-skip-tls-verify", false,
+		"Skip TLS verification of repository to push images to (use for http repositories)")
+	cmd.Flags().StringVar(&destRepositoryUsername, "to-repository-username", "",
+		"Username to use to log in to destination repository")
+	cmd.Flags().StringVar(&destRepositoryPassword, "to-repository-password", "",
+		"Password to use to log in to destination repository")
 
 	return cmd
 }
 
 type prePushFunc func(destRegistry, imageName string, imageTags ...string) error
 
-func pushImages(
-	cfg config.ImagesConfig,
-	sourceRegistry, destRegistry string,
+func pushOCIArtifacts(
+	cfg config.HelmChartsConfig,
+	sourceRepository, destRepository string,
 	skopeoOpts []skopeo.SkopeoOption,
 	destRegistrySkipTLSVerify bool,
 	out output.Output,
 	skopeoRunner *skopeo.Runner,
 	prePushFuncs ...prePushFunc,
 ) error {
-	// Sort registries for deterministic ordering.
-	regNames := cfg.SortedRegistryNames()
+	skopeoOpts = append(skopeoOpts, skopeo.DisableSrcTLSVerify())
+	if destRegistrySkipTLSVerify {
+		skopeoOpts = append(skopeoOpts, skopeo.DisableDestTLSVerify())
+	}
 
-	for _, registryName := range regNames {
-		registryConfig := cfg[registryName]
-		skopeoOpts = append(skopeoOpts, skopeo.DisableSrcTLSVerify())
-		if destRegistrySkipTLSVerify {
-			skopeoOpts = append(skopeoOpts, skopeo.DisableDestTLSVerify())
-		}
+	// Sort repositories for deterministic ordering.
+	repoNames := cfg.SortedRepositoryNames()
 
-		// Sort images for deterministic ordering.
-		imageNames := registryConfig.SortedImageNames()
+	for _, repoName := range repoNames {
+		repoConfig := cfg.Repositories[repoName]
 
-		for _, imageName := range imageNames {
-			imageTags := registryConfig.Images[imageName]
+		// Sort charts for deterministic ordering.
+		chartNames := repoConfig.SortedChartNames()
+
+		for _, chartName := range chartNames {
+			chartVersions := repoConfig.Charts[chartName]
 
 			for _, prePush := range prePushFuncs {
-				if err := prePush(destRegistry, imageName, imageTags...); err != nil {
+				if err := prePush("", destRepository); err != nil {
 					return fmt.Errorf("pre-push func failed: %w", err)
 				}
 			}
 
-			for _, imageTag := range imageTags {
+			for _, chartVersion := range chartVersions {
 				out.StartOperation(
-					fmt.Sprintf("Copying %s/%s:%s (from bundle) to %s/%s:%s",
-						registryName, imageName, imageTag,
-						destRegistry, imageName, imageTag,
+					fmt.Sprintf("Copying %s:%s (from bundle) to %s/%s:%s",
+						chartName, chartVersion,
+						destRepository, chartName, chartVersion,
 					),
 				)
 				skopeoStdout, skopeoStderr, err := skopeoRunner.Copy(context.TODO(),
-					fmt.Sprintf("docker://%s/%s:%s", sourceRegistry, imageName, imageTag),
-					fmt.Sprintf("docker://%s/%s:%s", destRegistry, imageName, imageTag),
+					fmt.Sprintf("docker://%s/%s:%s", sourceRepository, chartName, chartVersion),
+					fmt.Sprintf("docker://%s/%s:%s", destRepository, chartName, chartVersion),
 					append(
 						skopeoOpts, skopeo.All(),
 					)...,
