@@ -37,6 +37,21 @@ jobs:
         with:
           test-results: test.json
 
+  e2e-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Install asdf
+        uses: asdf-vm/actions/setup@v1
+
+      - name: Install go
+        run: make install-tool.golang
+
+      - name: Run e2e tests
+        run: make e2e-test
+
   lint:
     runs-on: ubuntu-latest
     steps:

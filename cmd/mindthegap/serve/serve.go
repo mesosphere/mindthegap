@@ -19,6 +19,9 @@ func NewCommand(out output.Output) *cobra.Command {
 	}
 
 	cmd.AddCommand(imagebundle.NewCommand(out))
-	cmd.AddCommand(helmbundle.NewCommand(out))
+
+	helmBundleCmd, _ := helmbundle.NewCommand(out)
+	cmd.AddCommand(helmBundleCmd)
+
 	return cmd
 }

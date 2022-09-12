@@ -1,0 +1,9 @@
+# Copyright 2021 D2iQ, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+repositories:
+  jetstack:
+    repoURL: https://unknownchartrepository
+    charts:
+      podinfo:
+      - "6.2.0"

@@ -6,14 +6,18 @@ package registry
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/distribution/distribution/v3/configuration"
-	"github.com/distribution/distribution/v3/registry"
+	"github.com/distribution/distribution/v3/registry/handlers"
 	_ "github.com/distribution/distribution/v3/registry/storage/driver/filesystem"
 	"github.com/phayes/freeport"
+	"github.com/sirupsen/logrus"
 )
 
 type Config struct {
@@ -99,7 +103,7 @@ log:
 
 type Registry struct {
 	config   *configuration.Configuration
-	delegate *registry.Registry
+	delegate *http.Server
 	address  string
 }
 
@@ -109,11 +113,13 @@ func NewRegistry(cfg Config) (*Registry, error) {
 		return nil, err
 	}
 
-	registryConfig.Log.Level = "fatal"
+	logrus.SetLevel(logrus.FatalLevel)
+	regHandler := handlers.NewApp(context.Background(), registryConfig)
 
-	reg, err := registry.NewRegistry(context.TODO(), registryConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create registry: %w", err)
+	reg := &http.Server{
+		Addr:              registryConfig.HTTP.Addr,
+		Handler:           regHandler,
+		ReadHeaderTimeout: 1 * time.Second,
 	}
 
 	return &Registry{
@@ -127,6 +133,21 @@ func (r Registry) Address() string {
 	return r.address
 }
 
-func (r *Registry) ListenAndServe() error {
-	return r.delegate.ListenAndServe()
+func (r Registry) Shutdown(ctx context.Context) error {
+	return r.delegate.Shutdown(ctx)
+}
+
+func (r Registry) ListenAndServe() error {
+	var err error
+	if r.config.HTTP.TLS.Certificate != "" && r.config.HTTP.TLS.Key != "" {
+		err = r.delegate.ListenAndServeTLS(r.config.HTTP.TLS.Certificate, r.config.HTTP.TLS.Key)
+	} else {
+		err = r.delegate.ListenAndServe()
+	}
+
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+
+	return nil
 }

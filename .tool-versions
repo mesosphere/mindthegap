@@ -3,3 +3,4 @@ goreleaser 1.11.2
 golang 1.19
 helm 3.9.4
 pre-commit 2.20.0
+ginkgo 2.1.6
