@@ -43,6 +43,10 @@ func NewCommand(out output.Output) *cobra.Command {
 
 			out.EndOperation(true)
 
+			imageBundleFiles, err = utils.FilesWithGlobs(imageBundleFiles)
+			if err != nil {
+				return err
+			}
 			cfg, _, err := utils.ExtractBundles(tempDir, out, imageBundleFiles...)
 			if err != nil {
 				return err
@@ -79,8 +83,8 @@ func NewCommand(out output.Output) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().
-		StringSliceVar(&imageBundleFiles, "images-bundle", nil, "Tarball of images to serve")
+	cmd.Flags().StringSliceVar(&imageBundleFiles, "images-bundle", nil,
+		"Tarball of images to serve. Can also be a glob pattern.")
 	_ = cmd.MarkFlagRequired("images-bundle")
 	cmd.Flags().StringVar(&listenAddress, "listen-address", "localhost", "Address to listen on")
 	cmd.Flags().

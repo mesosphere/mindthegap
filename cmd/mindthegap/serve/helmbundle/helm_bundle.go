@@ -43,6 +43,10 @@ func NewCommand(out output.Output) *cobra.Command {
 
 			out.EndOperation(true)
 
+			helmBundleFiles, err = utils.FilesWithGlobs(helmBundleFiles)
+			if err != nil {
+				return err
+			}
 			_, cfg, err := utils.ExtractBundles(tempDir, out, helmBundleFiles...)
 			if err != nil {
 				return err
@@ -79,8 +83,8 @@ func NewCommand(out output.Output) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().
-		StringSliceVar(&helmBundleFiles, "helm-bundle", nil, "Tarball of Helm charts to serve")
+	cmd.Flags().StringSliceVar(&helmBundleFiles, "helm-bundle", nil,
+		"Tarball of Helm charts to serve. Can also be a glob pattern.")
 	_ = cmd.MarkFlagRequired("helm-bundle")
 	cmd.Flags().StringVar(&listenAddress, "listen-address", "localhost", "Address to listen on")
 	cmd.Flags().
