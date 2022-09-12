@@ -99,6 +99,7 @@ e2e-test: install-tool.golang install-tool.ginkgo skopeo.build; $(info $(M) runn
 		$(E2E_GINKGO_FLAGS) \
 		--junit-report=junit-e2e.xml \
 		--json-report=report-e2e.json \
+		--tags e2e \
 		test/e2e/... && \
 	go tool cover \
 		-html=coverage-e2e.out \
