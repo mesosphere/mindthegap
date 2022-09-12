@@ -45,6 +45,10 @@ func NewCommand(out output.Output) *cobra.Command {
 			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempDir) })
 			out.EndOperation(true)
 
+			helmBundleFiles, err = utils.FilesWithGlobs(helmBundleFiles)
+			if err != nil {
+				return err
+			}
 			_, cfg, err := utils.ExtractBundles(tempDir, out, helmBundleFiles...)
 			if err != nil {
 				return err
@@ -116,8 +120,8 @@ func NewCommand(out output.Output) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().
-		StringSliceVar(&helmBundleFiles, "helm-bundle", nil, "Tarball containing list of Helm charts to push")
+	cmd.Flags().StringSliceVar(&helmBundleFiles, "helm-bundle", nil,
+		"Tarball containing list of Helm charts to push. Can also be a glob pattern.")
 	_ = cmd.MarkFlagRequired("helm-bundle")
 	cmd.Flags().StringVar(&destRepository, "to-repository", "", "Repository to push images to")
 	_ = cmd.MarkFlagRequired("to-repository")

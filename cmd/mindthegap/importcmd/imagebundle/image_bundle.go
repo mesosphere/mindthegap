@@ -42,6 +42,10 @@ func NewCommand(out output.Output) *cobra.Command {
 			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempDir) })
 			out.EndOperation(true)
 
+			imageBundleFiles, err = utils.FilesWithGlobs(imageBundleFiles)
+			if err != nil {
+				return err
+			}
 			cfg, _, err := utils.ExtractBundles(tempDir, out, imageBundleFiles...)
 			if err != nil {
 				return err
@@ -119,8 +123,8 @@ func NewCommand(out output.Output) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().
-		StringSliceVar(&imageBundleFiles, "image-bundle", nil, "Tarball containing list of images to import")
+	cmd.Flags().StringSliceVar(&imageBundleFiles, "image-bundle", nil,
+		"Tarball containing list of images to import. Can also be a glob pattern.")
 	_ = cmd.MarkFlagRequired("image-bundle")
 	cmd.Flags().StringVar(&containerdNamespace, "containerd-namespace", "k8s.io",
 		"Containerd namespace to import images into")
