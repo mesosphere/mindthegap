@@ -122,6 +122,8 @@ var _ = Describe("Push Bundle", func() {
 			"--to-registry-insecure-skip-tls-verify",
 		})
 
-		Expect(cmd.Execute().Error()).To(ContainSubstring("no such file or directory"))
+		Expect(
+			cmd.Execute(),
+		).To(MatchError(fmt.Sprintf("did find any matching files for %q", bundleFile)))
 	})
 })
