@@ -8,23 +8,19 @@ package helmbundle_test
 
 import (
 	"fmt"
-	"net"
 	"path/filepath"
 	"strconv"
-	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/phayes/freeport"
 	"github.com/spf13/cobra"
-	"helm.sh/helm/v3/pkg/action"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
-	createhelmbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/create/helmbundle"
 	servehelmbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/serve/helmbundle"
 	"github.com/mesosphere/mindthegap/helm"
-	"github.com/mesosphere/mindthegap/test/e2e/helpers"
+	"github.com/mesosphere/mindthegap/test/e2e/helmbundle/helpers"
 )
 
 var _ = Describe("Serve Bundle", func() {
@@ -39,20 +35,19 @@ var _ = Describe("Serve Bundle", func() {
 
 		bundleFile = filepath.Join(tmpDir, "helm-bundle.tar")
 
-		cmd = helpers.NewCommand(func(out output.Output) *cobra.Command {
+		cmd = helpers.NewCommand(GinkgoT(), func(out output.Output) *cobra.Command {
 			var c *cobra.Command
 			c, stopCh = servehelmbundle.NewCommand(out)
 			return c
 		})
 	})
 
-	It("Success", func() {
-		createBundleCmd := helpers.NewCommand(createhelmbundle.NewCommand)
-		createBundleCmd.SetArgs([]string{
-			"--output-file", bundleFile,
-			"--helm-charts-file", filepath.Join("testdata", "create-success.yaml"),
-		})
-		Expect(createBundleCmd.Execute()).To(Succeed())
+	It("Without TLS", func() {
+		helpers.CreateBundle(
+			GinkgoT(),
+			bundleFile,
+			filepath.Join("testdata", "create-success.yaml"),
+		)
 
 		port, err := freeport.GetFreePort()
 		Expect(err).NotTo(HaveOccurred())
@@ -70,38 +65,61 @@ var _ = Describe("Serve Bundle", func() {
 			close(done)
 		}()
 
-		Eventually(func() error {
-			conn, err := net.DialTimeout(
-				"tcp",
-				net.JoinHostPort("localhost", strconv.Itoa(port)),
-				1*time.Second,
-			)
-			DeferCleanup(func() {
-				if conn != nil {
-					conn.Close()
-				}
-			})
-			return err
-		}).ShouldNot(HaveOccurred())
+		helpers.WaitForTCPPort(GinkgoT(), "localhost", port)
 
-		h, cleanup := helm.NewClient(output.NewNonInteractiveShell(GinkgoWriter, GinkgoWriter, 10))
-		DeferCleanup(cleanup)
-
-		helmTmpDir := GinkgoT().TempDir()
-
-		d, err := h.GetChartFromRepo(
-			helmTmpDir,
-			"",
-			fmt.Sprintf("%s://localhost:%v/charts/podinfo", helm.OCIScheme, port),
+		helpers.ValidateChartIsAvailable(
+			GinkgoT(),
+			"localhost",
+			port,
+			"podinfo",
 			"6.2.0",
-			[]helm.ConfigOpt{helm.RegistryClientConfigOpt()},
-			func(p *action.Pull) { p.InsecureSkipTLSverify = true },
+			helm.InsecureSkipTLSverifyOpt(),
 		)
+
+		close(stopCh)
+
+		Eventually(done).Should(BeClosed())
+	})
+
+	It("With TLS", func() {
+		ipAddr := helpers.GetFirstNonLoopbackIP(GinkgoT())
+
+		tempCertDir := GinkgoT().TempDir()
+		_, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(
+			GinkgoT(),
+			tempCertDir,
+			ipAddr,
+		)
+
+		helpers.CreateBundle(
+			GinkgoT(),
+			bundleFile,
+			filepath.Join("testdata", "create-success.yaml"),
+		)
+
+		port, err := freeport.GetFreePort()
 		Expect(err).NotTo(HaveOccurred())
-		chrt, err := helm.LoadChart(d)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(chrt.Metadata.Name).To(Equal("podinfo"))
-		Expect(chrt.Metadata.Version).To(Equal("6.2.0"))
+		cmd.SetArgs([]string{
+			"--helm-bundle", bundleFile,
+			"--listen-address", ipAddr.String(),
+			"--listen-port", strconv.Itoa(port),
+			"--tls-cert-file", certFile,
+			"--tls-private-key-file", keyFile,
+		})
+
+		done := make(chan struct{})
+		go func() {
+			defer GinkgoRecover()
+
+			Expect(cmd.Execute()).To(Succeed())
+
+			close(done)
+		}()
+
+		helpers.WaitForTCPPort(GinkgoT(), ipAddr.String(), port)
+
+		// TODO Reenable once Helm supports custom CA certs and self-signed certs.
+		// helpers.ValidateChartIsAvailable(GinkgoT(), "localhost", port, "podinfo", "6.2.0", helm.CAFileOpt(caCertFile))
 
 		close(stopCh)
 

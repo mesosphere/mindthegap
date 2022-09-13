@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	createhelmbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/create/helmbundle"
-	"github.com/mesosphere/mindthegap/test/e2e/helpers"
+	"github.com/mesosphere/mindthegap/test/e2e/helmbundle/helpers"
 )
 
 var _ = Describe("Create Bundle", func() {
@@ -28,7 +28,7 @@ var _ = Describe("Create Bundle", func() {
 
 		bundleFile = filepath.Join(tmpDir, "helm-bundle.tar")
 
-		cmd = helpers.NewCommand(createhelmbundle.NewCommand)
+		cmd = helpers.NewCommand(GinkgoT(), createhelmbundle.NewCommand)
 		cmd.SilenceUsage = true
 	})
 
