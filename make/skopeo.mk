@@ -22,7 +22,7 @@ skopeo.build.all:
 	$(MAKE) --no-print-directory GOOS=windows GOARCH=arm64 skopeo.build
 
 .PHONY: skopeo/static/skopeo-$(GOOS)-$(GOARCH)$(if $(filter $(GOOS),windows),.exe)
-skopeo/static/skopeo-$(GOOS)-$(GOARCH)$(if $(filter $(GOOS),windows),.exe): ; $(info $(M) Building skopeo for $(GOOS)/$(GOARCH))
+skopeo/static/skopeo-$(GOOS)-$(GOARCH)$(if $(filter $(GOOS),windows),.exe): ; $(info $(M) building skopeo for $(GOOS)/$(GOARCH))
 	mkdir -p $(dir $@)
 	rm -f $(REPO_ROOT)/$@
 	cd skopeo-static && \

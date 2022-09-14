@@ -18,7 +18,8 @@ func NewCommand(out output.Output) *cobra.Command {
 		Short: "Serve image or Helm chart bundles from an OCI registry",
 	}
 
-	cmd.AddCommand(imagebundle.NewCommand(out))
+	imageBundleCmd, _ := imagebundle.NewCommand(out)
+	cmd.AddCommand(imageBundleCmd)
 
 	helmBundleCmd, _ := helmbundle.NewCommand(out)
 	cmd.AddCommand(helmBundleCmd)

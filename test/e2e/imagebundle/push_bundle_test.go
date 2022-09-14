@@ -2,24 +2,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //go:build e2e
-// +build e2e
 
-package helmbundle_test
+package imagebundle_test
 
 import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"runtime"
 
+	"github.com/distribution/distribution/v3/manifest/manifestlist"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/phayes/freeport"
 	"github.com/spf13/cobra"
 
-	pushhelmbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/push/helmbundle"
+	pushimagebundle "github.com/mesosphere/mindthegap/cmd/mindthegap/push/imagebundle"
+	"github.com/mesosphere/mindthegap/cmd/mindthegap/utils"
 	"github.com/mesosphere/mindthegap/docker/registry"
-	"github.com/mesosphere/mindthegap/helm"
-	"github.com/mesosphere/mindthegap/test/e2e/helmbundle/helpers"
+	"github.com/mesosphere/mindthegap/skopeo"
+	"github.com/mesosphere/mindthegap/test/e2e/imagebundle/helpers"
 )
 
 var _ = Describe("Push Bundle", func() {
@@ -32,9 +34,9 @@ var _ = Describe("Push Bundle", func() {
 	BeforeEach(func() {
 		tmpDir = GinkgoT().TempDir()
 
-		bundleFile = filepath.Join(tmpDir, "helm-bundle.tar")
+		bundleFile = filepath.Join(tmpDir, "image-bundle.tar")
 
-		cmd = helpers.NewCommand(GinkgoT(), pushhelmbundle.NewCommand)
+		cmd = helpers.NewCommand(GinkgoT(), pushimagebundle.NewCommand)
 	})
 
 	It("Without TLS", func() {
@@ -64,20 +66,24 @@ var _ = Describe("Push Bundle", func() {
 		helpers.WaitForTCPPort(GinkgoT(), "localhost", port)
 
 		cmd.SetArgs([]string{
-			"--helm-bundle", bundleFile,
-			"--to-registry", fmt.Sprintf("localhost:%d/charts", port),
+			"--image-bundle", bundleFile,
+			"--to-registry", fmt.Sprintf("localhost:%d", port),
 			"--to-registry-insecure-skip-tls-verify",
 		})
 
 		Expect(cmd.Execute()).To(Succeed())
 
-		helpers.ValidateChartIsAvailable(
+		helpers.ValidateImageIsAvailable(
 			GinkgoT(),
 			"localhost",
 			port,
-			"podinfo",
+			"stefanprodan/podinfo",
 			"6.2.0",
-			helm.InsecureSkipTLSverifyOpt(),
+			[]manifestlist.PlatformSpec{{
+				OS:           "linux",
+				Architecture: runtime.GOARCH,
+			}},
+			skopeo.DisableTLSVerify(),
 		)
 
 		Expect(reg.Shutdown(context.Background())).To((Succeed()))
@@ -95,7 +101,7 @@ var _ = Describe("Push Bundle", func() {
 		ipAddr := helpers.GetFirstNonLoopbackIP(GinkgoT())
 
 		tempCertDir := GinkgoT().TempDir()
-		_, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(
+		caCertFile, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(
 			GinkgoT(),
 			tempCertDir,
 			ipAddr,
@@ -126,15 +132,32 @@ var _ = Describe("Push Bundle", func() {
 		helpers.WaitForTCPPort(GinkgoT(), ipAddr.String(), port)
 
 		cmd.SetArgs([]string{
-			"--helm-bundle", bundleFile,
-			"--to-registry", fmt.Sprintf("%s:%d/charts", ipAddr, port),
-			"--to-registry-insecure-skip-tls-verify",
+			"--image-bundle", bundleFile,
+			"--to-registry", fmt.Sprintf("%s:%d", ipAddr, port),
+			"--to-registry-ca-cert-file", caCertFile,
 		})
 
 		Expect(cmd.Execute()).To(Succeed())
 
-		// TODO Reenable once Helm supports custom CA certs and self-signed certs.
-		// helpers.ValidateChartIsAvailable(GinkgoT(), ipAddr.String(), port, "podinfo", "6.2.0", helm.CAFileOpt(caCertFile))
+		tmpCACertDir := GinkgoT().TempDir()
+		err = utils.CopyFile(
+			caCertFile,
+			filepath.Join(tmpCACertDir, filepath.Base(caCertFile)),
+		)
+		Expect(err).NotTo(HaveOccurred())
+
+		helpers.ValidateImageIsAvailable(
+			GinkgoT(),
+			ipAddr.String(),
+			port,
+			"stefanprodan/podinfo",
+			"6.2.0",
+			[]manifestlist.PlatformSpec{{
+				OS:           "linux",
+				Architecture: runtime.GOARCH,
+			}},
+			skopeo.CertDir(tmpCACertDir),
+		)
 
 		Expect(reg.Shutdown(context.Background())).To((Succeed()))
 
@@ -143,7 +166,7 @@ var _ = Describe("Push Bundle", func() {
 
 	It("Bundle does not exist", func() {
 		cmd.SetArgs([]string{
-			"--helm-bundle", bundleFile,
+			"--image-bundle", bundleFile,
 			"--to-registry", "localhost:unused/charts",
 			"--to-registry-insecure-skip-tls-verify",
 		})

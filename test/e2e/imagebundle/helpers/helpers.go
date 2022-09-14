@@ -7,6 +7,7 @@
 package helpers
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -21,22 +22,23 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/distribution/distribution/v3/manifest/manifestlist"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
+	"github.com/onsi/gomega/gstruct"
 	"github.com/spf13/cobra"
-	"helm.sh/helm/v3/pkg/action"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
-	createhelmbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/create/helmbundle"
-	"github.com/mesosphere/mindthegap/helm"
+	createimagebundle "github.com/mesosphere/mindthegap/cmd/mindthegap/create/imagebundle"
+	"github.com/mesosphere/mindthegap/skopeo"
 )
 
-func CreateBundle(t ginkgo.GinkgoTInterface, bundleFile, cfgFile string) {
-	createBundleCmd := NewCommand(t, createhelmbundle.NewCommand)
+func CreateBundle(t ginkgo.GinkgoTInterface, bundleFile, cfgFile string, platforms ...string) {
+	createBundleCmd := NewCommand(t, createimagebundle.NewCommand)
 	createBundleCmd.SetArgs([]string{
 		"--output-file", bundleFile,
-		"--helm-charts-file", cfgFile,
+		"--images-file", cfgFile,
 	})
 	gomega.ExpectWithOffset(1, createBundleCmd.Execute()).To(gomega.Succeed())
 }
@@ -175,32 +177,41 @@ func GenerateCertificateAndKeyWithIPSAN(
 	return caCertFile, caKeyFile, certFile, keyFile
 }
 
-func ValidateChartIsAvailable(
+func ValidateImageIsAvailable(
 	t ginkgo.GinkgoTInterface,
 	addr string,
 	port int,
-	chartName, chartVersion string,
-	pullOpts ...action.PullOpt,
+	image, tag string,
+	platforms []manifestlist.PlatformSpec,
+	opts ...skopeo.SkopeoOption,
 ) {
 	t.Helper()
-	h, cleanup := helm.NewClient(
-		output.NewNonInteractiveShell(ginkgo.GinkgoWriter, ginkgo.GinkgoWriter, 10),
-	)
-	ginkgo.DeferCleanup(cleanup)
 
-	helmTmpDir := t.TempDir()
+	r, cleanup := skopeo.NewRunner()
+	defer cleanup()
 
-	d, err := h.GetChartFromRepo(
-		helmTmpDir,
-		"",
-		fmt.Sprintf("%s://%s:%d/charts/%s", helm.OCIScheme, addr, port, chartName),
-		chartVersion,
-		[]helm.ConfigOpt{helm.RegistryClientConfigOpt()},
-		pullOpts...,
+	ml, stdout, stderr, err := r.InspectManifest(
+		context.Background(),
+		fmt.Sprintf("docker://%s:%d/%s:%s", addr, port, image, tag),
+		append(opts, skopeo.Debug())...,
 	)
+
+	t.Log("skopeo stdout: ", string(stdout))
+	t.Log("skopeo stderr: ", string(stderr))
+
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
-	chrt, err := helm.LoadChart(d)
-	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
-	gomega.ExpectWithOffset(1, chrt.Metadata.Name).To(gomega.Equal(chartName))
-	gomega.ExpectWithOffset(1, chrt.Metadata.Version).To(gomega.Equal(chartVersion))
+	gomega.ExpectWithOffset(1, ml.Manifests).To(gomega.HaveLen(len(platforms)))
+
+	for _, p := range platforms {
+		gomega.ExpectWithOffset(1, ml.Manifests).To(
+			gomega.ContainElement(
+				gstruct.MatchFields(
+					gstruct.IgnoreExtras|gstruct.IgnoreMissing,
+					gstruct.Fields{
+						"Platform": gomega.Equal(p),
+					},
+				),
+			),
+		)
+	}
 }
