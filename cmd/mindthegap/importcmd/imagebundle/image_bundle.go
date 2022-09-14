@@ -85,12 +85,11 @@ func NewCommand(out output.Output) *cobra.Command {
 
 						out.StartOperation(fmt.Sprintf("Importing %s", destImageName))
 
-						exportTarball := filepath.Join(ociExportsTempDir, "oci-export.tar")
+						exportTarball := filepath.Join(ociExportsTempDir, "docker-archive.tar")
 
 						skopeoStdout, skopeoStderr, err := skopeoRunner.Copy(context.TODO(),
 							fmt.Sprintf("docker://%s", srcImageName),
-							fmt.Sprintf("oci-archive:%s:%s", exportTarball, destImageName),
-							skopeo.All(),
+							fmt.Sprintf("docker-archive:%s:%s", exportTarball, destImageName),
 							skopeo.DisableSrcTLSVerify(),
 						)
 						if err != nil {
