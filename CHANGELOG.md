@@ -17,6 +17,31 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v0.18.0...v0.19.0
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Breaking Changes 🛠
+* fix!: Remove unnecessary gzip compression of bundles by default by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/174
+### Exciting New Features 🎉
+* feat: Use OCI storage for helm chart bundle by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/175
+* feat: support globs for image and helm bundles by @dkoshkin in https://github.com/mesosphere/mindthegap/pull/183
+### Fixes 🔧
+* fix: Ensure that image IDs do not change on import by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/185
+### Other Changes
+* refactor: Move mindthegap cmd to own package by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/170
+* build(deps): bump helm.sh/helm/v3 from 3.9.3 to 3.9.4 by @dependabot in https://github.com/mesosphere/mindthegap/pull/173
+* build: Upgrade all tools by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/176
+* build(deps): bump github.com/aws/aws-sdk-go-v2/service/ecr from 1.17.12 to 1.17.16 by @dependabot in https://github.com/mesosphere/mindthegap/pull/178
+* build(deps): bump github.com/docker/cli from 20.10.17+incompatible to 20.10.18+incompatible by @dependabot in https://github.com/mesosphere/mindthegap/pull/181
+* build(deps): bump k8s.io/klog/v2 from 2.70.1 to 2.80.1 by @dependabot in https://github.com/mesosphere/mindthegap/pull/182
+* build(deps): bump github.com/aws/aws-sdk-go-v2/config from 1.17.1 to 1.17.5 by @dependabot in https://github.com/mesosphere/mindthegap/pull/179
+* build(deps): bump k8s.io/apimachinery from 0.24.2 to 0.25.0 by @dependabot in https://github.com/mesosphere/mindthegap/pull/180
+* test: Add e2e tests for helm bundle functionality by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/184
+* test: Add e2e tests for image bundle serve and push by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/186
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v0.19.0...v1.0.0-rc.1
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
