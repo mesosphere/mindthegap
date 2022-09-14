@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -22,12 +23,13 @@ import (
 
 func NewCommand(out output.Output) *cobra.Command {
 	var (
-		imageBundleFiles          []string
-		destRegistry              string
-		destRegistrySkipTLSVerify bool
-		destRegistryUsername      string
-		destRegistryPassword      string
-		ecrLifecyclePolicy        string
+		imageBundleFiles              []string
+		destRegistry                  string
+		destRegistryCACertificateFile string
+		destRegistrySkipTLSVerify     bool
+		destRegistryUsername          string
+		destRegistryPassword          string
+		ecrLifecyclePolicy            string
 	)
 
 	cmd := &cobra.Command{
@@ -113,6 +115,7 @@ func NewCommand(out output.Output) *cobra.Command {
 				reg.Address(),
 				destRegistry,
 				skopeoOpts,
+				destRegistryCACertificateFile,
 				destRegistrySkipTLSVerify,
 				out,
 				skopeoRunner,
@@ -126,8 +129,14 @@ func NewCommand(out output.Output) *cobra.Command {
 	_ = cmd.MarkFlagRequired("image-bundle")
 	cmd.Flags().StringVar(&destRegistry, "to-registry", "", "Registry to push images to")
 	_ = cmd.MarkFlagRequired("to-registry")
+	cmd.Flags().StringVar(&destRegistryCACertificateFile, "to-registry-ca-cert-file", "",
+		"CA certificate file used to verify TLS verification of registry to push images to (use for http registries)")
 	cmd.Flags().BoolVar(&destRegistrySkipTLSVerify, "to-registry-insecure-skip-tls-verify", false,
-		"Skip TLS verification of registry to push images to (use for http registries)")
+		"Skip TLS verification of registry to push images to (use for non-TLS http registries)")
+	cmd.MarkFlagsMutuallyExclusive(
+		"to-registry-ca-cert-file",
+		"to-registry-insecure-skip-tls-verify",
+	)
 	cmd.Flags().StringVar(&destRegistryUsername, "to-registry-username", "",
 		"Username to use to log in to destination registry")
 	cmd.Flags().StringVar(&destRegistryPassword, "to-registry-password", "",
@@ -145,6 +154,7 @@ func pushImages(
 	cfg config.ImagesConfig,
 	sourceRegistry, destRegistry string,
 	skopeoOpts []skopeo.SkopeoOption,
+	destRegistryCACertificateFile string,
 	destRegistrySkipTLSVerify bool,
 	out output.Output,
 	skopeoRunner *skopeo.Runner,
@@ -153,12 +163,31 @@ func pushImages(
 	// Sort registries for deterministic ordering.
 	regNames := cfg.SortedRegistryNames()
 
+	if destRegistryCACertificateFile != "" {
+		tmpDir, err := os.MkdirTemp("", ".skopeo-certs-*")
+		if err != nil {
+			return fmt.Errorf(
+				"failed to create temporary directory for destination registry certificates: %w",
+				err,
+			)
+		}
+		defer os.RemoveAll(tmpDir)
+
+		if err := utils.CopyFile(destRegistryCACertificateFile, filepath.Join(tmpDir, "ca.crt")); err != nil {
+			return err
+		}
+
+		skopeoOpts = append(skopeoOpts, skopeo.DestCertDir(tmpDir))
+	}
+
+	skopeoOpts = append(skopeoOpts, skopeo.DisableSrcTLSVerify())
+
+	if destRegistrySkipTLSVerify {
+		skopeoOpts = append(skopeoOpts, skopeo.DisableDestTLSVerify())
+	}
+
 	for _, registryName := range regNames {
 		registryConfig := cfg[registryName]
-		skopeoOpts = append(skopeoOpts, skopeo.DisableSrcTLSVerify())
-		if destRegistrySkipTLSVerify {
-			skopeoOpts = append(skopeoOpts, skopeo.DisableDestTLSVerify())
-		}
 
 		// Sort images for deterministic ordering.
 		imageNames := registryConfig.SortedImageNames()

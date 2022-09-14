@@ -164,7 +164,7 @@ func ParseImagesConfigFile(configFile string) (ImagesConfig, error) {
 		}
 		named, nameErr := reference.ParseNamed(trimmedLine)
 		if nameErr != nil {
-			return ImagesConfig{}, fmt.Errorf("failed to parse config file: %w", yamlParseErr)
+			return ImagesConfig{}, fmt.Errorf("failed to parse config file: %w", nameErr)
 		}
 		namedTagged, ok := named.(reference.NamedTagged)
 		if !ok {

@@ -38,9 +38,27 @@ func DisableSrcTLSVerify() SkopeoOption {
 	}
 }
 
+func DisableTLSVerify() SkopeoOption {
+	return func() string {
+		return "--tls-verify=false"
+	}
+}
+
+func CertDir(dir string) SkopeoOption {
+	return func() string {
+		return fmt.Sprintf("--cert-dir=%s", dir)
+	}
+}
+
 func DisableDestTLSVerify() SkopeoOption {
 	return func() string {
 		return "--dest-tls-verify=false"
+	}
+}
+
+func DestCertDir(dir string) SkopeoOption {
+	return func() string {
+		return fmt.Sprintf("--dest-cert-dir=%s", dir)
 	}
 }
 
