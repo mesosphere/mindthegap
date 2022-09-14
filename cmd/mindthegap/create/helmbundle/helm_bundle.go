@@ -18,6 +18,7 @@ import (
 
 	"github.com/mesosphere/mindthegap/archive"
 	"github.com/mesosphere/mindthegap/cleanup"
+	"github.com/mesosphere/mindthegap/cmd/mindthegap/utils"
 	"github.com/mesosphere/mindthegap/config"
 	"github.com/mesosphere/mindthegap/docker/registry"
 	"github.com/mesosphere/mindthegap/helm"
@@ -32,7 +33,7 @@ func NewCommand(out output.Output) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "helm-bundle",
-		Short: "Create a helm bundle",
+		Short: "Create a Helm chart bundle",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !overwrite {
 				out.StartOperation("Checking if output file already exists")
@@ -56,7 +57,7 @@ func NewCommand(out output.Output) *cobra.Command {
 				}
 			}
 
-			out.StartOperation("Parsing helm bundle config")
+			out.StartOperation("Parsing Helm chart bundle config")
 			cfg, err := config.ParseHelmChartsConfigFile(configFile)
 			if err != nil {
 				out.EndOperation(false)
@@ -249,6 +250,9 @@ func NewCommand(out output.Output) *cobra.Command {
 		StringVar(&outputFile, "output-file", "helm-charts.tar", "Output file to write Helm charts bundle to")
 	cmd.Flags().
 		BoolVar(&overwrite, "overwrite", false, "Overwrite Helm charts bundle file if it already exists")
+
+	// TODO Unhide this from DKP CLI once DKP supports OCI registry for Helm charts.
+	utils.AddCmdAnnotation(cmd, "exclude-from-dkp-cli", "true")
 
 	return cmd
 }

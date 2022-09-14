@@ -132,6 +132,9 @@ func NewCommand(out output.Output) *cobra.Command {
 	cmd.Flags().StringVar(&destRegistryPassword, "to-registry-password", "",
 		"Password to use to log in to destination registry")
 
+	// TODO Unhide this from DKP CLI once DKP supports OCI registry for Helm charts.
+	utils.AddCmdAnnotation(cmd, "exclude-from-dkp-cli", "true")
+
 	return cmd
 }
 
