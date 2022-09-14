@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/spf13/cobra"
 	"helm.sh/helm/v3/pkg/action"
@@ -124,6 +125,8 @@ func NewCommand(out output.Output) *cobra.Command {
 
 			for repoName, repoConfig := range cfg.Repositories {
 				for chartName, chartVersions := range repoConfig.Charts {
+					sort.Strings(chartVersions)
+
 					out.StartOperation(
 						fmt.Sprintf(
 							"Fetching Helm chart %s (versions %v) from %s (%s)",
@@ -149,6 +152,7 @@ func NewCommand(out output.Output) *cobra.Command {
 							repoConfig.RepoURL,
 							chartName,
 							chartVersion,
+							[]helm.ConfigOpt{helm.RegistryClientConfigOpt()},
 							opts...,
 						)
 						if err != nil {

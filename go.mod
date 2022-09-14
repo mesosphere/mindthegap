@@ -15,7 +15,10 @@ require (
 	github.com/hashicorp/go-getter v1.6.2
 	github.com/mesosphere/dkp-cli-runtime/core v0.5.2
 	github.com/mholt/archiver/v3 v3.5.1
+	github.com/onsi/ginkgo/v2 v2.1.6
+	github.com/onsi/gomega v1.20.2
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
+	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.0
@@ -38,7 +41,6 @@ require (
 	github.com/Masterminds/squirrel v1.5.3 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
-	github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
 	github.com/aws/aws-sdk-go v1.43.16 // indirect
@@ -55,10 +57,6 @@ require (
 	github.com/aws/smithy-go v1.13.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
-	github.com/bshuster-repo/logrus-logstash-hook v1.0.0 // indirect
-	github.com/bugsnag/bugsnag-go v0.0.0-20141110184014-b1d153021fcd // indirect
-	github.com/bugsnag/osext v0.0.0-20130617224835-0dd3f918b21b // indirect
-	github.com/bugsnag/panicwrap v0.0.0-20151223152923-e2c28503fcd0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5 // indirect
 	github.com/containerd/containerd v1.6.6 // indirect
@@ -152,7 +150,6 @@ require (
 	github.com/russross/blackfriday v1.6.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
-	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
@@ -160,9 +157,6 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca // indirect
-	github.com/yvasiyarov/go-metrics v0.0.0-20140926110328-57bccd1ccd43 // indirect
-	github.com/yvasiyarov/gorelic v0.0.0-20141212073537-a9bba5b9ab50 // indirect
-	github.com/yvasiyarov/newrelic_platform_go v0.0.0-20140908184405-b21fdbd4370f // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect

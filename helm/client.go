@@ -41,7 +41,7 @@ func NewClient(out output.Output) (*Client, CleanupFunc) {
 		tempDir: tempDir,
 	}
 	return c, func() error {
-		return os.RemoveAll(filepath.Dir(c.tempDir))
+		return os.RemoveAll(c.tempDir)
 	}
 }
 
@@ -97,14 +97,42 @@ func CAFileOpt(caFile string) action.PullOpt {
 	}
 }
 
+type ConfigOpt func(*action.Configuration) error
+
+func RegistryClientConfigOpt(opts ...registry.ClientOption) ConfigOpt {
+	return func(cfg *action.Configuration) error {
+		cl, err := registry.NewClient(opts...)
+		if err != nil {
+			return fmt.Errorf("failed to create registry client: %w", err)
+		}
+
+		cfg.RegistryClient = cl
+
+		return nil
+	}
+}
+
 func (c *Client) GetChartFromRepo(
 	outputDir, repoURL, chartName, chartVersion string,
+	configOpts []ConfigOpt,
 	extraPullOpts ...action.PullOpt,
 ) (string, error) {
+	cfg := &action.Configuration{Log: c.out.V(4).Infof}
+
+	if registry.IsOCI(chartName) {
+		configOpts = append([]ConfigOpt{RegistryClientConfigOpt()}, configOpts...)
+	}
+
+	for _, f := range configOpts {
+		if err := f(cfg); err != nil {
+			return "", fmt.Errorf("failed to configure helm client: %w", err)
+		}
+	}
+
 	pull := action.NewPullWithOpts(
 		append(
 			extraPullOpts,
-			action.WithConfig(&action.Configuration{Log: c.out.V(4).Infof}),
+			action.WithConfig(cfg),
 			DoNotUntarOpt(),
 			DestDirOpt(outputDir),
 			TempRepositoryCacheOpt(c.tempDir),
@@ -112,6 +140,7 @@ func (c *Client) GetChartFromRepo(
 			ChartVersionOpt(chartVersion),
 		)...,
 	)
+
 	helmOutput, err := pull.Run(chartName)
 	if err != nil {
 		return "", fmt.Errorf(
@@ -127,7 +156,10 @@ func (c *Client) GetChartFromRepo(
 		c.out.V(4).Info(helmOutput)
 	}
 
-	return filepath.Join(outputDir, fmt.Sprintf("%s-%s.tgz", chartName, chartVersion)), nil
+	return filepath.Join(
+		outputDir,
+		fmt.Sprintf("%s-%s.tgz", filepath.Base(chartName), chartVersion),
+	), nil
 }
 
 func (c *Client) GetChartFromURL(outputDir, chartURL, workingDir string) (string, error) {

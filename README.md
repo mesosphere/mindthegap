@@ -102,7 +102,7 @@ served via `registry:2`.
 #### Serving a Helm chart bundle
 
 ```shell
-mindthegap serve helm-bundle --helm-charts-bundle <path/to/helm-charts.tar> \
+mindthegap serve helm-bundle --helm-bundle <path/to/helm-charts.tar> \
   [--listen-address <addr>] \
   [--list-port <port>] \
   [--tls-cert-file <path/to/cert/file> --tls-private-key-file <path/to/key/file>]

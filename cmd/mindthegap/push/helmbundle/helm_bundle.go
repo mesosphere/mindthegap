@@ -23,10 +23,10 @@ import (
 func NewCommand(out output.Output) *cobra.Command {
 	var (
 		helmBundleFiles           []string
-		destRepository            string
+		destRegistry              string
 		destRegistrySkipTLSVerify bool
-		destRepositoryUsername    string
-		destRepositoryPassword    string
+		destRegistryUsername      string
+		destRegistryPassword      string
 	)
 
 	cmd := &cobra.Command{
@@ -76,18 +76,18 @@ func NewCommand(out output.Output) *cobra.Command {
 			skopeoOpts := []skopeo.SkopeoOption{
 				skopeo.PreserveDigests(),
 			}
-			if destRepositoryUsername != "" && destRepositoryPassword != "" {
+			if destRegistryUsername != "" && destRegistryPassword != "" {
 				skopeoOpts = append(
 					skopeoOpts,
 					skopeo.DestCredentials(
-						destRepositoryUsername,
-						destRepositoryPassword,
+						destRegistryUsername,
+						destRegistryPassword,
 					),
 				)
 			} else {
 				skopeoStdout, skopeoStderr, err := skopeoRunner.AttemptToLoginToRegistry(
 					context.Background(),
-					destRepository,
+					destRegistry,
 				)
 				if err != nil {
 					out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
@@ -100,7 +100,7 @@ func NewCommand(out output.Output) *cobra.Command {
 
 			// Determine type of destination registry.
 			var prePushFuncs []prePushFunc
-			if ecr.IsECRRegistry(destRepository) {
+			if ecr.IsECRRegistry(destRegistry) {
 				prePushFuncs = append(
 					prePushFuncs,
 					ecr.EnsureRepositoryExistsFunc(""),
@@ -110,7 +110,7 @@ func NewCommand(out output.Output) *cobra.Command {
 			return pushOCIArtifacts(
 				cfg,
 				fmt.Sprintf("%s/charts", reg.Address()),
-				destRepository,
+				destRegistry,
 				skopeoOpts,
 				destRegistrySkipTLSVerify,
 				out,
@@ -123,14 +123,14 @@ func NewCommand(out output.Output) *cobra.Command {
 	cmd.Flags().StringSliceVar(&helmBundleFiles, "helm-bundle", nil,
 		"Tarball containing list of Helm charts to push. Can also be a glob pattern.")
 	_ = cmd.MarkFlagRequired("helm-bundle")
-	cmd.Flags().StringVar(&destRepository, "to-repository", "", "Repository to push images to")
-	_ = cmd.MarkFlagRequired("to-repository")
-	cmd.Flags().BoolVar(&destRegistrySkipTLSVerify, "to-repository-insecure-skip-tls-verify", false,
-		"Skip TLS verification of repository to push images to (use for http repositories)")
-	cmd.Flags().StringVar(&destRepositoryUsername, "to-repository-username", "",
+	cmd.Flags().StringVar(&destRegistry, "to-registry", "", "Registry to push images to")
+	_ = cmd.MarkFlagRequired("to-registry")
+	cmd.Flags().BoolVar(&destRegistrySkipTLSVerify, "to-registry-insecure-skip-tls-verify", false,
+		"Skip TLS verification of registry to push images to (use for http registries)")
+	cmd.Flags().StringVar(&destRegistryUsername, "to-registry-username", "",
 		"Username to use to log in to destination repository")
-	cmd.Flags().StringVar(&destRepositoryPassword, "to-repository-password", "",
-		"Password to use to log in to destination repository")
+	cmd.Flags().StringVar(&destRegistryPassword, "to-registry-password", "",
+		"Password to use to log in to destination registry")
 
 	return cmd
 }
@@ -139,7 +139,7 @@ type prePushFunc func(destRegistry, imageName string, imageTags ...string) error
 
 func pushOCIArtifacts(
 	cfg config.HelmChartsConfig,
-	sourceRepository, destRepository string,
+	sourceRegistry, destRegistry string,
 	skopeoOpts []skopeo.SkopeoOption,
 	destRegistrySkipTLSVerify bool,
 	out output.Output,
@@ -164,7 +164,7 @@ func pushOCIArtifacts(
 			chartVersions := repoConfig.Charts[chartName]
 
 			for _, prePush := range prePushFuncs {
-				if err := prePush("", destRepository); err != nil {
+				if err := prePush("", destRegistry); err != nil {
 					return fmt.Errorf("pre-push func failed: %w", err)
 				}
 			}
@@ -173,12 +173,12 @@ func pushOCIArtifacts(
 				out.StartOperation(
 					fmt.Sprintf("Copying %s:%s (from bundle) to %s/%s:%s",
 						chartName, chartVersion,
-						destRepository, chartName, chartVersion,
+						destRegistry, chartName, chartVersion,
 					),
 				)
 				skopeoStdout, skopeoStderr, err := skopeoRunner.Copy(context.TODO(),
-					fmt.Sprintf("docker://%s/%s:%s", sourceRepository, chartName, chartVersion),
-					fmt.Sprintf("docker://%s/%s:%s", destRepository, chartName, chartVersion),
+					fmt.Sprintf("docker://%s/%s:%s", sourceRegistry, chartName, chartVersion),
+					fmt.Sprintf("docker://%s/%s:%s", destRegistry, chartName, chartVersion),
 					append(
 						skopeoOpts, skopeo.All(),
 					)...,

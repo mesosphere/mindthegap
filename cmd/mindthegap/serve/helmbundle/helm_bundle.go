@@ -5,6 +5,7 @@ package helmbundle
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -18,7 +19,7 @@ import (
 	"github.com/mesosphere/mindthegap/docker/registry"
 )
 
-func NewCommand(out output.Output) *cobra.Command {
+func NewCommand(out output.Output) (cmd *cobra.Command, stopCh chan struct{}) {
 	var (
 		helmBundleFiles []string
 		listenAddress   string
@@ -27,7 +28,9 @@ func NewCommand(out output.Output) *cobra.Command {
 		tlsKey          string
 	)
 
-	cmd := &cobra.Command{
+	stopCh = make(chan struct{})
+
+	cmd = &cobra.Command{
 		Use:   "helm-bundle",
 		Short: "Serve a Helm chart repository in an OCI registry from Helm chart bundles",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -74,10 +77,14 @@ func NewCommand(out output.Output) *cobra.Command {
 			}
 			out.EndOperation(true)
 			out.Infof("Listening on %s\n", reg.Address())
-			if err := reg.ListenAndServe(); err != nil {
-				out.Error(err, "error serving Docker registry")
-				os.Exit(2)
-			}
+
+			go func() {
+				if err := reg.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+					out.Error(err, "error serving Docker registry")
+					os.Exit(2)
+				}
+			}()
+			<-stopCh
 
 			return nil
 		},
@@ -92,5 +99,5 @@ func NewCommand(out output.Output) *cobra.Command {
 	cmd.Flags().StringVar(&tlsCertificate, "tls-cert-file", "", "TLS certificate file")
 	cmd.Flags().StringVar(&tlsKey, "tls-private-key-file", "", "TLS private key file")
 
-	return cmd
+	return cmd, stopCh
 }

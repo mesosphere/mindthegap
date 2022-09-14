@@ -72,6 +72,39 @@ bench.%: ## Runs go benchmarks for a specific module
 bench.%: ensure-static-skopeo; $(info $(M) running benchmarks$(if $(GOTEST_RUN), matching "$(GOTEST_RUN)") for $* module)
 	$(if $(filter-out root,$*),cd $* && )go test $(if $(GOTEST_RUN),-run "$(GOTEST_RUN)") -race -cover -v ./...
 
+E2E_PARALLEL_NODES ?= $(shell nproc --ignore=1)
+E2E_FLAKE_ATTEMPTS ?= 1
+
+.PHONY: e2e-test
+e2e-test: ## Runs e2e tests
+e2e-test: install-tool.golang install-tool.ginkgo skopeo.build; $(info $(M) running e2e tests$(if $(E2E_FOCUS), matching "$(E2E_FOCUS)"))
+	ginkgo run \
+		--r \
+		--race \
+		--progress \
+		--trace \
+		--randomize-all \
+		--randomize-suites \
+		--fail-on-pending \
+		--keep-going \
+		$(if $(filter $(CI),true),--always-emit-ginkgo-writer) \
+		--covermode=atomic \
+		--coverprofile coverage-e2e.out \
+		--procs=$(E2E_PARALLEL_NODES) \
+		--compilers=$(E2E_PARALLEL_NODES) \
+		--flake-attempts=$(E2E_FLAKE_ATTEMPTS) \
+		$(if $(E2E_FOCUS),--focus="$(E2E_FOCUS)") \
+		$(if $(E2E_SKIP),--skip="$(E2E_SKIP)") \
+		$(if $(E2E_LABEL),--label-filter="$(E2E_LABEL)") \
+		$(E2E_GINKGO_FLAGS) \
+		--junit-report=junit-e2e.xml \
+		--json-report=report-e2e.json \
+		--tags e2e \
+		test/e2e/... && \
+	go tool cover \
+		-html=coverage-e2e.out \
+		-o coverage-e2e.html
+
 GOLANGCI_CONFIG_FILE ?= $(wildcard $(REPO_ROOT)/.golangci.y*ml)
 
 .PHONY: lint

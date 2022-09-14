@@ -7,11 +7,13 @@ dist
 *.swp
 
 # go coverage output
-coverage.out
-coverage.html
+coverage*.out
+coverage*.html
 
 test.json
 junit-report.xml
+junit-e2e.xml
+report-e2e.json
 openapi_violations.report
 
 .idea/
