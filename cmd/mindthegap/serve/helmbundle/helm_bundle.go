@@ -99,5 +99,8 @@ func NewCommand(out output.Output) (cmd *cobra.Command, stopCh chan struct{}) {
 	cmd.Flags().StringVar(&tlsCertificate, "tls-cert-file", "", "TLS certificate file")
 	cmd.Flags().StringVar(&tlsKey, "tls-private-key-file", "", "TLS private key file")
 
+	// TODO Unhide this from DKP CLI once DKP supports OCI registry for Helm charts.
+	utils.AddCmdAnnotation(cmd, "exclude-from-dkp-cli", "true")
+
 	return cmd, stopCh
 }

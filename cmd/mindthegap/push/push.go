@@ -15,7 +15,7 @@ import (
 func NewCommand(out output.Output) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "push",
-		Short: "Push images from an image or Helm chart bundle into an existing OCI registry",
+		Short: "Push images or Helm charts from bundles into an existing OCI registry",
 	}
 
 	cmd.AddCommand(imagebundle.NewCommand(out))
