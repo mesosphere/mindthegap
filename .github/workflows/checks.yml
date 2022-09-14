@@ -46,13 +46,14 @@ jobs:
       - name: Output required tool versions
         id: tool-versions
         run: |
-          echo "::set-output name=go::$(grep -E '^golang ' .tool-versions | cut -d' ' -f2)"
+          echo "::set-output name=go::$(grep -E '^golang ' .tool-versions | cut -d' ' -f2 | sed -e 's/^\([0-9]\+\.[0-9]\+\)$/\1.0/')"
           echo "::set-output name=golangci-lint::v$(grep -E '^golangci-lint ' .tool-versions | cut -d' ' -f2)"
 
       - uses: actions/setup-go@v3
         with:
           go-version: ${{ steps.tool-versions.outputs.go }}
-          check-latest: true
+          check-latest: false
+          cache: true
 
       - name: Ensure dummy skopeo files
         run: make ensure-static-skopeo
