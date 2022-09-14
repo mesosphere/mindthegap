@@ -42,6 +42,17 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v0.19.0...v1.0.0-rc.1
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: Hide helm bundle commands from DKP CLI by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/187
+### Other Changes
+* docs: Add mindthegap image for fun by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/189
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.0.0-rc.1...v1.0.0
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
