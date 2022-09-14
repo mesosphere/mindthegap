@@ -3,7 +3,7 @@
  SPDX-License-Identifier: Apache-2.0
 -->
 
-<p style="text-align: center;"><img src="mindthegap.svg" alt="mindthegap" width="300"/></p>
+<h1 align="center"><img src="mindthegap.svg" alt="mindthegap" width="300"/></h1>
 
 ![GitHub](https://img.shields.io/github/license/mesosphere/mindthegap?style=flat-square)
 
