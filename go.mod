@@ -6,11 +6,11 @@ module github.com/mesosphere/mindthegap
 go 1.18
 
 require (
-	github.com/aws/aws-sdk-go-v2/config v1.17.5
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.17.16
+	github.com/aws/aws-sdk-go-v2/config v1.17.6
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.17.17
 	github.com/containers/image/v5 v5.22.0
 	github.com/containers/skopeo v1.9.2
-	github.com/distribution/distribution/v3 v3.0.0-20220725133111-4bf3547399eb
+	github.com/distribution/distribution/v3 v3.0.0-20220907155224-78b9c98c5c31
 	github.com/docker/cli v20.10.18+incompatible
 	github.com/hashicorp/go-getter v1.6.2
 	github.com/mesosphere/dkp-cli-runtime/core v0.6.0
@@ -26,7 +26,7 @@ require (
 	helm.sh/helm/v3 v3.9.4
 	k8s.io/apimachinery v0.25.0
 	k8s.io/klog/v2 v2.80.1
-	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed
+	k8s.io/utils v0.0.0-20220823124924-e9cbc92d1a73
 )
 
 require (
@@ -44,17 +44,17 @@ require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
 	github.com/aws/aws-sdk-go v1.43.16 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.16.14 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.12.18 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.15 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.21 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.15 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.22 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.15 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.11.21 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.13.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.16.17 // indirect
-	github.com/aws/smithy-go v1.13.2 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.16.15 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.12.19 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.16 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.22 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.16 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.23 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.16 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.11.22 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.13.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.16.18 // indirect
+	github.com/aws/smithy-go v1.13.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
@@ -103,6 +103,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.2.1 // indirect
+	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
