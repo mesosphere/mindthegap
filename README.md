@@ -28,7 +28,7 @@ images config file. You can also provide the images file in a simple file with
 an image per line, e.g.
 
 ```plain
-docker.io/library/nginx:1.21.5
+nginx:1.21.5
 test.registry2.io/test-image6:atag
 ```
 

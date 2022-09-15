@@ -114,6 +114,11 @@ func TestParseImagesFile(t *testing.T) {
 					"test-image5": {"tag32", "tag42", "tag52"},
 					"test-image6": {"tag63", "tag73", "tag83"},
 				},
+			}, "docker.io": RegistrySyncConfig{
+				Images: map[string][]string{
+					"plain/image":    {"tag"},
+					"library/image2": {"tag2"},
+				},
 			},
 		},
 	}}

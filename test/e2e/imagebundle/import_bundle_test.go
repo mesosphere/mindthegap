@@ -45,7 +45,7 @@ var _ = Describe("Import Bundle", func() {
 		helpers.CreateBundle(
 			GinkgoT(),
 			bundleFile,
-			filepath.Join("testdata", "import-bundle.yaml"),
+			filepath.Join("testdata", "import-bundle.txt"),
 		)
 
 		copyFileTempDir := GinkgoT().TempDir()
