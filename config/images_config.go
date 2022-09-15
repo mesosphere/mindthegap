@@ -162,7 +162,7 @@ func ParseImagesConfigFile(configFile string) (ImagesConfig, error) {
 		if trimmedLine == "" || strings.HasPrefix(trimmedLine, "#") {
 			continue
 		}
-		named, nameErr := reference.ParseNamed(trimmedLine)
+		named, nameErr := reference.ParseNormalizedNamed(trimmedLine)
 		if nameErr != nil {
 			return ImagesConfig{}, fmt.Errorf("failed to parse config file: %w", nameErr)
 		}

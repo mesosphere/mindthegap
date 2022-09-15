@@ -1,5 +1,6 @@
 #  Copyright 2021 D2iQ, Inc. All rights reserved.
 #  SPDX-License-Identifier: Apache-2.0
+
 test.registry.io/test-image:tag1
 test.registry.io/test-image:tag3
 test.registry.io/test-image:tag2
@@ -19,3 +20,6 @@ test.registry2.io/test-image5:tag52
 test.registry2.io/test-image6:tag63
 test.registry2.io/test-image6:tag73
 test.registry2.io/test-image6:tag83
+
+plain/image:tag
+image2:tag2
