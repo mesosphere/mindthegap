@@ -50,7 +50,7 @@ repos:
   - id: gitlint
     stages: [commit-msg]
 - repo: https://github.com/jumanjihouse/pre-commit-hooks
-  rev: 2.1.6
+  rev: 3.0.0
   hooks:
   - id: shfmt
     stages: [commit]
@@ -64,13 +64,13 @@ repos:
     stages: [commit]
     args: ["-e", "SC2211"]
 - repo: https://github.com/igorshubovych/markdownlint-cli
-  rev: v0.31.1
+  rev: v0.32.2
   hooks:
   - id: markdownlint
     stages: [commit]
     exclude: ^CHANGELOG.md$
 - repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.2.0
+  rev: v1.3.1
   hooks:
   - id: insert-license
     name: License headers - Go
