@@ -79,6 +79,7 @@ E2E_FLAKE_ATTEMPTS ?= 1
 e2e-test: ## Runs e2e tests
 e2e-test: install-tool.golang install-tool.ginkgo skopeo.build
 	$(info $(M) running e2e tests$(if $(E2E_LABEL), labelled "$(E2E_LABEL)")$(if $(E2E_FOCUS), matching "$(E2E_FOCUS)"))
+	GOOS=linux $(MAKE) build-snapshot
 	ginkgo run \
 		--r \
 		--race \
