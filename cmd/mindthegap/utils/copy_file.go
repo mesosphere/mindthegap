@@ -10,13 +10,18 @@ import (
 )
 
 func CopyFile(src, dst string) error {
+	sStat, err := os.Stat(src)
+	if err != nil {
+		return fmt.Errorf("failed to read source file: %w", err)
+	}
+
 	s, err := os.Open(src)
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
 	}
 	defer s.Close()
 
-	d, err := os.Create(dst)
+	d, err := os.OpenFile(dst, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, sStat.Mode().Perm())
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
