@@ -53,6 +53,24 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.0.0-rc.1...v1.0.0
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: Add Docker image by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/198
+### Fixes 🔧
+* fix: Ensure file permissions are preserved when copying files by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/191
+* test: Add e2e test for import image-bundle  by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/192
+* fix: Properly handle friendly image names by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/195
+### Other Changes
+* build(deps): Upgrade direct dependencies by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/193
+* build: Upgrade tools by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/194
+* build(deps): bump k8s.io/apimachinery from 0.25.0 to 0.25.1 by @dependabot in https://github.com/mesosphere/mindthegap/pull/196
+* build(deps): bump github.com/onsi/ginkgo/v2 from 2.1.6 to 2.2.0 by @dependabot in https://github.com/mesosphere/mindthegap/pull/197
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.0.0...v1.1.0
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
