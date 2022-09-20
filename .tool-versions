@@ -1,5 +1,5 @@
 gcloud 402.0.0
-ginkgo 2.1.6
+ginkgo 2.2.0
 golangci-lint 1.49.0
 goreleaser 1.11.3
 golang 1.19.1
