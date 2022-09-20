@@ -37,7 +37,7 @@ jobs:
       - name: Build
         run: make release
         env:
-          GORELEASER_FLAGS: --skip-publish --skip-validate
+          GORELEASER_FLAGS: --skip-publish --skip-validate --skip-docker
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run binary

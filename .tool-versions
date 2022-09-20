@@ -1,6 +1,7 @@
+gcloud 402.0.0
+ginkgo 2.1.6
 golangci-lint 1.49.0
-goreleaser 1.11.2
+goreleaser 1.11.3
 golang 1.19.1
 helm 3.9.4
 pre-commit 2.20.0
-ginkgo 2.1.6
