@@ -14,7 +14,7 @@ require (
 	github.com/docker/cli v20.10.18+incompatible
 	github.com/docker/docker v20.10.18+incompatible
 	github.com/hashicorp/go-getter v1.6.2
-	github.com/mesosphere/dkp-cli-runtime/core v0.6.0
+	github.com/mesosphere/dkp-cli-runtime/core v0.7.0
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/onsi/ginkgo/v2 v2.2.0
 	github.com/onsi/gomega v1.20.2
