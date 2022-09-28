@@ -71,6 +71,25 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.0.0...v1.1.0
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix: Correctly identify ECR registries by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/206
+### Other Changes
+* build: Upgrade go-tuf to fix security issue by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/199
+* test: Update sha for import bundle check by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/207
+* build(deps): bump github.com/aws/aws-sdk-go-v2/config from 1.17.6 to 1.17.7 by @dependabot in https://github.com/mesosphere/mindthegap/pull/201
+* build(deps): bump k8s.io/apimachinery from 0.25.1 to 0.25.2 by @dependabot in https://github.com/mesosphere/mindthegap/pull/203
+* build(deps): bump github.com/mesosphere/dkp-cli-runtime/core from 0.6.0 to 0.7.0 by @dependabot in https://github.com/mesosphere/mindthegap/pull/204
+* build(deps): bump github.com/aws/aws-sdk-go-v2/service/ecr from 1.17.17 to 1.17.18 by @dependabot in https://github.com/mesosphere/mindthegap/pull/202
+* build(deps): bump helm.sh/helm/v3 from 3.9.4 to 3.10.0 by @dependabot in https://github.com/mesosphere/mindthegap/pull/205
+* ci: Login to Docker Hub before running make release by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/208
+* ci: Fix up Docker login by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/209
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.1.0...v1.1.1
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
