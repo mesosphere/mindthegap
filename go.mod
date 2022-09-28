@@ -26,7 +26,7 @@ require (
 	github.com/stretchr/testify v1.8.0
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.9.4
-	k8s.io/apimachinery v0.25.1
+	k8s.io/apimachinery v0.25.2
 	k8s.io/klog/v2 v2.80.1
 	k8s.io/utils v0.0.0-20220823124924-e9cbc92d1a73
 )
