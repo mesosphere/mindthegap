@@ -120,7 +120,7 @@ var _ = Describe("Import Bundle", func() {
 		Expect(exitCode).To(Equal(0))
 
 		Expect(strings.TrimSpace(outBuf.String())).
-			To(Equal("sha256:b7c51f9294349f26b8ab08272253c70e94cd1a06ef938875a12f8f7f4753c4ec"))
+			To(Equal("sha256:69b30799dabb55a68ea5c2f3f9844a7c111d20ac5f51e1cfa2cf8ddd81e96d19"))
 	})
 
 	It("Bundle does not exist", func() {
