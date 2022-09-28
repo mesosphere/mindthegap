@@ -7,7 +7,7 @@ go 1.18
 
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.17.7
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.17.17
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.17.18
 	github.com/containers/image/v5 v5.22.0
 	github.com/containers/skopeo v1.9.2
 	github.com/distribution/distribution/v3 v3.0.0-20220907155224-78b9c98c5c31
