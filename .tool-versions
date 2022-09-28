@@ -3,5 +3,5 @@ ginkgo 2.2.0
 golangci-lint 1.49.0
 goreleaser 1.11.3
 golang 1.19.1
-helm 3.9.4
+helm 3.10.0
 pre-commit 2.20.0
