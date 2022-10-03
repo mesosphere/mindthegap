@@ -90,6 +90,18 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.1.0...v1.1.1
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Other Changes
+* build(deps): bump github.com/containers/image/v5 from 5.22.0 to 5.23.0 by @dependabot in https://github.com/mesosphere/mindthegap/pull/212
+* build(deps): bump github.com/aws/aws-sdk-go-v2/config from 1.17.7 to 1.17.8 by @dependabot in https://github.com/mesosphere/mindthegap/pull/211
+* build(deps): bump github.com/containers/skopeo from 1.9.2 to 1.10.0 in /skopeo-static by @dependabot in https://github.com/mesosphere/mindthegap/pull/210
+* ci: Specify release-please action version by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/215
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.1.1...v1.2.0
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
