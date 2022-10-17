@@ -4,8 +4,8 @@
 # syntax=docker/dockerfile:1
 
 # Use distroless/static:nonroot image for a base.
-FROM --platform=linux/amd64 gcr.io/distroless/static@sha256:d11899d4ea81ceaab422afb0af9b446bb560411b9cec4664af4f913ef85f0b62 as linux-amd64
-FROM --platform=linux/arm64 gcr.io/distroless/static@sha256:690d14f648e06c53ec52a477de11f37028b764cffd18123f08bcd4179ca75a9f as linux-arm64
+FROM --platform=linux/amd64 gcr.io/distroless/static@sha256:6e5f8857479b83d032a14a17f8e0731634c6b8b5e225f53a039085ec1f7698c6 as linux-amd64
+FROM --platform=linux/arm64 gcr.io/distroless/static@sha256:d79a4342bd72644f30436ae22e55ab68a7c3a125e91d76936bcb2be66aa2af57 as linux-arm64
 
 FROM --platform=linux/${TARGETARCH} linux-${TARGETARCH}
 
