@@ -102,6 +102,24 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.1.1...v1.2.0
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Other Changes
+* build(deps): bump github.com/onsi/gomega from 1.20.2 to 1.21.1 by @dependabot in https://github.com/mesosphere/mindthegap/pull/216
+* build(deps): bump github.com/opencontainers/image-spec from 1.1.0-rc1 to 1.1.0-rc2 by @dependabot in https://github.com/mesosphere/mindthegap/pull/217
+* test: Fix changed image SHA for import e2e test by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/224
+* build: Upgrade tools by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/225
+* build(deps): bump k8s.io/apimachinery from 0.25.2 to 0.25.3 by @dependabot in https://github.com/mesosphere/mindthegap/pull/222
+* build(deps): bump github.com/docker/docker from 20.10.18+incompatible to 20.10.19+incompatible by @dependabot in https://github.com/mesosphere/mindthegap/pull/220
+* build(deps): bump github.com/onsi/ginkgo/v2 from 2.2.0 to 2.3.1 by @dependabot in https://github.com/mesosphere/mindthegap/pull/221
+* build(deps): bump helm.sh/helm/v3 from 3.10.0 to 3.10.1 by @dependabot in https://github.com/mesosphere/mindthegap/pull/219
+* build(deps): bump github.com/docker/cli from 20.10.18+incompatible to 20.10.19+incompatible by @dependabot in https://github.com/mesosphere/mindthegap/pull/223
+* build: Latest distroless image by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/226
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.2.0...v1.2.1
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
