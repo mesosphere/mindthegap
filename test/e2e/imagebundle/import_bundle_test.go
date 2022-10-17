@@ -29,29 +29,26 @@ import (
 
 var _ = Describe("Import Bundle", func() {
 	var (
+		tmpDir     string
 		bundleFile string
 		cmd        *cobra.Command
 	)
 
 	BeforeEach(func() {
-		tmpDir := GinkgoT().TempDir()
+		tmpDir = GinkgoT().TempDir()
 
 		bundleFile = filepath.Join(tmpDir, "image-bundle.tar")
 
-		cmd = helpers.NewCommand(GinkgoT(), importimagebundle.NewCommand)
-	})
-
-	It("Success", func() {
 		helpers.CreateBundle(
 			GinkgoT(),
 			bundleFile,
 			filepath.Join("testdata", "import-bundle.txt"),
 		)
 
-		copyFileTempDir := GinkgoT().TempDir()
-		Expect(
-			os.Rename(bundleFile, filepath.Join(copyFileTempDir, filepath.Base(bundleFile))),
-		).To(Succeed())
+		cmd = helpers.NewCommand(GinkgoT(), importimagebundle.NewCommand)
+	})
+
+	It("Success", func() {
 		Expect(
 			utils.CopyFile(
 				filepath.Join(
@@ -62,12 +59,12 @@ var _ = Describe("Import Bundle", func() {
 					fmt.Sprintf("mindthegap_linux_%s_v1", runtime.GOARCH),
 					"mindthegap",
 				),
-				filepath.Join(copyFileTempDir, "mindthegap"),
+				filepath.Join(tmpDir, "mindthegap"),
 			),
 		).To(Succeed())
 
-		tarToCopy := filepath.Join(copyFileTempDir, "copy.tar")
-		Expect(archive.ArchiveDirectory(copyFileTempDir, tarToCopy)).To(Succeed())
+		tarToCopy := filepath.Join(tmpDir, "copy.tar")
+		Expect(archive.ArchiveDirectory(tmpDir, tarToCopy)).To(Succeed())
 		f, err := os.Open(tarToCopy)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -120,16 +117,16 @@ var _ = Describe("Import Bundle", func() {
 		Expect(exitCode).To(Equal(0))
 
 		Expect(strings.TrimSpace(outBuf.String())).
-			To(Equal("sha256:69b30799dabb55a68ea5c2f3f9844a7c111d20ac5f51e1cfa2cf8ddd81e96d19"))
+			To(Equal("sha256:c4c4421f5e2ee9c34b4c85b0d00d17fea04d148f42f10a2ff9c2ff64784a098b"))
 	})
 
 	It("Bundle does not exist", func() {
 		cmd.SetArgs([]string{
-			"--image-bundle", bundleFile,
+			"--image-bundle", "non-existent-file",
 		})
 
 		Expect(
 			cmd.Execute(),
-		).To(MatchError(fmt.Sprintf("did find any matching files for %q", bundleFile)))
+		).To(MatchError(fmt.Sprintf("did find any matching files for %q", "non-existent-file")))
 	})
 })
