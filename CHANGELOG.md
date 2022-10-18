@@ -131,6 +131,12 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.2.1...v1.2.2
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.2.2...v1.2.3
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
