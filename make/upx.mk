@@ -1,9 +1,11 @@
 # Copyright 2021 D2iQ, Inc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+SKIP_UPX := true
+
 .PHONY: upx
 upx: UPX_REAL_TARGET := $(addsuffix $(if $(filter $(GOOS),windows),.exe),$(basename $(UPX_TARGET)))
-ifneq ($(IS_SNAPSHOT),true)
+ifneq ($(SKIP_UPX),true)
 ifeq ($(GOOS)/$(GOARCH),windows/arm64)
 upx: ; $(info $(M) skipping packing $(UPX_REAL_TARGET) - $(GOOS)/$(GOARCH) is not yet supported by upx)
 else ifeq ($(GOOS),darwin)
