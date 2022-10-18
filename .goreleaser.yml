@@ -49,7 +49,7 @@ builds:
     mod_timestamp: '{{ .CommitTimestamp }}'
     hooks:
       pre:
-        - cmd: make go-generate
+        - cmd: make SKIP_UPX={{ .IsSnapshot }} go-generate
           env:
             - GOOS={{ .Os }}
             - GOARCH={{ .Arch }}
