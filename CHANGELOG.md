@@ -137,6 +137,15 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.2.2...v1.2.3
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix: Ensure docker daemon skopeo logging is output on error by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/231
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.2.3...v1.2.4
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
