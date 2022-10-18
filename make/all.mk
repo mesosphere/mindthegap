@@ -16,3 +16,4 @@ include $(INCLUDE_DIR)docker.mk
 include $(INCLUDE_DIR)ci.mk
 include $(INCLUDE_DIR)tag.mk
 include $(INCLUDE_DIR)skopeo.mk
+include $(INCLUDE_DIR)upx.mk

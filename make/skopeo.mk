@@ -32,3 +32,4 @@ skopeo/static/skopeo-$(GOOS)-$(GOARCH)$(if $(filter $(GOOS),windows),.exe): ; $(
 			-trimpath -ldflags='-s -w' \
 			-tags containers_image_openpgp \
 			github.com/containers/skopeo/cmd/skopeo
+	$(MAKE) UPX_TARGET=$@ upx
