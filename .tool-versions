@@ -5,3 +5,4 @@ goreleaser 1.11.5
 golang 1.19.2
 helm 3.10.1
 pre-commit 2.20.0
+upx 3.96
