@@ -155,6 +155,8 @@ func NewCommand(out output.Output) *cobra.Command {
 								context.Background(),
 								fmt.Sprintf("%s%s", srcSkopeoScheme, srcImageName),
 							)
+							skopeoStdout = append(skopeoStdout, skopeoDaemonStdout...)
+							skopeoStderr = append(skopeoStderr, skopeoDaemonStderr...)
 							if err != nil {
 								out.EndOperation(false)
 								out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
@@ -162,8 +164,6 @@ func NewCommand(out output.Output) *cobra.Command {
 								return err
 							}
 							srcImageManifestList = srcDaemonImageManifestList
-							skopeoStdout = append(skopeoStdout, skopeoDaemonStdout...)
-							skopeoStderr = append(skopeoStderr, skopeoDaemonStderr...)
 						}
 						out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
 						out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
