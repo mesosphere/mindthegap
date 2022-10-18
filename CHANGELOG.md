@@ -120,6 +120,17 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.2.0...v1.2.1
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix: Upgrade github.com/sylabs/sif/v2@v2.8.1 by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/227
+### Other Changes
+* build: Reinstate upx packing of linux binaries by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/228
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.2.1...v1.2.2
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
