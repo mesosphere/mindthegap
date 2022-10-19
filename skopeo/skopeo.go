@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 
@@ -149,6 +150,9 @@ func (r *Runner) mustUnpack() {
 		panic(err)
 	}
 	r.unpackedSkopeoPath = filepath.Join(tempDir, "skopeo")
+	if runtime.GOOS == "windows" {
+		r.unpackedSkopeoPath += ".exe"
+	}
 	//nolint:gosec // Binary must be executable.
 	if err = os.WriteFile(r.unpackedSkopeoPath, skopeoBinary, 0o700); err != nil {
 		panic(err)
