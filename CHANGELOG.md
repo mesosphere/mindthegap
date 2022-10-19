@@ -146,6 +146,15 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.2.3...v1.2.4
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix: Specify exe suffix for skopeo on Windows by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/233
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.2.4...v1.3.0
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
