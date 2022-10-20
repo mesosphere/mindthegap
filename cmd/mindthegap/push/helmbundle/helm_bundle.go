@@ -126,7 +126,7 @@ func NewCommand(out output.Output) *cobra.Command {
 	cmd.Flags().StringVar(&destRegistry, "to-registry", "", "Registry to push images to")
 	_ = cmd.MarkFlagRequired("to-registry")
 	cmd.Flags().BoolVar(&destRegistrySkipTLSVerify, "to-registry-insecure-skip-tls-verify", false,
-		"Skip TLS verification of registry to push images to (use for http registries)")
+		"Skip TLS verification of registry to push images to (also use for non-TLS http registries)")
 	cmd.Flags().StringVar(&destRegistryUsername, "to-registry-username", "",
 		"Username to use to log in to destination repository")
 	cmd.Flags().StringVar(&destRegistryPassword, "to-registry-password", "",

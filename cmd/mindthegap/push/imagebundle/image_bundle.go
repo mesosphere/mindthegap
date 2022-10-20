@@ -130,9 +130,9 @@ func NewCommand(out output.Output) *cobra.Command {
 	cmd.Flags().StringVar(&destRegistry, "to-registry", "", "Registry to push images to")
 	_ = cmd.MarkFlagRequired("to-registry")
 	cmd.Flags().StringVar(&destRegistryCACertificateFile, "to-registry-ca-cert-file", "",
-		"CA certificate file used to verify TLS verification of registry to push images to (use for http registries)")
+		"CA certificate file used to verify TLS verification of registry to push images to")
 	cmd.Flags().BoolVar(&destRegistrySkipTLSVerify, "to-registry-insecure-skip-tls-verify", false,
-		"Skip TLS verification of registry to push images to (use for non-TLS http registries)")
+		"Skip TLS verification of registry to push images to (also use for non-TLS http registries)")
 	cmd.MarkFlagsMutuallyExclusive(
 		"to-registry-ca-cert-file",
 		"to-registry-insecure-skip-tls-verify",
