@@ -155,6 +155,15 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.2.4...v1.3.0
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix: Clarify help text for CA certs by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/236
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.3.0...v1.3.1
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
