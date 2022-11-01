@@ -2,14 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 repos:
-- repo: local
-  hooks:
-  - id: golangci-lint
-    name: golangci-lint
-    entry: make lint
-    language: system
-    files: "(.*\\.go|go.mod|go.sum)$"
-    pass_filenames: false
 - repo: https://github.com/tekwizely/pre-commit-golang
   rev: v1.0.0-rc.1
   hooks:

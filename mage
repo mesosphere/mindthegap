@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Copyright 2021 D2iQ, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+set -euo pipefail
+IFS=$'\n\t'
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+
+cd magefiles
+exec go run ./mage.go -w "${SCRIPT_DIR}" "$@"

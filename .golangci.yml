@@ -4,6 +4,8 @@
 run:
   timeout: 5m
   go: '1.17'
+  build-tags:
+    - "mage"
 
 linters:
   disable-all: true
