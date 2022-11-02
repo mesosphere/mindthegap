@@ -71,6 +71,7 @@ jobs:
           reporter: github-pr-review
           go_version: ${{ fromJson(steps.versions.outputs.tools).golangci }}
           golangci_lint_version: v${{ fromJson(steps.versions.outputs.tools).golangci-lint }}
+          filter_mode: ${{ github.event_name == 'pull_request' && 'file' || 'nofilter' }}
 
   pre-commit:
     runs-on: ubuntu-latest
@@ -96,9 +97,6 @@ jobs:
       - uses: mfinelli/setup-shfmt@v2
         with:
           shfmt-version: ${{ fromJson(steps.versions.outputs.tools).shfmt }}
-
-      - name: Install golang via asdf
-        run: make install-tool.golang install-tool.shfmt
 
       - uses: pre-commit/action@v3.0.0
         with:
