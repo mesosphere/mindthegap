@@ -6,7 +6,7 @@
 export GOPRIVATE ?= github.com/mesosphere
 
 ALL_GO_SUBMODULES := $(shell PATH='$(PATH)'; find -mindepth 2 -maxdepth 2 -name go.mod -printf '%P\n' | sort)
-GO_SUBMODULES_NO_TOOLS := $(filter-out $(addsuffix /go.mod,skopeo-static tools),$(ALL_GO_SUBMODULES))
+GO_SUBMODULES_NO_TOOLS := $(filter-out $(addsuffix /go.mod,skopeo-static tools magefiles),$(ALL_GO_SUBMODULES))
 
 ifndef GOOS
 export GOOS := $(OS)

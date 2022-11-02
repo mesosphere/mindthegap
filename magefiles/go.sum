@@ -273,8 +273,8 @@ github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Ky
 github.com/mattn/go-isatty v0.0.14 h1:yVuAays6BHfxijgZPzw+3Zlu5yQgKGP2/hcQbHb7S9Y=
 github.com/mattn/go-isatty v0.0.14/go.mod h1:7GGIvUiUoEMVVmxf/4nioHXj79iQHKdU27kJ6hsGG94=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
-github.com/mesosphere/daggers v0.0.2-0.20221102173833-43f3fbed0576 h1:2JlWFYUsOEy6582aRFSP7NGnmW6/0N0J8BZqSQdac+4=
-github.com/mesosphere/daggers v0.0.2-0.20221102173833-43f3fbed0576/go.mod h1:8KjOTlo+loovmrMctoruxpTiAIa7yPLZ7V0nAj5l4Zo=
+github.com/mesosphere/daggers v0.0.2-0.20221102200230-a9a4ba7bcd11 h1:sieWEAIJXKamDn8i3NhWq5B+7KKIWPb1wBKA5GBCnYw=
+github.com/mesosphere/daggers v0.0.2-0.20221102200230-a9a4ba7bcd11/go.mod h1:8KjOTlo+loovmrMctoruxpTiAIa7yPLZ7V0nAj5l4Zo=
 github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG+4E0Y=
 github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
 github.com/mitchellh/mapstructure v1.1.2/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=

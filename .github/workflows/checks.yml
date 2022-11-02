@@ -97,6 +97,9 @@ jobs:
         with:
           shfmt-version: ${{ fromJson(steps.versions.outputs.tools).shfmt }}
 
+      - name: Install golang via asdf
+        run: make install-tool.golang install-tool.shfmt
+
       - uses: pre-commit/action@v3.0.0
         with:
           extra_args: --all-files --show-diff-on-failure
