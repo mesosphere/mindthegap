@@ -8,8 +8,8 @@ package main
 import (
 	"context"
 
-	_ "github.com/magefile/mage/mage"
 	"github.com/magefile/mage/mg"
+
 	"github.com/mesosphere/daggers/dagger/options"
 	precommitdagger "github.com/mesosphere/daggers/dagger/precommit"
 	"github.com/mesosphere/daggers/mage/precommit"
@@ -17,6 +17,7 @@ import (
 
 type Lint mg.Namespace
 
+// Precommit runs precommit checks.
 func (Lint) Precommit(ctx context.Context) error {
 	return precommit.PrecommitWithOptions(ctx,
 		precommitdagger.CustomizeContainer(

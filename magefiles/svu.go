@@ -6,7 +6,6 @@
 package main
 
 import (
-	_ "github.com/magefile/mage/mage"
 	//mage:import svu
 	_ "github.com/mesosphere/daggers/mage/svu"
 )
