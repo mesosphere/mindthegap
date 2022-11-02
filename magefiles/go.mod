@@ -7,7 +7,7 @@ go 1.19
 
 require (
 	github.com/magefile/mage v1.14.0
-	github.com/mesosphere/daggers v0.0.2-0.20221102164627-414664ec0258
+	github.com/mesosphere/daggers v0.0.2-0.20221102173833-43f3fbed0576
 )
 
 replace github.com/docker/docker => github.com/docker/docker v20.10.3-0.20220414164044-61404de7df1a+incompatible

@@ -8,5 +8,7 @@ IFS=$'\n\t'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPT_DIR
 
+export MAGEFILE_ENABLE_COLOR=true
+
 cd magefiles
 exec go run ./mage.go -w "${SCRIPT_DIR}" "$@"
