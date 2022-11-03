@@ -57,7 +57,7 @@ func Test_parsePossibleURI(t *testing.T) {
 		tt := tests[ti]
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			scheme, address := parsePossibleURI(tt.in)
+			scheme, address, _ := parsePossibleURI(tt.in)
 			require.Equal(t, tt.expectedScheme, scheme)
 			require.Equal(t, tt.expectedAddress, address)
 		})
