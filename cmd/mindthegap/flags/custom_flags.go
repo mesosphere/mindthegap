@@ -30,7 +30,7 @@ func (v *RegistryURI) Set(value string) (err error) {
 	return
 }
 
-func parsePossibleURI(raw string) (scheme string, address string, err error) {
+func parsePossibleURI(raw string) (scheme, address string, err error) {
 	u, err := url.ParseRequestURI(raw)
 	if err != nil || u.Host == "" {
 		// parse again with a scheme to make it a valid URI
