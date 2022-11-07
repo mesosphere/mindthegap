@@ -504,8 +504,8 @@ github.com/mattn/go-sqlite3 v1.14.6/go.mod h1:NyWgC/yNuGj7Q9rpYnZvas74GogHl5/Z4A
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
 github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 h1:I0XW9+e1XWDxdcEniV4rQAIOPUGDq67JSCiRCgGCZLI=
 github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369/go.mod h1:BSXmuO+STAnVfrANrmjBb36TMTDstsz7MSK+HVaYKv4=
-github.com/mesosphere/dkp-cli-runtime/core v0.7.0 h1:v1tumIUEuxMgTECms96jj5YKQU0Ekw/0HOgm3/nuuC0=
-github.com/mesosphere/dkp-cli-runtime/core v0.7.0/go.mod h1:mlSRuXJaHeOFfSKhC3ZxOm+gfQuP9jT5WuFe3e0EGYs=
+github.com/mesosphere/dkp-cli-runtime/core v0.7.1 h1:t4MUV6X3VMaQcx4H9//UtGBU7cA0r3l9FEq4aqdczrY=
+github.com/mesosphere/dkp-cli-runtime/core v0.7.1/go.mod h1:mlSRuXJaHeOFfSKhC3ZxOm+gfQuP9jT5WuFe3e0EGYs=
 github.com/mholt/archiver/v3 v3.5.1 h1:rDjOBX9JSF5BvoJGvjqK479aL70qh9DIpZCl+k7Clwo=
 github.com/mholt/archiver/v3 v3.5.1/go.mod h1:e3dqJ7H78uzsRSEACH1joayhuSyhnonssnDhppzS1L4=
 github.com/miekg/dns v1.0.14/go.mod h1:W1PPwlIAgtquWBMBEV9nkV9Cazfe8ScdGz/Lj7v3Nrg=
