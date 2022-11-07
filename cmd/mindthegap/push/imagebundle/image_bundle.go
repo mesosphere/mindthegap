@@ -14,6 +14,7 @@ import (
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
 	"github.com/mesosphere/mindthegap/cleanup"
+	"github.com/mesosphere/mindthegap/cmd/mindthegap/flags"
 	"github.com/mesosphere/mindthegap/cmd/mindthegap/utils"
 	"github.com/mesosphere/mindthegap/config"
 	"github.com/mesosphere/mindthegap/docker/ecr"
@@ -24,7 +25,7 @@ import (
 func NewCommand(out output.Output) *cobra.Command {
 	var (
 		imageBundleFiles              []string
-		destRegistry                  string
+		destRegistryURI               flags.RegistryURI
 		destRegistryCACertificateFile string
 		destRegistrySkipTLSVerify     bool
 		destRegistryUsername          string
@@ -73,6 +74,9 @@ func NewCommand(out output.Output) *cobra.Command {
 			}()
 			out.EndOperation(true)
 
+			// do not include the scheme
+			destRegistry := destRegistryURI.Address()
+
 			skopeoRunner, skopeoCleanup := skopeo.NewRunner()
 			cleaner.AddCleanupFn(func() { _ = skopeoCleanup() })
 
@@ -116,7 +120,9 @@ func NewCommand(out output.Output) *cobra.Command {
 				destRegistry,
 				skopeoOpts,
 				destRegistryCACertificateFile,
-				destRegistrySkipTLSVerify,
+				// use either user provided --to-registry-insecure-skip-tls-verify flag
+				// or scheme from --to-registry flag
+				flags.SkipTLSVerify(destRegistrySkipTLSVerify, destRegistryURI),
 				out,
 				skopeoRunner,
 				prePushFuncs...,
@@ -127,7 +133,8 @@ func NewCommand(out output.Output) *cobra.Command {
 	cmd.Flags().StringSliceVar(&imageBundleFiles, "image-bundle", nil,
 		"Tarball containing list of images to push. Can also be a glob pattern.")
 	_ = cmd.MarkFlagRequired("image-bundle")
-	cmd.Flags().StringVar(&destRegistry, "to-registry", "", "Registry to push images to")
+	cmd.Flags().Var(&destRegistryURI, "to-registry", "Registry to push images to. "+
+		"TLS verification will be skipped when using an http:// registry.")
 	_ = cmd.MarkFlagRequired("to-registry")
 	cmd.Flags().StringVar(&destRegistryCACertificateFile, "to-registry-ca-cert-file", "",
 		"CA certificate file used to verify TLS verification of registry to push images to")

@@ -167,7 +167,7 @@ var _ = Describe("Push Bundle", func() {
 	It("Bundle does not exist", func() {
 		cmd.SetArgs([]string{
 			"--image-bundle", bundleFile,
-			"--to-registry", "localhost:unused/charts",
+			"--to-registry", "localhost:0/charts",
 			"--to-registry-insecure-skip-tls-verify",
 		})
 
