@@ -28,16 +28,13 @@ jobs:
 
       - name: Check out code
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Install tools via asdf
         uses: asdf-vm/actions/install@v1
 
       - name: Build
-        run: make release
+        run: make SKIP_UPX=false build-snapshot
         env:
-          GORELEASER_FLAGS: --skip-publish --skip-validate --skip-docker
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run binary
