@@ -1,0 +1,2 @@
+nginx:1.21.5
+gcr.io/knative-releases/knative.dev/serving/cmd/autoscaler-hpa@sha256:7003443f0faabbaca12249aa16b73fa171bddf350abd826dd93b06f5080a146d

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/distribution/distribution/v3/manifest/manifestlist"
 	"github.com/spf13/cobra"
@@ -136,7 +137,13 @@ func NewCommand(out output.Output) *cobra.Command {
 				for _, imageName := range imageNames {
 					imageTags := registryConfig.Images[imageName]
 					for _, imageTag := range imageTags {
-						srcImageName := fmt.Sprintf("%s/%s:%s", registryName, imageName, imageTag)
+						var nameWithoutRegistry string
+						if strings.HasPrefix(imageTag, "sha256:") {
+							nameWithoutRegistry = fmt.Sprintf("%s@%s", imageName, imageTag)
+						} else {
+							nameWithoutRegistry = fmt.Sprintf("%s:%s", imageName, imageTag)
+						}
+						srcImageName := fmt.Sprintf("%s/%s", registryName, nameWithoutRegistry)
 						out.StartOperation(
 							fmt.Sprintf("Copying %s (platforms: %v)",
 								srcImageName, platforms,
@@ -245,7 +252,7 @@ func NewCommand(out output.Output) *cobra.Command {
 						}
 						skopeoStdout, skopeoStderr, err = skopeoRunner.CopyManifest(context.TODO(),
 							destImageManifestList,
-							fmt.Sprintf("docker://%s/%s:%s", reg.Address(), imageName, imageTag),
+							fmt.Sprintf("docker://%s/%s", reg.Address(), nameWithoutRegistry),
 							append(
 								skopeoOpts,
 								skopeo.DisableDestTLSVerify(),

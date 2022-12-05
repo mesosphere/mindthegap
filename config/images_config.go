@@ -166,19 +166,26 @@ func ParseImagesConfigFile(configFile string) (ImagesConfig, error) {
 		if nameErr != nil {
 			return ImagesConfig{}, fmt.Errorf("failed to parse config file: %w", nameErr)
 		}
+		var tagOrDigest string
 		namedTagged, ok := named.(reference.NamedTagged)
 		if !ok {
-			return ImagesConfig{}, fmt.Errorf("failed to parse config file: %w", yamlParseErr)
+			namedDigest, ok := named.(reference.Digested)
+			if !ok {
+				return ImagesConfig{}, fmt.Errorf("failed to parse config file: %w", yamlParseErr)
+			}
+			tagOrDigest = namedDigest.Digest().String()
 		}
 
-		registry := reference.Domain(namedTagged)
+		registry := reference.Domain(named)
 		name := reference.Path(named)
-		tag := namedTagged.Tag()
+		if tagOrDigest == "" {
+			tagOrDigest = namedTagged.Tag()
+		}
 
 		if _, found := config[registry]; !found {
 			config[registry] = RegistrySyncConfig{Images: map[string][]string{}}
 		}
-		config[registry].Images[name] = append(config[registry].Images[name], tag)
+		config[registry].Images[name] = append(config[registry].Images[name], tagOrDigest)
 	}
 
 	return config, nil
