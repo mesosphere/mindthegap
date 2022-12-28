@@ -15,7 +15,7 @@ repos:
   hooks:
   - id: go-mod-tidy-repo
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.3.0
+  rev: v4.4.0
   hooks:
   - id: trailing-whitespace
     stages: [commit]
@@ -42,7 +42,7 @@ repos:
   - id: end-of-file-fixer
     stages: [commit]
 - repo: https://github.com/jorisroovers/gitlint
-  rev: v0.17.0
+  rev: v0.18.0
   hooks:
   - id: gitlint
     stages: [commit-msg]
@@ -55,7 +55,7 @@ repos:
   - id: script-must-have-extension
     stages: [commit]
 - repo: https://github.com/shellcheck-py/shellcheck-py
-  rev: v0.8.0.4
+  rev: v0.9.0.2
   hooks:
   - id: shellcheck
     stages: [commit]
