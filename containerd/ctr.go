@@ -20,7 +20,16 @@ func ImportImageArchive(
 	cmd := exec.CommandContext(
 		ctx,
 		"ctr",
-		append(baseArgs, []string{"images", "import", "--no-unpack", archivePath}...)...)
+		append(
+			baseArgs,
+			[]string{
+				"images",
+				"import",
+				"--no-unpack",
+				"--all-platforms",
+				"--digests",
+				archivePath,
+			}...)...)
 	cmdOutput, err := cmd.CombinedOutput()
 	if err != nil {
 		return cmdOutput, fmt.Errorf("failed to import image(s) from image archive: %w", err)
