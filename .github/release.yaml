@@ -5,8 +5,10 @@ changelog:
   exclude:
     labels:
       - ignore-for-release
+      - dependencies
     authors:
       - octocat
+      - dependabot
   categories:
     - title: Breaking Changes 🛠
       labels:
