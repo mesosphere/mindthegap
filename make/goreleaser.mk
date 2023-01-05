@@ -16,7 +16,7 @@ build-snapshot: dockerauth install-tool.goreleaser ; $(info $(M) building snapsh
 		--snapshot \
 		--rm-dist \
 		--parallelism=$(GORELEASER_PARALLELISM) \
-		--single-target \
+		$(if $(BUILD_ALL),,--single-target) \
 		--skip-post-hooks
 
 .PHONY: release

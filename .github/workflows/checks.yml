@@ -46,6 +46,11 @@ jobs:
       - name: Install asdf
         uses: asdf-vm/actions/setup@v1
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm64
+
       - name: Run e2e tests
         run: make e2e-test
 

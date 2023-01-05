@@ -34,11 +34,16 @@ import (
 )
 
 func CreateBundle(t ginkgo.GinkgoTInterface, bundleFile, cfgFile string, platforms ...string) {
+	platformFlags := make([]string, 0, len(platforms))
+	for _, p := range platforms {
+		platformFlags = append(platformFlags, "--platform", p)
+	}
+
 	createBundleCmd := NewCommand(t, createimagebundle.NewCommand)
-	createBundleCmd.SetArgs([]string{
+	createBundleCmd.SetArgs(append([]string{
 		"--output-file", bundleFile,
 		"--images-file", cfgFile,
-	})
+	}, platformFlags...))
 	gomega.ExpectWithOffset(1, createBundleCmd.Execute()).To(gomega.Succeed())
 }
 
