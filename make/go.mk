@@ -83,7 +83,7 @@ e2e-test: install-tool.golang install-tool.ginkgo skopeo.build
 	ginkgo run \
 		--r \
 		--race \
-		--progress \
+		--show-node-events \
 		--trace \
 		--randomize-all \
 		--randomize-suites \
