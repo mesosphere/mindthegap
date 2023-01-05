@@ -164,6 +164,31 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.3.0...v1.3.1
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: support passing optional scheme in --to-registry by @dkoshkin in https://github.com/mesosphere/mindthegap/pull/252
+* feat: Reenable upx for macos binaries by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/262
+### Fixes 🔧
+* fix: Import all platforms from image bundle by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/292
+### Other Changes
+* build: Upgrade tools by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/244
+* ci: Refactor checks to remove more asdf stuff by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/253
+* ci: Add gha actions to dependabot config by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/263
+* build: Upgrade tools to latest versions by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/268
+* ci: Add dependabot automation to auto-approve and enable auto-merge by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/269
+* build: Upgrade tools by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/286
+* build: Upgrade goreleaser and upx by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/291
+* build: Do not show dependency updates in release notes by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/294
+* build: Ensure that license and readme are contained in released archive by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/295
+* build: Update deprecated ginkgo flag: progress -> show-node-events by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/296
+* build: Ensure that e2e build tags are enabled in vscode by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/297
+* test: Add e2e for arm64 import by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/293
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.3.1...v1.4.0
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
