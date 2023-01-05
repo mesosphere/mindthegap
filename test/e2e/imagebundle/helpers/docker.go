@@ -40,15 +40,19 @@ func NewDockerClient() (*Docker, error) {
 }
 
 func (d *Docker) PullImage(ctx context.Context, image string) error {
-	_, _, err := d.cl.ImageInspectWithRaw(ctx, image)
-	if err == nil {
-		return nil
-	}
-	if !client.IsErrNotFound(err) {
-		return fmt.Errorf("failed to inspect image %q: %w", image, err)
-	}
+	return d.PullImageWithPlatform(ctx, image, nil)
+}
 
-	r, err := d.cl.ImagePull(ctx, image, types.ImagePullOptions{})
+func (d *Docker) PullImageWithPlatform(
+	ctx context.Context,
+	image string,
+	platform *specs.Platform,
+) error {
+	opts := types.ImagePullOptions{}
+	if platform != nil && platform.OS != "" {
+		opts.Platform = fmt.Sprintf("%s/%s", platform.OS, platform.Architecture)
+	}
+	r, err := d.cl.ImagePull(ctx, image, opts)
 	defer r.Close()
 	if err != nil {
 		return fmt.Errorf("failed to pull image %q: %w", image, err)
@@ -62,7 +66,15 @@ func (d *Docker) PullImage(ctx context.Context, image string) error {
 }
 
 func (d *Docker) StartContainer(ctx context.Context, cfg container.Config) (*Container, error) {
-	if err := d.PullImage(ctx, cfg.Image); err != nil {
+	return d.StartContainerWithPlatform(ctx, cfg, &specs.Platform{})
+}
+
+func (d *Docker) StartContainerWithPlatform(
+	ctx context.Context,
+	cfg container.Config,
+	platform *specs.Platform,
+) (*Container, error) {
+	if err := d.PullImageWithPlatform(ctx, cfg.Image, platform); err != nil {
 		return nil, err
 	}
 
@@ -71,7 +83,7 @@ func (d *Docker) StartContainer(ctx context.Context, cfg container.Config) (*Con
 		&cfg,
 		&container.HostConfig{},
 		&network.NetworkingConfig{},
-		&specs.Platform{},
+		platform,
 		"",
 	)
 	if err != nil {

@@ -79,7 +79,11 @@ E2E_FLAKE_ATTEMPTS ?= 1
 e2e-test: ## Runs e2e tests
 e2e-test: install-tool.golang install-tool.ginkgo skopeo.build
 	$(info $(M) running e2e tests$(if $(E2E_LABEL), labelled "$(E2E_LABEL)")$(if $(E2E_FOCUS), matching "$(E2E_FOCUS)"))
-	$(MAKE) build-snapshot
+	$(MAKE) BUILD_ALL=true build-snapshot
+ifdef CI
+	$(MAKE) SKIP_UPX=false GOOS=linux GOARCH=amd64 UPX_TARGET=dist/mindthegap_linux_arm64/mindthegap upx
+	$(MAKE) SKIP_UPX=false GOOS=linux GOARCH=arm64 UPX_TARGET=dist/mindthegap_linux_amd64_v1/mindthegap upx
+endif
 	ginkgo run \
 		--r \
 		--race \
