@@ -10,5 +10,7 @@
 			"path": "skopeo-static"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"go.buildTags": "e2e"
+	}
 }
