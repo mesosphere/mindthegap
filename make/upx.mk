@@ -12,6 +12,6 @@ else
 upx: install-tool.upx
 upx: ## Pack executable using upx
 upx: ; $(info $(M) packing $(UPX_REAL_TARGET))
-	(upx -l $(UPX_REAL_TARGET) &>/dev/null && echo $(UPX_REAL_TARGET) is already packed) || upx --best $(UPX_REAL_TARGET)
+	(upx -l $(UPX_REAL_TARGET) &>/dev/null && echo $(UPX_REAL_TARGET) is already packed) || upx -9 --lzma $(UPX_REAL_TARGET)
 endif
 endif
