@@ -26,6 +26,7 @@ release: dockerauth install-tool.goreleaser ; $(info $(M) building release $*)
 		release \
 		--rm-dist \
 		--parallelism=$(GORELEASER_PARALLELISM) \
+		--timeout=60m \
 		$(GORELEASER_FLAGS)
 
 .PHONY: release-snapshot
@@ -36,4 +37,5 @@ release-snapshot: dockerauth install-tool.goreleaser ; $(info $(M) building snap
 		--snapshot \
 		--skip-publish \
 		--rm-dist \
-		--parallelism=$(GORELEASER_PARALLELISM)
+		--parallelism=$(GORELEASER_PARALLELISM) \
+		--timeout=60m
