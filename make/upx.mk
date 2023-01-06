@@ -12,6 +12,8 @@ else
 upx: install-tool.upx
 upx: ## Pack executable using upx
 upx: ; $(info $(M) packing $(UPX_REAL_TARGET))
-	(upx -l $(UPX_REAL_TARGET) &>/dev/null && echo $(UPX_REAL_TARGET) is already packed) || upx --best $(UPX_REAL_TARGET)
+	(upx -l $(UPX_REAL_TARGET) &>/dev/null && echo $(UPX_REAL_TARGET) is already packed) || upx -9 --lzma $(UPX_REAL_TARGET)
+# Double check file is successfully compressed - seen errors with macos binaries
+	upx -t $(UPX_REAL_TARGET) &>/dev/null || (echo $(UPX_REAL_TARGET) is broken after upx compression && exit 1)
 endif
 endif
