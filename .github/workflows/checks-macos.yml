@@ -31,6 +31,8 @@ jobs:
 
       - name: Install tools via asdf
         uses: asdf-vm/actions/install@v1
+        with:
+          asdf_branch: v0.11.0
 
       - name: Build
         run: make SKIP_UPX=false build-snapshot
