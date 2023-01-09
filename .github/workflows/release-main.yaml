@@ -28,6 +28,8 @@ jobs:
       - if: ${{ steps.release-please.outputs.release_created }}
         name: Install tools via asdf
         uses: asdf-vm/actions/install@v1
+        with:
+          asdf_branch: v0.11.0
 
       - if: ${{ steps.release-please.outputs.release_created }}
         name: Login to Docker Hub
