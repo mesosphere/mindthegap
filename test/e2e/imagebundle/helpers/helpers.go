@@ -6,7 +6,6 @@
 package helpers
 
 import (
-	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -21,7 +20,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/distribution/distribution/v3/manifest/manifestlist"
+	"github.com/google/go-containerregistry/pkg/name"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 	"github.com/onsi/gomega/gstruct"
@@ -30,7 +31,6 @@ import (
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
 	createimagebundle "github.com/mesosphere/mindthegap/cmd/mindthegap/create/imagebundle"
-	"github.com/mesosphere/mindthegap/skopeo"
 )
 
 func CreateBundle(t ginkgo.GinkgoTInterface, bundleFile, cfgFile string, platforms ...string) {
@@ -186,28 +186,27 @@ func ValidateImageIsAvailable(
 	addr string,
 	port int,
 	image, tag string,
-	platforms []manifestlist.PlatformSpec,
-	opts ...skopeo.SkopeoOption,
+	platforms []*v1.Platform,
+	opts ...remote.Option,
 ) {
 	t.Helper()
 
-	r, cleanup := skopeo.NewRunner()
-	defer cleanup()
-
-	ml, stdout, stderr, err := r.InspectManifest(
-		context.Background(),
-		fmt.Sprintf("docker://%s:%d/%s:%s", addr, port, image, tag),
-		append(opts, skopeo.Debug())...,
-	)
-
-	t.Log("skopeo stdout: ", string(stdout))
-	t.Log("skopeo stderr: ", string(stderr))
-
+	imageName := fmt.Sprintf("%s:%d/%s:%s", addr, port, image, tag)
+	ref, err := name.ParseReference(imageName, name.StrictValidation)
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
-	gomega.ExpectWithOffset(1, ml.Manifests).To(gomega.HaveLen(len(platforms)))
+	idx, err := remote.Index(
+		ref,
+		opts...,
+	)
+	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
+
+	manifest, err := idx.IndexManifest()
+	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
+
+	gomega.ExpectWithOffset(1, manifest.Manifests).To(gomega.HaveLen(len(platforms)))
 
 	for _, p := range platforms {
-		gomega.ExpectWithOffset(1, ml.Manifests).To(
+		gomega.ExpectWithOffset(1, manifest.Manifests).To(
 			gomega.ContainElement(
 				gstruct.MatchFields(
 					gstruct.IgnoreExtras|gstruct.IgnoreMissing,

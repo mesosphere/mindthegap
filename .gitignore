@@ -26,5 +26,3 @@ dist/
 
 *.tar.gz
 *.tar
-
-/skopeo/static/

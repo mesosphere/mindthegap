@@ -8,8 +8,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 
+	"github.com/google/go-containerregistry/pkg/name"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/transport"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
@@ -17,7 +23,7 @@ import (
 	"github.com/mesosphere/mindthegap/cmd/mindthegap/utils"
 	"github.com/mesosphere/mindthegap/containerd"
 	"github.com/mesosphere/mindthegap/docker/registry"
-	"github.com/mesosphere/mindthegap/skopeo"
+	"github.com/mesosphere/mindthegap/images/httputils"
 )
 
 func NewCommand(out output.Output) *cobra.Command {
@@ -67,9 +73,6 @@ func NewCommand(out output.Output) *cobra.Command {
 			}()
 			out.EndOperation(true)
 
-			skopeoRunner, skopeoCleanup := skopeo.NewRunner()
-			cleaner.AddCleanupFn(func() { _ = skopeoCleanup() })
-
 			ociExportsTempDir, err := os.MkdirTemp("", ".oci-exports-*")
 			if err != nil {
 				return fmt.Errorf("failed to create temporary directory for OCI exports: %w", err)
@@ -85,30 +88,53 @@ func NewCommand(out output.Output) *cobra.Command {
 
 						out.StartOperation(fmt.Sprintf("Importing %s", destImageName))
 
-						exportTarball := filepath.Join(ociExportsTempDir, "docker-archive.tar")
+						ref, err := name.ParseReference(srcImageName, name.StrictValidation)
+						if err != nil {
+							out.EndOperation(false)
+							return err
+						}
 
-						skopeoStdout, skopeoStderr, err := skopeoRunner.Copy(context.TODO(),
-							fmt.Sprintf("docker://%s", srcImageName),
-							fmt.Sprintf("docker-archive:%s:%s", exportTarball, destImageName),
-							skopeo.DisableSrcTLSVerify(),
+						v1Image, err := remote.Image(
+							ref,
+							remote.WithTransport(
+								httputils.NewConfigurableTLSRoundTripper(
+									remote.DefaultTransport,
+									httputils.TLSHostsConfig{
+										reg.Address(): transport.TLSConfig{Insecure: true},
+									},
+								),
+							),
+							remote.WithPlatform(
+								v1.Platform{OS: runtime.GOOS, Architecture: runtime.GOARCH},
+							),
 						)
 						if err != nil {
 							out.EndOperation(false)
-							out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
-							out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
 							return err
 						}
-						out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
-						out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
+
+						tag, err := name.NewTag(destImageName, name.StrictValidation)
+						if err != nil {
+							out.EndOperation(false)
+							return err
+						}
+
+						exportTarball := filepath.Join(ociExportsTempDir, "docker-archive.tar")
+
+						if err := tarball.MultiWriteToFile(exportTarball, map[name.Tag]v1.Image{tag: v1Image}); err != nil {
+							out.EndOperation(false)
+							return err
+						}
 
 						ctrOutput, err := containerd.ImportImageArchive(
 							context.TODO(), exportTarball, containerdNamespace,
 						)
 						if err != nil {
-							out.Info(string(ctrOutput))
+							out.Warn(string(ctrOutput))
 							out.EndOperation(false)
 							return err
 						}
+
 						out.V(4).Info(string(ctrOutput))
 
 						_ = os.Remove(exportTarball)

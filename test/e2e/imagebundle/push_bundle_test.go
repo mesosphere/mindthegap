@@ -8,19 +8,22 @@ package imagebundle_test
 import (
 	"context"
 	"fmt"
+	"net"
 	"path/filepath"
 	"runtime"
+	"strconv"
 
-	"github.com/distribution/distribution/v3/manifest/manifestlist"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/phayes/freeport"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/transport"
 
 	pushimagebundle "github.com/mesosphere/mindthegap/cmd/mindthegap/push/imagebundle"
-	"github.com/mesosphere/mindthegap/cmd/mindthegap/utils"
 	"github.com/mesosphere/mindthegap/docker/registry"
-	"github.com/mesosphere/mindthegap/skopeo"
+	"github.com/mesosphere/mindthegap/images/httputils"
 	"github.com/mesosphere/mindthegap/test/e2e/imagebundle/helpers"
 )
 
@@ -79,11 +82,10 @@ var _ = Describe("Push Bundle", func() {
 			port,
 			"stefanprodan/podinfo",
 			"6.2.0",
-			[]manifestlist.PlatformSpec{{
+			[]*v1.Platform{{
 				OS:           "linux",
 				Architecture: runtime.GOARCH,
 			}},
-			skopeo.DisableTLSVerify(),
 		)
 
 		Expect(reg.Shutdown(context.Background())).To((Succeed()))
@@ -139,12 +141,79 @@ var _ = Describe("Push Bundle", func() {
 
 		Expect(cmd.Execute()).To(Succeed())
 
-		tmpCACertDir := GinkgoT().TempDir()
-		err = utils.CopyFile(
-			caCertFile,
-			filepath.Join(tmpCACertDir, filepath.Base(caCertFile)),
+		helpers.ValidateImageIsAvailable(
+			GinkgoT(),
+			ipAddr.String(),
+			port,
+			"stefanprodan/podinfo",
+			"6.2.0",
+			[]*v1.Platform{{
+				OS:           "linux",
+				Architecture: runtime.GOARCH,
+			}},
+			remote.WithTransport(
+				httputils.NewConfigurableTLSRoundTripper(
+					remote.DefaultTransport, httputils.TLSHostsConfig{
+						net.JoinHostPort(ipAddr.String(), strconv.Itoa(port)): transport.TLSConfig{
+							CAFile: caCertFile,
+						},
+					},
+				),
+			),
 		)
+
+		Expect(reg.Shutdown(context.Background())).To((Succeed()))
+
+		Eventually(done).Should(BeClosed())
+	})
+
+	It("With Insecure TLS", func() {
+		helpers.CreateBundle(
+			GinkgoT(),
+			bundleFile,
+			filepath.Join("testdata", "create-success.yaml"),
+		)
+
+		ipAddr := helpers.GetFirstNonLoopbackIP(GinkgoT())
+
+		tempCertDir := GinkgoT().TempDir()
+		caCertFile, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(
+			GinkgoT(),
+			tempCertDir,
+			ipAddr,
+		)
+
+		port, err := freeport.GetFreePort()
 		Expect(err).NotTo(HaveOccurred())
+		reg, err := registry.NewRegistry(registry.Config{
+			StorageDirectory: filepath.Join(tmpDir, "registry"),
+			Host:             ipAddr.String(),
+			Port:             uint16(port),
+			TLS: registry.TLS{
+				Certificate: certFile,
+				Key:         keyFile,
+			},
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		done := make(chan struct{})
+		go func() {
+			defer GinkgoRecover()
+
+			Expect(reg.ListenAndServe()).To(Succeed())
+
+			close(done)
+		}()
+
+		helpers.WaitForTCPPort(GinkgoT(), ipAddr.String(), port)
+
+		cmd.SetArgs([]string{
+			"--image-bundle", bundleFile,
+			"--to-registry", fmt.Sprintf("%s:%d", ipAddr, port),
+			"--to-registry-insecure-skip-tls-verify",
+		})
+
+		Expect(cmd.Execute()).To(Succeed())
 
 		helpers.ValidateImageIsAvailable(
 			GinkgoT(),
@@ -152,11 +221,19 @@ var _ = Describe("Push Bundle", func() {
 			port,
 			"stefanprodan/podinfo",
 			"6.2.0",
-			[]manifestlist.PlatformSpec{{
+			[]*v1.Platform{{
 				OS:           "linux",
 				Architecture: runtime.GOARCH,
 			}},
-			skopeo.CertDir(tmpCACertDir),
+			remote.WithTransport(
+				httputils.NewConfigurableTLSRoundTripper(
+					remote.DefaultTransport, httputils.TLSHostsConfig{
+						net.JoinHostPort(ipAddr.String(), strconv.Itoa(port)): transport.TLSConfig{
+							CAFile: caCertFile,
+						},
+					},
+				),
+			),
 		)
 
 		Expect(reg.Shutdown(context.Background())).To((Succeed()))

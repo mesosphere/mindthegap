@@ -4,12 +4,16 @@
 package imagebundle
 
 import (
-	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 
+	"github.com/containers/image/v5/types"
+	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/logs"
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/transport"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
@@ -19,7 +23,8 @@ import (
 	"github.com/mesosphere/mindthegap/config"
 	"github.com/mesosphere/mindthegap/docker/ecr"
 	"github.com/mesosphere/mindthegap/docker/registry"
-	"github.com/mesosphere/mindthegap/skopeo"
+	"github.com/mesosphere/mindthegap/images/authnhelpers"
+	"github.com/mesosphere/mindthegap/images/httputils"
 )
 
 func NewCommand(out output.Output) *cobra.Command {
@@ -74,40 +79,47 @@ func NewCommand(out output.Output) *cobra.Command {
 			}()
 			out.EndOperation(true)
 
-			// do not include the scheme
-			destRegistry := destRegistryURI.Address()
+			logs.Debug.SetOutput(out.V(4).InfoWriter())
+			logs.Warn.SetOutput(out.InfoWriter())
 
-			skopeoRunner, skopeoCleanup := skopeo.NewRunner()
-			cleaner.AddCleanupFn(func() { _ = skopeoCleanup() })
+			var remoteOpts []remote.Option
+			insecure := flags.SkipTLSVerify(destRegistrySkipTLSVerify, destRegistryURI)
+			if insecure || destRegistryCACertificateFile != "" {
+				transport := httputils.NewConfigurableTLSRoundTripper(
+					remote.DefaultTransport,
+					httputils.TLSHostsConfig{
+						destRegistryURI.Host(): transport.TLSConfig{
+							Insecure: insecure,
+							CAFile:   destRegistryCACertificateFile,
+						},
+						reg.Address(): transport.TLSConfig{Insecure: true},
+					},
+				)
 
-			skopeoOpts := []skopeo.SkopeoOption{
-				skopeo.PreserveDigests(),
+				remoteOpts = append(remoteOpts, remote.WithTransport(transport))
 			}
+
+			keychain := authn.DefaultKeychain
 			if destRegistryUsername != "" && destRegistryPassword != "" {
-				skopeoOpts = append(
-					skopeoOpts,
-					skopeo.DestCredentials(
-						destRegistryUsername,
-						destRegistryPassword,
+				keychain = authn.NewMultiKeychain(
+					authn.NewKeychainFromHelper(
+						authnhelpers.NewStaticHelper(
+							destRegistryURI.Host(),
+							&types.DockerAuthConfig{
+								Username: destRegistryUsername,
+								Password: destRegistryPassword,
+							},
+						),
 					),
+					keychain,
 				)
-			} else {
-				skopeoStdout, skopeoStderr, err := skopeoRunner.AttemptToLoginToRegistry(
-					context.Background(),
-					destRegistry,
-				)
-				if err != nil {
-					out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
-					out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
-					return fmt.Errorf("error logging in to target registry: %w", err)
-				}
-				out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
-				out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
 			}
+
+			remoteOpts = append(remoteOpts, remote.WithAuthFromKeychain(keychain))
 
 			// Determine type of destination registry.
 			var prePushFuncs []prePushFunc
-			if ecr.IsECRRegistry(destRegistry) {
+			if ecr.IsECRRegistry(destRegistryURI.Host()) {
 				prePushFuncs = append(
 					prePushFuncs,
 					ecr.EnsureRepositoryExistsFunc(ecrLifecyclePolicy),
@@ -117,14 +129,9 @@ func NewCommand(out output.Output) *cobra.Command {
 			return pushImages(
 				cfg,
 				reg.Address(),
-				destRegistry,
-				skopeoOpts,
-				destRegistryCACertificateFile,
-				// use either user provided --to-registry-insecure-skip-tls-verify flag
-				// or scheme from --to-registry flag
-				flags.SkipTLSVerify(destRegistrySkipTLSVerify, destRegistryURI),
+				destRegistryURI.Address(),
+				remoteOpts,
 				out,
-				skopeoRunner,
 				prePushFuncs...,
 			)
 		},
@@ -160,38 +167,12 @@ type prePushFunc func(destRegistry, imageName string, imageTags ...string) error
 func pushImages(
 	cfg config.ImagesConfig,
 	sourceRegistry, destRegistry string,
-	skopeoOpts []skopeo.SkopeoOption,
-	destRegistryCACertificateFile string,
-	destRegistrySkipTLSVerify bool,
+	remoteOpts []remote.Option,
 	out output.Output,
-	skopeoRunner *skopeo.Runner,
 	prePushFuncs ...prePushFunc,
 ) error {
 	// Sort registries for deterministic ordering.
 	regNames := cfg.SortedRegistryNames()
-
-	if destRegistryCACertificateFile != "" {
-		tmpDir, err := os.MkdirTemp("", ".skopeo-certs-*")
-		if err != nil {
-			return fmt.Errorf(
-				"failed to create temporary directory for destination registry certificates: %w",
-				err,
-			)
-		}
-		defer os.RemoveAll(tmpDir)
-
-		if err := utils.CopyFile(destRegistryCACertificateFile, filepath.Join(tmpDir, "ca.crt")); err != nil {
-			return err
-		}
-
-		skopeoOpts = append(skopeoOpts, skopeo.DestCertDir(tmpDir))
-	}
-
-	skopeoOpts = append(skopeoOpts, skopeo.DisableSrcTLSVerify())
-
-	if destRegistrySkipTLSVerify {
-		skopeoOpts = append(skopeoOpts, skopeo.DisableDestTLSVerify())
-	}
 
 	for _, registryName := range regNames {
 		registryConfig := cfg[registryName]
@@ -215,21 +196,32 @@ func pushImages(
 						destRegistry, imageName, imageTag,
 					),
 				)
-				skopeoStdout, skopeoStderr, err := skopeoRunner.Copy(context.TODO(),
-					fmt.Sprintf("docker://%s/%s:%s", sourceRegistry, imageName, imageTag),
-					fmt.Sprintf("docker://%s/%s:%s", destRegistry, imageName, imageTag),
-					append(
-						skopeoOpts, skopeo.All(),
-					)...,
-				)
+
+				srcImage := fmt.Sprintf("%s/%s:%s", sourceRegistry, imageName, imageTag)
+				srcRef, err := name.ParseReference(srcImage, name.StrictValidation)
 				if err != nil {
 					out.EndOperation(false)
-					out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
-					out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
 					return err
 				}
-				out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
-				out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
+
+				destImage := fmt.Sprintf("%s/%s:%s", destRegistry, imageName, imageTag)
+				dstRef, err := name.ParseReference(destImage, name.StrictValidation)
+				if err != nil {
+					out.EndOperation(false)
+					return err
+				}
+
+				idx, err := remote.Index(srcRef, remoteOpts...)
+				if err != nil {
+					out.EndOperation(false)
+					return err
+				}
+
+				if err := remote.WriteIndex(dstRef, idx, remoteOpts...); err != nil {
+					out.EndOperation(false)
+					return err
+				}
+
 				out.EndOperation(true)
 			}
 		}
