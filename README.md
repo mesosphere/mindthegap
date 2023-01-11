@@ -115,10 +115,9 @@ registry will fail.
 ## How does it work?
 
 `mindthegap` starts up a [Docker registry](https://docs.docker.com/registry/)
-and then uses [`skopeo`](https://github.com/containers/skopeo) to copy the
-specified images for all specified platforms into the running registry. The
-resulting registry storage is then tarred up, resulting in a tarball of the
-specified images.
+and then uses [`crane`](https://github.com/google/go-containerregistry/blob/main/cmd/crane/doc/crane.md)
+as a library to copy the specified images for all specified platforms into the running registry. The
+resulting registry storage is then tarred up, resulting in a tarball of the specified images.
 
 The resulting tarball can be loaded into a running Docker registry, or
 be used as the initial storage for running your own registry from via Docker

@@ -6,7 +6,7 @@
 export GOPRIVATE ?= github.com/mesosphere
 
 ALL_GO_SUBMODULES := $(shell PATH='$(PATH)'; find -mindepth 2 -maxdepth 2 -name go.mod -printf '%P\n' | sort)
-GO_SUBMODULES_NO_TOOLS := $(filter-out $(addsuffix /go.mod,skopeo-static tools),$(ALL_GO_SUBMODULES))
+GO_SUBMODULES_NO_TOOLS := $(filter-out $(addsuffix /go.mod,tools),$(ALL_GO_SUBMODULES))
 
 ifndef GOOS
 export GOOS := $(OS)
@@ -45,7 +45,7 @@ endif
 
 .PHONY: test.%
 test.%: ## Runs go tests for a specific module
-test.%: install-tool.go.gotestsum ensure-static-skopeo; $(info $(M) running tests$(if $(GOTEST_RUN), matching "$(GOTEST_RUN)") for $* module)
+test.%: install-tool.go.gotestsum; $(info $(M) running tests$(if $(GOTEST_RUN), matching "$(GOTEST_RUN)") for $* module)
 	$(if $(filter-out root,$*),cd $* && )$(call go_test)
 
 .PHONY: integration-test
@@ -69,7 +69,7 @@ endif
 
 .PHONY: bench.%
 bench.%: ## Runs go benchmarks for a specific module
-bench.%: ensure-static-skopeo; $(info $(M) running benchmarks$(if $(GOTEST_RUN), matching "$(GOTEST_RUN)") for $* module)
+bench.%: ; $(info $(M) running benchmarks$(if $(GOTEST_RUN), matching "$(GOTEST_RUN)") for $* module)
 	$(if $(filter-out root,$*),cd $* && )go test $(if $(GOTEST_RUN),-run "$(GOTEST_RUN)") -race -cover -v ./...
 
 E2E_PARALLEL_NODES ?= $(shell nproc --ignore=1)
@@ -77,13 +77,9 @@ E2E_FLAKE_ATTEMPTS ?= 1
 
 .PHONY: e2e-test
 e2e-test: ## Runs e2e tests
-e2e-test: install-tool.golang install-tool.ginkgo skopeo.build
+e2e-test: install-tool.golang install-tool.ginkgo install-tool.gojq
 	$(info $(M) running e2e tests$(if $(E2E_LABEL), labelled "$(E2E_LABEL)")$(if $(E2E_FOCUS), matching "$(E2E_FOCUS)"))
-	$(MAKE) BUILD_ALL=true build-snapshot
-ifdef CI
-	$(MAKE) SKIP_UPX=false GOOS=linux GOARCH=amd64 UPX_TARGET=dist/mindthegap_linux_arm64/mindthegap upx
-	$(MAKE) SKIP_UPX=false GOOS=linux GOARCH=arm64 UPX_TARGET=dist/mindthegap_linux_amd64_v1/mindthegap upx
-endif
+	$(MAKE) GORELEASER_FLAGS=$$'--config=<(env GOOS=$(shell go env GOOS) GOARCH=$(shell go env GOARCH) gojq --yaml-input --yaml-output \'del(.builds[0].goarch) | del(.builds[0].goos) | .builds[0].targets|=(["linux_amd64","linux_arm64",env.GOOS+"_"+env.GOARCH] | unique | map(. | sub("_amd64";"_amd64_v1")))\' .goreleaser.yml) --rm-dist --skip-validate --skip-publish' release
 	ginkgo run \
 		--r \
 		--race \
@@ -124,7 +120,7 @@ endif
 
 .PHONY: lint.%
 lint.%: ## Runs golangci-lint for a specific module
-lint.%: install-tool.golangci-lint install-tool.go.golines ensure-static-skopeo; $(info $(M) linting $* module)
+lint.%: install-tool.golangci-lint install-tool.go.golines; $(info $(M) linting $* module)
 	$(if $(filter-out root,$*),cd $* && )golines -w .
 	$(if $(filter-out root,$*),cd $* && )golangci-lint run --fix --config=$(GOLANGCI_CONFIG_FILE)
 	$(if $(filter-out root,$*),cd $* && )go fix ./...
@@ -140,7 +136,7 @@ endif
 
 .PHONY: mod-tidy.%
 mod-tidy.%: ## Runs go mod tidy for a specific module
-mod-tidy.%: install-tool.golang ensure-static-skopeo; $(info $(M) running go mod tidy for $* module)
+mod-tidy.%: install-tool.golang; $(info $(M) running go mod tidy for $* module)
 	$(if $(filter-out root,$*),cd $* && )go mod tidy -v -compat=1.17
 	$(if $(filter-out root,$*),cd $* && )go mod verify
 
@@ -161,7 +157,7 @@ go-clean.%: install-tool.golang; $(info $(M) running go clean for $* module)
 .PHONY: go-generate
 go-generate: ## Runs go generate
 go-generate: install-tool.golang ; $(info $(M) running go generate)
-	go generate ./...
+	go generate -x ./...
 
 .PHONY: go-mod-upgrade
 go-mod-upgrade: ## Interactive check for direct module dependency upgrades

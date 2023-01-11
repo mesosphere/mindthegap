@@ -27,7 +27,7 @@ jobs:
 
       - if: ${{ steps.release-please.outputs.release_created }}
         name: Install tools via asdf
-        uses: asdf-vm/actions/setup@v1
+        uses: asdf-vm/actions/setup@v1.1.0
         with:
           asdf_branch: v0.11.0
 
@@ -43,4 +43,3 @@ jobs:
         run: make release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}

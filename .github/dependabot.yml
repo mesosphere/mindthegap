@@ -13,11 +13,6 @@ updates:
     schedule:
       interval: "weekly"
 
-  - package-ecosystem: "gomod"
-    directory: "/skopeo-static"
-    schedule:
-      interval: "weekly"
-
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

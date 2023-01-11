@@ -168,7 +168,11 @@ func ParseImagesConfigFile(configFile string) (ImagesConfig, error) {
 		}
 		namedTagged, ok := named.(reference.NamedTagged)
 		if !ok {
-			return ImagesConfig{}, fmt.Errorf("failed to parse config file: %w", yamlParseErr)
+			tagged, err := reference.WithTag(named, "latest")
+			if err != nil {
+				return ImagesConfig{}, fmt.Errorf("invalid image name %q: %w", named, err)
+			}
+			namedTagged = tagged
 		}
 
 		registry := reference.Domain(namedTagged)

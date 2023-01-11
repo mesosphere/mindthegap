@@ -7,21 +7,23 @@ package imagebundle_test
 
 import (
 	"fmt"
+	"net"
 	"path/filepath"
 	"runtime"
 	"strconv"
 
-	"github.com/distribution/distribution/v3/manifest/manifestlist"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/phayes/freeport"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/transport"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
 	serveimagebundle "github.com/mesosphere/mindthegap/cmd/mindthegap/serve/imagebundle"
-	"github.com/mesosphere/mindthegap/cmd/mindthegap/utils"
-	"github.com/mesosphere/mindthegap/skopeo"
+	"github.com/mesosphere/mindthegap/images/httputils"
 	"github.com/mesosphere/mindthegap/test/e2e/imagebundle/helpers"
 )
 
@@ -75,11 +77,10 @@ var _ = Describe("Serve Bundle", func() {
 			port,
 			"stefanprodan/podinfo",
 			"6.2.0",
-			[]manifestlist.PlatformSpec{{
+			[]*v1.Platform{{
 				OS:           "linux",
 				Architecture: runtime.GOARCH,
 			}},
-			skopeo.DisableTLSVerify(),
 		)
 
 		close(stopCh)
@@ -124,24 +125,25 @@ var _ = Describe("Serve Bundle", func() {
 
 		helpers.WaitForTCPPort(GinkgoT(), ipAddr.String(), port)
 
-		tmpCACertDir := GinkgoT().TempDir()
-		err = utils.CopyFile(
-			caCertFile,
-			filepath.Join(tmpCACertDir, filepath.Base(caCertFile)),
-		)
-		Expect(err).NotTo(HaveOccurred())
-
 		helpers.ValidateImageIsAvailable(
 			GinkgoT(),
 			ipAddr.String(),
 			port,
 			"stefanprodan/podinfo",
 			"6.2.0",
-			[]manifestlist.PlatformSpec{{
+			[]*v1.Platform{{
 				OS:           "linux",
 				Architecture: runtime.GOARCH,
 			}},
-			skopeo.CertDir(tmpCACertDir),
+			remote.WithTransport(
+				httputils.NewConfigurableTLSRoundTripper(
+					remote.DefaultTransport, httputils.TLSHostsConfig{
+						net.JoinHostPort(ipAddr.String(), strconv.Itoa(port)): transport.TLSConfig{
+							CAFile: caCertFile,
+						},
+					},
+				),
+			),
 		)
 
 		close(stopCh)

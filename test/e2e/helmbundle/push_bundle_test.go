@@ -84,7 +84,7 @@ var _ = Describe("Push Bundle", func() {
 		Eventually(done).Should(BeClosed())
 	})
 
-	It("With TLS", func() {
+	It("With Insecure TLS", func() {
 		helpers.CreateBundle(
 			GinkgoT(),
 			bundleFile,
@@ -128,6 +128,62 @@ var _ = Describe("Push Bundle", func() {
 			"--helm-bundle", bundleFile,
 			"--to-registry", fmt.Sprintf("%s:%d/charts", ipAddr, port),
 			"--to-registry-insecure-skip-tls-verify",
+		})
+
+		Expect(cmd.Execute()).To(Succeed())
+
+		// TODO Reenable once Helm supports custom CA certs and self-signed certs.
+		// helpers.ValidateChartIsAvailable(GinkgoT(), ipAddr.String(), port, "podinfo", "6.2.0", helm.CAFileOpt(caCertFile))
+
+		Expect(reg.Shutdown(context.Background())).To((Succeed()))
+
+		Eventually(done).Should(BeClosed())
+	})
+
+	It("With TLS", func() {
+		helpers.CreateBundle(
+			GinkgoT(),
+			bundleFile,
+			filepath.Join("testdata", "create-success.yaml"),
+		)
+
+		ipAddr := helpers.GetFirstNonLoopbackIP(GinkgoT())
+
+		tempCertDir := GinkgoT().TempDir()
+		caCertFile, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(
+			GinkgoT(),
+			tempCertDir,
+			ipAddr,
+		)
+
+		port, err := freeport.GetFreePort()
+		Expect(err).NotTo(HaveOccurred())
+		reg, err := registry.NewRegistry(registry.Config{
+			StorageDirectory: filepath.Join(tmpDir, "registry"),
+			Host:             ipAddr.String(),
+			Port:             uint16(port),
+			TLS: registry.TLS{
+				Certificate: certFile,
+				Key:         keyFile,
+			},
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		done := make(chan struct{})
+		go func() {
+			defer GinkgoRecover()
+
+			Expect(reg.ListenAndServe()).To(Succeed())
+
+			close(done)
+		}()
+
+		helpers.WaitForTCPPort(GinkgoT(), ipAddr.String(), port)
+
+		cmd.SetArgs([]string{
+			"--helm-bundle", bundleFile,
+			"--to-registry", fmt.Sprintf("%s:%d/charts", ipAddr, port),
+			"--to-registry-ca-cert-file", caCertFile,
 		})
 
 		Expect(cmd.Execute()).To(Succeed())

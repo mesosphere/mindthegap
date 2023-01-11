@@ -4,14 +4,17 @@
 package imagebundle
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 
-	"github.com/distribution/distribution/v3/manifest/manifestlist"
+	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/logs"
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/transport"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
@@ -19,7 +22,9 @@ import (
 	"github.com/mesosphere/mindthegap/cleanup"
 	"github.com/mesosphere/mindthegap/config"
 	"github.com/mesosphere/mindthegap/docker/registry"
-	"github.com/mesosphere/mindthegap/skopeo"
+	"github.com/mesosphere/mindthegap/images"
+	"github.com/mesosphere/mindthegap/images/authnhelpers"
+	"github.com/mesosphere/mindthegap/images/httputils"
 )
 
 func NewCommand(out output.Output) *cobra.Command {
@@ -101,33 +106,37 @@ func NewCommand(out output.Output) *cobra.Command {
 			}()
 			out.EndOperation(true)
 
-			skopeoRunner, skopeoCleanup := skopeo.NewRunner()
-			cleaner.AddCleanupFn(func() { _ = skopeoCleanup() })
+			logs.Debug.SetOutput(out.V(4).InfoWriter())
+			logs.Warn.SetOutput(out.InfoWriter())
 
 			// Sort registries for deterministic ordering.
 			regNames := cfg.SortedRegistryNames()
 
 			for _, registryName := range regNames {
 				registryConfig := cfg[registryName]
-				var skopeoOpts []skopeo.SkopeoOption
+
+				var remoteOpts []remote.Option
 				if registryConfig.TLSVerify != nil && !*registryConfig.TLSVerify {
-					skopeoOpts = append(skopeoOpts, skopeo.DisableSrcTLSVerify())
-				}
-				if registryConfig.Credentials != nil && registryConfig.Credentials.Username != "" {
-					skopeoOpts = append(
-						skopeoOpts,
-						skopeo.SrcCredentials(
-							registryConfig.Credentials.Username,
-							registryConfig.Credentials.Password,
-						),
+					transport := httputils.NewConfigurableTLSRoundTripper(
+						remote.DefaultTransport,
+						httputils.TLSHostsConfig{registryName: transport.TLSConfig{Insecure: true}},
 					)
-				} else {
-					skopeoStdout, skopeoStderr, err := skopeoRunner.AttemptToLoginToRegistry(context.TODO(), registryName)
-					if err != nil {
-						out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
-						out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
-						return fmt.Errorf("error logging in to registry: %w", err)
-					}
+
+					remoteOpts = append(remoteOpts, remote.WithTransport(transport))
+				}
+
+				keychain := authn.NewMultiKeychain(
+					authn.NewKeychainFromHelper(
+						authnhelpers.NewStaticHelper(registryName, registryConfig.Credentials),
+					),
+					authn.DefaultKeychain,
+				)
+
+				remoteOpts = append(remoteOpts, remote.WithAuthFromKeychain(keychain))
+
+				platformsStrings := make([]string, 0, len(platforms))
+				for _, p := range platforms {
+					platformsStrings = append(platformsStrings, p.String())
 				}
 
 				// Sort images for deterministic ordering.
@@ -143,123 +152,28 @@ func NewCommand(out output.Output) *cobra.Command {
 							),
 						)
 
-						srcSkopeoScheme := "docker://"
-						srcImageManifestList, skopeoStdout, skopeoStderr, err := skopeoRunner.InspectManifest(
-							context.Background(),
-							fmt.Sprintf("%s%s", srcSkopeoScheme, srcImageName),
-							skopeo.NoTags(),
-						)
-						if err != nil {
-							srcSkopeoScheme = "docker-daemon:"
-							srcDaemonImageManifestList, skopeoDaemonStdout, skopeoDaemonStderr, err := skopeoRunner.InspectManifest(
-								context.Background(),
-								fmt.Sprintf("%s%s", srcSkopeoScheme, srcImageName),
-							)
-							skopeoStdout = append(skopeoStdout, skopeoDaemonStdout...)
-							skopeoStderr = append(skopeoStderr, skopeoDaemonStderr...)
-							if err != nil {
-								out.EndOperation(false)
-								out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
-								out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
-								return err
-							}
-							srcImageManifestList = srcDaemonImageManifestList
-						}
-						out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
-						out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
-						destImageManifestList := manifestlist.ManifestList{
-							Versioned: srcImageManifestList.Versioned,
-						}
-						platformManifests := make(
-							map[string]manifestlist.ManifestDescriptor,
-							len(srcImageManifestList.Manifests),
-						)
-						for i := range srcImageManifestList.Manifests {
-							m := srcImageManifestList.Manifests[i]
-							srcManifestPlatform := m.Platform.OS + "/" + m.Platform.Architecture
-							if m.Platform.Variant != "" {
-								srcManifestPlatform += "/" + m.Platform.Variant
-							}
-							platformManifests[srcManifestPlatform] = m
-						}
-
-						for _, p := range platforms {
-							platformManifest, ok := platformManifests[p.String()]
-							if !ok {
-								if p.arch == "arm64" {
-									p.variant = "v8"
-								}
-								platformManifest, ok = platformManifests[p.String()]
-								if !ok {
-									out.EndOperation(false)
-									return fmt.Errorf(
-										"could not find platform %s for image %s",
-										p,
-										srcImageName,
-									)
-								}
-							}
-
-							srcImageToCopy := fmt.Sprintf("%s/%s@%s", registryName,
-								imageName,
-								platformManifest.Digest)
-							if srcSkopeoScheme != "docker://" {
-								srcImageToCopy = srcImageName
-							}
-
-							skopeoStdout, skopeoStderr, err := skopeoRunner.Copy(
-								context.TODO(),
-								fmt.Sprintf(
-									"%s%s",
-									srcSkopeoScheme,
-									srcImageToCopy,
-								),
-								fmt.Sprintf(
-									"docker://%s/%s@%s",
-									reg.Address(),
-									imageName,
-									platformManifest.Digest,
-								),
-								append(
-									skopeoOpts,
-									skopeo.DisableDestTLSVerify(),
-									skopeo.OS(p.os),
-									skopeo.Arch(p.arch),
-									skopeo.Variant(p.variant),
-									skopeo.PreserveDigests(),
-								)...,
-							)
-							if err != nil {
-								out.EndOperation(false)
-								out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
-								out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
-								return err
-							}
-							out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
-							out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
-
-							destImageManifestList.Manifests = append(
-								destImageManifestList.Manifests,
-								platformManifest,
-							)
-						}
-						skopeoStdout, skopeoStderr, err = skopeoRunner.CopyManifest(context.TODO(),
-							destImageManifestList,
-							fmt.Sprintf("docker://%s/%s:%s", reg.Address(), imageName, imageTag),
-							append(
-								skopeoOpts,
-								skopeo.DisableDestTLSVerify(),
-							)...,
-						)
+						imageIndex, err := images.ManifestListForImage(
+							srcImageName,
+							platformsStrings,
+							remoteOpts...)
 						if err != nil {
 							out.EndOperation(false)
-							out.Infof("---skopeo stdout---:\n%s", skopeoStdout)
-							out.Infof("---skopeo stderr---:\n%s", skopeoStderr)
 							return err
 						}
+
+						destImageName := fmt.Sprintf("%s/%s:%s", reg.Address(), imageName, imageTag)
+						ref, err := name.ParseReference(destImageName, name.StrictValidation)
+						if err != nil {
+							out.EndOperation(false)
+							return err
+						}
+
+						if err := remote.WriteIndex(ref, imageIndex, remoteOpts...); err != nil {
+							out.EndOperation(false)
+							return err
+						}
+
 						out.EndOperation(true)
-						out.V(4).Infof("---skopeo stdout---:\n%s", skopeoStdout)
-						out.V(4).Infof("---skopeo stderr---:\n%s", skopeoStderr)
 					}
 				}
 			}

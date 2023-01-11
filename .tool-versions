@@ -1,5 +1,6 @@
 gcloud 412.0.0
 ginkgo 2.6.1
+gojq 0.12.11
 golang 1.19.4
 golangci-lint 1.50.1
 goreleaser 1.14.1
@@ -7,4 +8,3 @@ helm 3.10.3
 pre-commit 2.21.0
 shfmt 3.6.0
 upx 4.0.1
-gojq 0.12.11
