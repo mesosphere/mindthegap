@@ -10,7 +10,7 @@ endif
 
 .PHONY: build-snapshot
 build-snapshot: ## Builds a snapshot with goreleaser
-build-snapshot: dockerauth install-tool.goreleaser ; $(info $(M) building snapshot $*)
+build-snapshot: dockerauth install-tool.goreleaser install-tool.golang ; $(info $(M) building snapshot $*)
 	goreleaser --debug=$(GORELEASER_DEBUG) \
 		build \
 		--snapshot \
@@ -21,7 +21,7 @@ build-snapshot: dockerauth install-tool.goreleaser ; $(info $(M) building snapsh
 
 .PHONY: release
 release: ## Builds a release with goreleaser
-release: dockerauth install-tool.goreleaser ; $(info $(M) building release $*)
+release: dockerauth install-tool.goreleaser  install-tool.golang ; $(info $(M) building release $*)
 	goreleaser --debug=$(GORELEASER_DEBUG) \
 		release \
 		--rm-dist \
@@ -31,7 +31,7 @@ release: dockerauth install-tool.goreleaser ; $(info $(M) building release $*)
 
 .PHONY: release-snapshot
 release-snapshot: ## Builds a snapshot release with goreleaser
-release-snapshot: dockerauth install-tool.goreleaser ; $(info $(M) building snapshot release $*)
+release-snapshot: dockerauth install-tool.goreleaser  install-tool.golang ; $(info $(M) building snapshot release $*)
 	goreleaser --debug=$(GORELEASER_DEBUG) \
 		release \
 		--snapshot \
