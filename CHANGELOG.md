@@ -189,6 +189,21 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.3.1...v1.4.0
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: Migrate to crane from skopeo by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/308
+### Other Changes
+* build: Increase timeout for goreleaser to work on public GHA runners by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/299
+* build: Remove broken upx test after compression by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/300
+* build: Use lzma compression for better file size, and decrease upx level by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/302
+* build: Use crane instead of skopeo for updating distroless image by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/307
+* ci: Ensure github api token is set for asdf by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/306
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.4.0...v1.5.0
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
