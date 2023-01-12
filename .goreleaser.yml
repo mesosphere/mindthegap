@@ -48,11 +48,6 @@ builds:
       - arm64
     mod_timestamp: '{{ .CommitTimestamp }}'
     hooks:
-      pre:
-        - cmd: make SKIP_UPX={{ if index .Env "SKIP_UPX" }}{{ .Env.SKIP_UPX }}{{ else }}{{ .IsSnapshot }}{{ end }} go-generate
-          env:
-            - GOOS={{ .Os }}
-            - GOARCH={{ .Arch }}
       post:
         - cmd: make SKIP_UPX={{ if index .Env "SKIP_UPX" }}{{ .Env.SKIP_UPX }}{{ else }}{{ .IsSnapshot }}{{ end }} GOOS={{ .Os }} GOARCH={{ .Arch }} UPX_TARGET={{ .Path }} upx
 archives:
