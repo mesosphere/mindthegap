@@ -213,6 +213,15 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.5.0...v1.5.1
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix: Support docker certs.d host certs again by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/313
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.5.1...v1.5.2
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
