@@ -13,7 +13,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/spf13/cobra"
-	"k8s.io/client-go/transport"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
@@ -86,13 +85,12 @@ func NewCommand(out output.Output) *cobra.Command {
 			insecure := flags.SkipTLSVerify(destRegistrySkipTLSVerify, destRegistryURI)
 			if insecure || destRegistryCACertificateFile != "" {
 				transport := httputils.NewConfigurableTLSRoundTripper(
-					remote.DefaultTransport,
 					httputils.TLSHostsConfig{
-						destRegistryURI.Host(): transport.TLSConfig{
+						destRegistryURI.Host(): httputils.TLSHostConfig{
 							Insecure: insecure,
 							CAFile:   destRegistryCACertificateFile,
 						},
-						reg.Address(): transport.TLSConfig{Insecure: true},
+						reg.Address(): httputils.TLSHostConfig{Insecure: true},
 					},
 				)
 

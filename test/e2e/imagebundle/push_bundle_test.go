@@ -19,7 +19,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/phayes/freeport"
 	"github.com/spf13/cobra"
-	"k8s.io/client-go/transport"
 
 	pushimagebundle "github.com/mesosphere/mindthegap/cmd/mindthegap/push/imagebundle"
 	"github.com/mesosphere/mindthegap/docker/registry"
@@ -153,8 +152,8 @@ var _ = Describe("Push Bundle", func() {
 			}},
 			remote.WithTransport(
 				httputils.NewConfigurableTLSRoundTripper(
-					remote.DefaultTransport, httputils.TLSHostsConfig{
-						net.JoinHostPort(ipAddr.String(), strconv.Itoa(port)): transport.TLSConfig{
+					httputils.TLSHostsConfig{
+						net.JoinHostPort(ipAddr.String(), strconv.Itoa(port)): httputils.TLSHostConfig{
 							CAFile: caCertFile,
 						},
 					},
@@ -227,8 +226,8 @@ var _ = Describe("Push Bundle", func() {
 			}},
 			remote.WithTransport(
 				httputils.NewConfigurableTLSRoundTripper(
-					remote.DefaultTransport, httputils.TLSHostsConfig{
-						net.JoinHostPort(ipAddr.String(), strconv.Itoa(port)): transport.TLSConfig{
+					httputils.TLSHostsConfig{
+						net.JoinHostPort(ipAddr.String(), strconv.Itoa(port)): httputils.TLSHostConfig{
 							CAFile: caCertFile,
 						},
 					},

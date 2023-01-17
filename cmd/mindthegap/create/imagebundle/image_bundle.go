@@ -14,7 +14,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/spf13/cobra"
-	"k8s.io/client-go/transport"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
@@ -118,8 +117,9 @@ func NewCommand(out output.Output) *cobra.Command {
 				var remoteOpts []remote.Option
 				if registryConfig.TLSVerify != nil && !*registryConfig.TLSVerify {
 					transport := httputils.NewConfigurableTLSRoundTripper(
-						remote.DefaultTransport,
-						httputils.TLSHostsConfig{registryName: transport.TLSConfig{Insecure: true}},
+						httputils.TLSHostsConfig{
+							registryName: httputils.TLSHostConfig{Insecure: true},
+						},
 					)
 
 					remoteOpts = append(remoteOpts, remote.WithTransport(transport))
