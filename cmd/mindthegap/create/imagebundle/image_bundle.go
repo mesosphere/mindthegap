@@ -115,15 +115,17 @@ func NewCommand(out output.Output) *cobra.Command {
 				registryConfig := cfg[registryName]
 
 				var remoteOpts []remote.Option
-				if registryConfig.TLSVerify != nil && !*registryConfig.TLSVerify {
-					transport := httputils.NewConfigurableTLSRoundTripper(
-						httputils.TLSHostsConfig{
-							registryName: httputils.TLSHostConfig{Insecure: true},
-						},
-					)
 
-					remoteOpts = append(remoteOpts, remote.WithTransport(transport))
+				var tlsHostsConfig httputils.TLSHostsConfig
+				if registryConfig.TLSVerify != nil && !*registryConfig.TLSVerify {
+					tlsHostsConfig = httputils.TLSHostsConfig{
+						registryName: httputils.TLSHostConfig{Insecure: true},
+					}
 				}
+				transport := httputils.NewConfigurableTLSRoundTripper(
+					tlsHostsConfig,
+				)
+				remoteOpts = append(remoteOpts, remote.WithTransport(transport))
 
 				keychain := authn.NewMultiKeychain(
 					authn.NewKeychainFromHelper(

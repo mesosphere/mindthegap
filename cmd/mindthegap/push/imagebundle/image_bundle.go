@@ -82,20 +82,21 @@ func NewCommand(out output.Output) *cobra.Command {
 			logs.Warn.SetOutput(out.InfoWriter())
 
 			var remoteOpts []remote.Option
-			insecure := flags.SkipTLSVerify(destRegistrySkipTLSVerify, destRegistryURI)
-			if insecure || destRegistryCACertificateFile != "" {
-				transport := httputils.NewConfigurableTLSRoundTripper(
-					httputils.TLSHostsConfig{
-						destRegistryURI.Host(): httputils.TLSHostConfig{
-							Insecure: insecure,
-							CAFile:   destRegistryCACertificateFile,
-						},
-						reg.Address(): httputils.TLSHostConfig{Insecure: true},
-					},
-				)
 
-				remoteOpts = append(remoteOpts, remote.WithTransport(transport))
+			insecure := flags.SkipTLSVerify(destRegistrySkipTLSVerify, destRegistryURI)
+			tlsHostsConfig := httputils.TLSHostsConfig{
+				reg.Address(): httputils.TLSHostConfig{Insecure: true},
 			}
+			if insecure || destRegistryCACertificateFile != "" {
+				tlsHostsConfig[destRegistryURI.Host()] = httputils.TLSHostConfig{
+					Insecure: insecure,
+					CAFile:   destRegistryCACertificateFile,
+				}
+			}
+			transport := httputils.NewConfigurableTLSRoundTripper(
+				tlsHostsConfig,
+			)
+			remoteOpts = append(remoteOpts, remote.WithTransport(transport))
 
 			keychain := authn.DefaultKeychain
 			if destRegistryUsername != "" && destRegistryPassword != "" {
