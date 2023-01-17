@@ -222,6 +222,15 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.5.1...v1.5.2
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix: Always use custom transport to ensure TLS config is correct by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/315
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.5.2...v1.5.3
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
