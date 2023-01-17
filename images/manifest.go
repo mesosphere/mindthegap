@@ -29,7 +29,11 @@ func ManifestListForImage(
 	if err != nil {
 		localImage, localErr := daemon.Image(ref)
 		if localErr != nil {
-			return nil, fmt.Errorf("failed to read image descriptor for %q from registry: %w", img, err)
+			return nil, fmt.Errorf(
+				"failed to read image descriptor for %q from registry: %w",
+				img,
+				err,
+			)
 		}
 
 		return indexForSinglePlatformImage(ref, localImage, platforms...)

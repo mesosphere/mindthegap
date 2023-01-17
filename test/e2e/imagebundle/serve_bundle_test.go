@@ -18,7 +18,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/phayes/freeport"
 	"github.com/spf13/cobra"
-	"k8s.io/client-go/transport"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
@@ -137,8 +136,8 @@ var _ = Describe("Serve Bundle", func() {
 			}},
 			remote.WithTransport(
 				httputils.NewConfigurableTLSRoundTripper(
-					remote.DefaultTransport, httputils.TLSHostsConfig{
-						net.JoinHostPort(ipAddr.String(), strconv.Itoa(port)): transport.TLSConfig{
+					httputils.TLSHostsConfig{
+						net.JoinHostPort(ipAddr.String(), strconv.Itoa(port)): httputils.TLSHostConfig{
 							CAFile: caCertFile,
 						},
 					},

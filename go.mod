@@ -10,8 +10,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.18.0
 	github.com/containers/image/v5 v5.23.1
 	github.com/distribution/distribution/v3 v3.0.0-20220907155224-78b9c98c5c31
+	github.com/docker/cli v20.10.22+incompatible
 	github.com/docker/docker v20.10.22+incompatible
 	github.com/docker/docker-credential-helpers v0.7.0
+	github.com/docker/go-connections v0.4.0
 	github.com/google/go-containerregistry v0.12.1
 	github.com/hashicorp/go-getter v1.6.2
 	github.com/mesosphere/dkp-cli-runtime/core v0.7.1
@@ -27,7 +29,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.10.3
 	k8s.io/apimachinery v0.26.0
-	k8s.io/client-go v0.26.0
 	k8s.io/klog/v2 v2.80.1
 	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d
 )
@@ -66,9 +67,7 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/docker/cli v20.10.22+incompatible // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
-	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -185,6 +184,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.25.2 // indirect
 	k8s.io/apiserver v0.25.2 // indirect
 	k8s.io/cli-runtime v0.25.2 // indirect
+	k8s.io/client-go v0.26.0 // indirect
 	k8s.io/component-base v0.25.2 // indirect
 	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 // indirect
 	k8s.io/kubectl v0.25.2 // indirect
