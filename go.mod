@@ -14,7 +14,7 @@ require (
 	github.com/docker/docker v20.10.23+incompatible
 	github.com/docker/docker-credential-helpers v0.7.0
 	github.com/docker/go-connections v0.4.0
-	github.com/google/go-containerregistry v0.12.1
+	github.com/google/go-containerregistry v0.13.0
 	github.com/hashicorp/go-getter v1.6.2
 	github.com/mesosphere/dkp-cli-runtime/core v0.7.1
 	github.com/mholt/archiver/v3 v3.5.1
