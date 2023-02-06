@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.18.0
 	github.com/containers/image/v5 v5.24.0
 	github.com/distribution/distribution/v3 v3.0.0-20221208165359-362910506bc2
-	github.com/docker/cli v20.10.23+incompatible
+	github.com/docker/cli v23.0.0+incompatible
 	github.com/docker/docker v20.10.23+incompatible
 	github.com/docker/docker-credential-helpers v0.7.0
 	github.com/docker/go-connections v0.4.0
