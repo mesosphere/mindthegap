@@ -77,7 +77,6 @@ jobs:
         with:
           fail_on_error: true
           reporter: github-pr-review
-          go_version: ${{ fromJson(steps.versions.outputs.tools).golangci }}
           golangci_lint_version: v${{ fromJson(steps.versions.outputs.tools).golangci-lint }}
 
   pre-commit:
