@@ -8,9 +8,8 @@ upx: UPX_REAL_TARGET := $(addsuffix $(if $(filter $(GOOS),windows),.exe),$(basen
 ifneq ($(SKIP_UPX),true)
 ifeq ($(GOOS)/$(GOARCH),windows/arm64)
 upx: ; $(info $(M) skipping packing $(UPX_REAL_TARGET) - $(GOOS)/$(GOARCH) is not yet supported by upx)
-# TODO Remove once upx 4.0.2 is released
-else ifeq ($(GOOS)/$(GOARCH),darwin/arm64)
-upx: ; $(info $(M) skipping packing $(UPX_REAL_TARGET) - $(GOOS)/$(GOARCH) has a bug in packing - https://github.com/upx/upx/issues/628 - should be fixed in 4.0.2)
+else ifeq ($(GOOS),darwin)
+upx: ; $(info $(M) skipping packing $(UPX_REAL_TARGET) - $(GOOS) has a bug in packing especially on Ventura - https://github.com/upx/upx/issues/612)
 else
 upx: install-tool.upx
 upx: ## Pack executable using upx
