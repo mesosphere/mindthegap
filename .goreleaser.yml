@@ -57,16 +57,17 @@ archives:
         format: zip
     builds:
       - mindthegap
+    rlcp: true
 dockers:
   - image_templates:
       # Specify the image tag including `-amd64` suffix if the build is not a snapshot build or is not being built on
       # arm64 machine. This allows for using the snapshot image build without the archtecture specific suffix
-      # consistently on local machines, i.e. can always use `mesosphere/mindthegap:v<VERSION>` on the machine the snapshot
+      # consistently on local machines, i.e. can always use `ghcr.io/mesosphere/mindthegap:v<VERSION>` on the machine the snapshot
       # is built on.
       #
       # For a release build the `-amd64` suffix will always be included and the `docker_manifests` specification below
       # will create the final multiplatform manifest to be pushed to the registry.
-      - 'mesosphere/mindthegap:v{{trimprefix .Version "v"}}{{ if or (not .IsSnapshot) (not (eq .Runtime.Goarch "amd64")) }}-amd64{{ end }}'
+      - 'ghcr.io/mesosphere/mindthegap:v{{trimprefix .Version "v"}}{{ if or (not .IsSnapshot) (not (eq .Runtime.Goarch "amd64")) }}-amd64{{ end }}'
     use: buildx
     dockerfile: Dockerfile
     build_flag_templates:
@@ -80,12 +81,12 @@ dockers:
   - image_templates:
       # Specify the image tag including `-amd64v8` suffix if the build is not a snapshot build or is not being built on
       # arm64 machine. This allows for using the snapshot image build without the archtecture specific suffix
-      # consistently on local machines, i.e. can always use `mesosphere/mindthegap:v<VERSION>` on the machine the snapshot
+      # consistently on local machines, i.e. can always use `ghcr.io/mesosphere/mindthegap:v<VERSION>` on the machine the snapshot
       # is built on.
       #
       # For a release build the `-amd64v8` suffix will always be included and the `docker_manifests` specification below
       # will create the final multiplatform manifest to be pushed to the registry.
-    - 'mesosphere/mindthegap:v{{trimprefix .Version "v"}}{{ if or (not .IsSnapshot) (not (eq .Runtime.Goarch "arm64")) }}-arm64v8{{ end }}'
+    - 'ghcr.io/mesosphere/mindthegap:v{{trimprefix .Version "v"}}{{ if or (not .IsSnapshot) (not (eq .Runtime.Goarch "arm64")) }}-arm64v8{{ end }}'
     use: buildx
     goarch: arm64
     dockerfile: Dockerfile
@@ -98,10 +99,10 @@ dockers:
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source={{.GitURL}}"
 docker_manifests:
-  - name_template: mesosphere/mindthegap:v{{trimprefix .Version "v"}}
+  - name_template: ghcr.io/mesosphere/mindthegap:v{{trimprefix .Version "v"}}
     image_templates:
-    - mesosphere/mindthegap:v{{trimprefix .Version "v"}}-amd64
-    - mesosphere/mindthegap:v{{trimprefix .Version "v"}}-arm64v8
+    - ghcr.io/mesosphere/mindthegap:v{{trimprefix .Version "v"}}-amd64
+    - ghcr.io/mesosphere/mindthegap:v{{trimprefix .Version "v"}}-arm64v8
 checksum:
   name_template: 'checksums.txt'
 snapshot:
