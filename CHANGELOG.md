@@ -242,6 +242,15 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.5.3...v1.5.4
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: Use ghcr.io rather than Docker Hub by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/343
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.5.4...v1.6.0
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
