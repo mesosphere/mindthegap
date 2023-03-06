@@ -16,7 +16,7 @@ import (
 	"k8s.io/utils/pointer"
 )
 
-func EnsureRepositoryExistsFunc(registryAddress string, ecrLifecyclePolicy string) func(
+func EnsureRepositoryExistsFunc(registryAddress, ecrLifecyclePolicy string) func(
 	_, repositoryName string, _ ...string,
 ) error {
 	return func(

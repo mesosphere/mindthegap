@@ -89,14 +89,14 @@ func TestParseECRRegistry(t *testing.T) {
 	}, {
 		name:            "public ECR",
 		registryAddress: "public.ecr.aws",
-		wantError:       "only private Amazon Elastic Container Registry supported.",
+		wantError:       "only private Amazon Elastic Container Registry supported",
 		wantAccountID:   "",
 		wantFips:        false,
 		wantRegion:      "",
 	}, {
 		name:            "non ECR",
 		registryAddress: "gcr.io",
-		wantError:       "only private Amazon Elastic Container Registry supported.",
+		wantError:       "only private Amazon Elastic Container Registry supported",
 		wantAccountID:   "",
 		wantFips:        false,
 		wantRegion:      "",

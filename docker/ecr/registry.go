@@ -17,12 +17,16 @@ func IsECRRegistry(registryAddress string) bool {
 	return ecrRegistryRegexp.MatchString(registryAddress)
 }
 
-func ParseECRRegistry(registryAddress string) (accountID string, fips bool, region string, err error) {
+func ParseECRRegistry(
+	registryAddress string,
+) (accountID string, fips bool, region string, err error) {
 	matches := ecrRegistryRegexp.FindStringSubmatch(registryAddress)
 	if len(matches) == 0 {
-		return "", false, "", fmt.Errorf("only private Amazon Elastic Container Registry supported.")
+		return "", false, "", fmt.Errorf(
+			"only private Amazon Elastic Container Registry supported")
 	} else if len(matches) < 3 {
-		return "", false, "", fmt.Errorf("%q is not a valid repository URI for private Amazon Elastic Container Registry.", registryAddress)
+		return "", false, "", fmt.Errorf(
+			"%q is not a valid repository URI for private Amazon Elastic Container Registry", registryAddress)
 	}
 
 	accountID = matches[1]
