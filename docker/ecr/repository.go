@@ -16,13 +16,17 @@ import (
 	"k8s.io/utils/pointer"
 )
 
-func EnsureRepositoryExistsFunc(ecrLifecyclePolicy string) func(
+func EnsureRepositoryExistsFunc(registryAddress string, ecrLifecyclePolicy string) func(
 	_, repositoryName string, _ ...string,
 ) error {
 	return func(
 		_, repositoryName string, _ ...string,
 	) error {
-		cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-west-2"))
+		_, _, region, err := ParseECRRegistry(registryAddress)
+		if err != nil {
+			return fmt.Errorf("failed to parse ECR registry host URI: %w", err)
+		}
+		cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
 		if err != nil {
 			log.Fatalf("unable to load SDK config, %v", err)
 		}
