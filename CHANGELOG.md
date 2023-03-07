@@ -251,6 +251,17 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.5.4...v1.6.0
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix: remove hardcoded AWS region when creating ECR lifecycle policies by @supershal in https://github.com/mesosphere/mindthegap/pull/353
+
+## New Contributors
+* @supershal made their first contribution in https://github.com/mesosphere/mindthegap/pull/353
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.0...v1.6.1
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
