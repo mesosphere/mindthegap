@@ -15,9 +15,6 @@ on:
     branches:
       - main
 
-permissions:
-  contents: read
-
 jobs:
   unit-test:
     runs-on: ubuntu-latest
@@ -64,9 +61,6 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -80,6 +74,7 @@ jobs:
         with:
           fail_on_error: true
           reporter: github-pr-review
+          go_version: v${{ fromJson(steps.versions.outputs.tools).golang }}
           golangci_lint_version: v${{ fromJson(steps.versions.outputs.tools).golangci-lint }}
 
   pre-commit:
