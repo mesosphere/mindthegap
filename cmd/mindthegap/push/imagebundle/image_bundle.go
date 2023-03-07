@@ -121,7 +121,7 @@ func NewCommand(out output.Output) *cobra.Command {
 			if ecr.IsECRRegistry(destRegistryURI.Host()) {
 				prePushFuncs = append(
 					prePushFuncs,
-					ecr.EnsureRepositoryExistsFunc(ecrLifecyclePolicy),
+					ecr.EnsureRepositoryExistsFunc(destRegistryURI.Host(), ecrLifecyclePolicy),
 				)
 			}
 
