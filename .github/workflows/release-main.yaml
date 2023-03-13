@@ -32,9 +32,9 @@ jobs:
 
       - if: ${{ steps.release-please.outputs.release_created }}
         name: Install tools via asdf
-        uses: asdf-vm/actions/setup@master
+        uses: asdf-vm/actions/setup@v2.0.0
         with:
-          asdf_branch: v0.11.0
+          asdf_branch: v0.11.2
 
       - if: ${{ steps.release-please.outputs.release_created }}
         name: Login to GitHub Container Registry

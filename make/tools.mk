@@ -13,7 +13,7 @@ export PATH := $(GOBIN):$(PATH)
 ifneq ($(wildcard $(GO_TOOLS_FILE)),)
 define install_go_tool
 	mkdir -p $(GOBIN)
-	CGO_ENABLED=0 go install -v $$(grep $1 $(GO_TOOLS_FILE))
+	CGO_ENABLED=0 go install -v $$(grep -Eo '^.+$1[^ ]+' $(GO_TOOLS_FILE))
 endef
 
 .PHONY:
@@ -80,8 +80,18 @@ upgrade-tools: upgrade-go-tools; $(info $(M) upgrading all tools to latest avail
 upgrade-go-tools: ## Upgrades all go tools to latest available versions
 upgrade-go-tools: install-tool.golang; $(info $(M) upgrading all go tools to latest available versions)
 	grep -v '# FREEZE' .go-tools | \
-		grep -Eo '^[^#]\S+' | \
-		sed 's/@.\+$$/@latest/' | \
-			xargs -I {} bash -ec '\
-				export LATEST_VERSION=$$(go list -m {}) && \
-				sed -i "s|$${LATEST_VERSION%% *}@.\+$$|$${LATEST_VERSION/ /@}|" .go-tools'
+		grep -Eo '^[^#][^@]+' | \
+			xargs -I {} bash -ec ' \
+				original_module_path={}; \
+				module_path={}; \
+				while [ "$${module_path}" != "." ]; do \
+					LATEST_VERSION=$$(go list -m $${module_path}@latest 2>/dev/null || echo ""); \
+					if [ -n "$${LATEST_VERSION}" ]; then \
+						sed -i "s|$${original_module_path}@.\+$$|$${original_module_path}@$${LATEST_VERSION#* }|" .go-tools; \
+						exit; \
+					else \
+						module_path=$$(dirname $${module_path}); \
+					fi; \
+				done; \
+				echo "Failed to find latest module version for $${original_module_path}"; \
+				exit 1'
