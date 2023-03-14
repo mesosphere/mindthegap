@@ -138,7 +138,7 @@ mindthegap push bundle --bundle <path/to/bundle.tar> \
   [--to-registry-insecure-skip-tls-verify]
 ```
 
-All images in an image bundle tar file, or Helm charts in a chartsy bundle, will be pushed to the target OCI registry.
+All images in an image bundle tar file, or Helm charts in a chart bundle, will be pushed to the target OCI registry.
 
 ### Serving a bundle (supports both image or Helm chart)
 
