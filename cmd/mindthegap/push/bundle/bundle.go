@@ -39,7 +39,7 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   bundleCmdName,
-		Short: "Push from a bundle into an existing OCI registry",
+		Short: "Push from bundles into an existing OCI registry",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cleaner := cleanup.NewCleaner()
 			defer cleaner.Cleanup()
