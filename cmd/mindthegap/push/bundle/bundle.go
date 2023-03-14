@@ -1,7 +1,7 @@
 // Copyright 2021 D2iQ, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-package imagebundle
+package bundle
 
 import (
 	"fmt"
@@ -26,9 +26,9 @@ import (
 	"github.com/mesosphere/mindthegap/images/httputils"
 )
 
-func NewCommand(out output.Output) *cobra.Command {
+func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 	var (
-		imageBundleFiles              []string
+		bundleFiles                   []string
 		destRegistryURI               flags.RegistryURI
 		destRegistryCACertificateFile string
 		destRegistrySkipTLSVerify     bool
@@ -38,14 +38,14 @@ func NewCommand(out output.Output) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "image-bundle",
-		Short: "Push images from an image bundle into an existing OCI registry",
+		Use:   bundleCmdName,
+		Short: "Push from bundles into an existing OCI registry",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cleaner := cleanup.NewCleaner()
 			defer cleaner.Cleanup()
 
 			out.StartOperation("Creating temporary directory")
-			tempDir, err := os.MkdirTemp("", ".image-bundle-*")
+			tempDir, err := os.MkdirTemp("", ".bundle-*")
 			if err != nil {
 				out.EndOperation(false)
 				return fmt.Errorf("failed to create temporary directory: %w", err)
@@ -53,11 +53,11 @@ func NewCommand(out output.Output) *cobra.Command {
 			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempDir) })
 			out.EndOperation(true)
 
-			imageBundleFiles, err = utils.FilesWithGlobs(imageBundleFiles)
+			bundleFiles, err = utils.FilesWithGlobs(bundleFiles)
 			if err != nil {
 				return err
 			}
-			cfg, _, err := utils.ExtractBundles(tempDir, out, imageBundleFiles...)
+			imagesCfg, chartsCfg, err := utils.ExtractBundles(tempDir, out, bundleFiles...)
 			if err != nil {
 				return err
 			}
@@ -125,20 +125,41 @@ func NewCommand(out output.Output) *cobra.Command {
 				)
 			}
 
-			return pushImages(
-				cfg,
-				reg.Address(),
-				destRegistryURI.Address(),
-				remoteOpts,
-				out,
-				prePushFuncs...,
-			)
+			if imagesCfg != nil {
+				err := pushImages(
+					*imagesCfg,
+					reg.Address(),
+					destRegistryURI.Address(),
+					remoteOpts,
+					out,
+					prePushFuncs...,
+				)
+				if err != nil {
+					return err
+				}
+			}
+
+			if chartsCfg != nil {
+				err := pushOCIArtifacts(
+					*chartsCfg,
+					fmt.Sprintf("%s/charts", reg.Address()),
+					destRegistryURI.Address(),
+					remoteOpts,
+					out,
+					prePushFuncs...,
+				)
+				if err != nil {
+					return err
+				}
+			}
+
+			return nil
 		},
 	}
 
-	cmd.Flags().StringSliceVar(&imageBundleFiles, "image-bundle", nil,
+	cmd.Flags().StringSliceVar(&bundleFiles, bundleCmdName, nil,
 		"Tarball containing list of images to push. Can also be a glob pattern.")
-	_ = cmd.MarkFlagRequired("image-bundle")
+	_ = cmd.MarkFlagRequired(bundleCmdName)
 	cmd.Flags().Var(&destRegistryURI, "to-registry", "Registry to push images to. "+
 		"TLS verification will be skipped when using an http:// registry.")
 	_ = cmd.MarkFlagRequired("to-registry")
@@ -217,6 +238,71 @@ func pushImages(
 				}
 
 				if err := remote.WriteIndex(dstRef, idx, remoteOpts...); err != nil {
+					out.EndOperation(false)
+					return err
+				}
+
+				out.EndOperation(true)
+			}
+		}
+	}
+
+	return nil
+}
+
+func pushOCIArtifacts(
+	cfg config.HelmChartsConfig,
+	sourceRegistry, destRegistry string,
+	remoteOpts []remote.Option,
+	out output.Output,
+	prePushFuncs ...prePushFunc,
+) error {
+	// Sort repositories for deterministic ordering.
+	repoNames := cfg.SortedRepositoryNames()
+
+	for _, repoName := range repoNames {
+		repoConfig := cfg.Repositories[repoName]
+
+		// Sort charts for deterministic ordering.
+		chartNames := repoConfig.SortedChartNames()
+
+		for _, chartName := range chartNames {
+			chartVersions := repoConfig.Charts[chartName]
+
+			for _, prePush := range prePushFuncs {
+				if err := prePush("", destRegistry); err != nil {
+					return fmt.Errorf("pre-push func failed: %w", err)
+				}
+			}
+
+			for _, chartVersion := range chartVersions {
+				out.StartOperation(
+					fmt.Sprintf("Copying %s:%s (from bundle) to %s/%s:%s",
+						chartName, chartVersion,
+						destRegistry, chartName, chartVersion,
+					),
+				)
+
+				srcChart := fmt.Sprintf("%s/%s:%s", sourceRegistry, chartName, chartVersion)
+				srcChartRef, err := name.ParseReference(srcChart, name.StrictValidation)
+				if err != nil {
+					out.EndOperation(false)
+					return err
+				}
+				src, err := remote.Image(srcChartRef)
+				if err != nil {
+					out.EndOperation(false)
+					return err
+				}
+
+				destChart := fmt.Sprintf("%s/%s:%s", destRegistry, chartName, chartVersion)
+				destChartRef, err := name.ParseReference(destChart, name.StrictValidation)
+				if err != nil {
+					out.EndOperation(false)
+					return err
+				}
+
+				if err := remote.Write(destChartRef, src, remoteOpts...); err != nil {
 					out.EndOperation(false)
 					return err
 				}

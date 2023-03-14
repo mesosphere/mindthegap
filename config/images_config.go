@@ -67,14 +67,18 @@ func (rsc RegistrySyncConfig) Clone() RegistrySyncConfig {
 // ImagesConfig contains all registries information read from the source YAML file.
 type ImagesConfig map[string]RegistrySyncConfig
 
-func (ic ImagesConfig) Merge(cfg ImagesConfig) ImagesConfig {
+func (ic *ImagesConfig) Merge(cfg ImagesConfig) *ImagesConfig {
 	if ic == nil && cfg == nil {
 		return nil
 	}
 
-	merged := make(ImagesConfig, len(ic)+len(cfg))
+	if ic == nil {
+		return &cfg
+	}
 
-	for k, v := range ic {
+	merged := make(ImagesConfig, len(*ic)+len(cfg))
+
+	for k, v := range *ic {
 		merged[k] = v.Clone()
 	}
 
@@ -110,7 +114,7 @@ func (ic ImagesConfig) Merge(cfg ImagesConfig) ImagesConfig {
 		}
 	}
 
-	return merged
+	return &merged
 }
 
 func sliceContains(sl []string, s string) bool {

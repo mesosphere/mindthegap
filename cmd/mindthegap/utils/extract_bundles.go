@@ -19,16 +19,16 @@ func ExtractBundles(
 	dest string,
 	out output.Output,
 	imageBundleFiles ...string,
-) (config.ImagesConfig, config.HelmChartsConfig, error) {
+) (*config.ImagesConfig, *config.HelmChartsConfig, error) {
 	sort.Strings(imageBundleFiles)
 
 	var (
 		// This will hold the merged config from all the image bundles which will be used to import
 		// all the images from all the bundles.
-		imagesCfg config.ImagesConfig
+		imagesCfg *config.ImagesConfig
 		// This will hold the merged config from all the Helm chart bundles which will be used to import
 		// all the Helm charts from all the bundles.
-		helmChartsCfg config.HelmChartsConfig
+		helmChartsCfg *config.HelmChartsConfig
 	)
 
 	// Just in case users specify the same bundle twice, keep a track of
@@ -45,7 +45,7 @@ func ExtractBundles(
 		err := archive.UnarchiveToDirectory(imageBundleFile, dest)
 		if err != nil {
 			out.EndOperation(false)
-			return config.ImagesConfig{}, config.HelmChartsConfig{}, fmt.Errorf(
+			return nil, nil, fmt.Errorf(
 				"failed to unarchive image bundle: %w",
 				err,
 			)
@@ -58,7 +58,7 @@ func ExtractBundles(
 			imageBundleCfg, err := config.ParseImagesConfigFile(imagesCfgFile)
 			if err != nil {
 				out.EndOperation(false)
-				return config.ImagesConfig{}, config.HelmChartsConfig{}, err
+				return nil, nil, err
 			}
 			out.V(4).Infof("Images config: %+v", imageBundleCfg)
 			out.EndOperation(true)
@@ -72,7 +72,7 @@ func ExtractBundles(
 			helmChartsBundleCfg, err := config.ParseHelmChartsConfigFile(helmChartsCfgFile)
 			if err != nil {
 				out.EndOperation(false)
-				return config.ImagesConfig{}, config.HelmChartsConfig{}, err
+				return nil, nil, err
 			}
 			out.V(4).Infof("Helm charts config: %+v", helmChartsBundleCfg)
 			out.EndOperation(true)

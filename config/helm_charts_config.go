@@ -71,7 +71,11 @@ func (c HelmChartsConfig) SortedRepositoryNames() []string {
 	return repoNames
 }
 
-func (c HelmChartsConfig) Merge(cfg HelmChartsConfig) HelmChartsConfig {
+func (c *HelmChartsConfig) Merge(cfg HelmChartsConfig) *HelmChartsConfig {
+	if c == nil {
+		return &cfg
+	}
+
 	var mergedRepos map[string]HelmRepositorySyncConfig
 
 	if c.Repositories != nil || cfg.Repositories != nil {
@@ -123,7 +127,7 @@ func (c HelmChartsConfig) Merge(cfg HelmChartsConfig) HelmChartsConfig {
 		mergedChartURLs = sets.NewString(append(c.ChartURLs, cfg.ChartURLs...)...).List()
 	}
 
-	return HelmChartsConfig{
+	return &HelmChartsConfig{
 		Repositories: mergedRepos,
 		ChartURLs:    mergedChartURLs,
 	}
