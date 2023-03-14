@@ -20,7 +20,8 @@ import (
 	"github.com/phayes/freeport"
 	"github.com/spf13/cobra"
 
-	pushimagebundle "github.com/mesosphere/mindthegap/cmd/mindthegap/push/imagebundle"
+	"github.com/mesosphere/dkp-cli-runtime/core/output"
+	pushbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/push/bundle"
 	"github.com/mesosphere/mindthegap/docker/registry"
 	"github.com/mesosphere/mindthegap/images/httputils"
 	"github.com/mesosphere/mindthegap/test/e2e/imagebundle/helpers"
@@ -38,7 +39,10 @@ var _ = Describe("Push Bundle", func() {
 
 		bundleFile = filepath.Join(tmpDir, "image-bundle.tar")
 
-		cmd = helpers.NewCommand(GinkgoT(), pushimagebundle.NewCommand)
+		cmd = helpers.NewCommand(
+			GinkgoT(),
+			func(out output.Output) *cobra.Command { return pushbundle.NewCommand(out, "image-bundle") },
+		)
 	})
 
 	It("Without TLS", func() {

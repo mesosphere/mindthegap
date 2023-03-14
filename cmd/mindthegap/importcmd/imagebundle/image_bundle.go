@@ -79,7 +79,7 @@ func NewCommand(out output.Output) *cobra.Command {
 			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(ociExportsTempDir) })
 
 			// Import the images from the merged bundle config.
-			for registryName, registryConfig := range cfg {
+			for registryName, registryConfig := range *cfg {
 				for imageName, imageTags := range registryConfig.Images {
 					for _, imageTag := range imageTags {
 						srcImageName := fmt.Sprintf("%s/%s:%s", reg.Address(), imageName, imageTag)

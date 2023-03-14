@@ -17,7 +17,7 @@ import (
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
-	servehelmbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/serve/helmbundle"
+	servebundle "github.com/mesosphere/mindthegap/cmd/mindthegap/serve/bundle"
 	"github.com/mesosphere/mindthegap/helm"
 	"github.com/mesosphere/mindthegap/test/e2e/helmbundle/helpers"
 )
@@ -36,7 +36,7 @@ var _ = Describe("Serve Bundle", func() {
 
 		cmd = helpers.NewCommand(GinkgoT(), func(out output.Output) *cobra.Command {
 			var c *cobra.Command
-			c, stopCh = servehelmbundle.NewCommand(out)
+			c, stopCh = servebundle.NewCommand(out, "helm-bundle")
 			return c
 		})
 	})

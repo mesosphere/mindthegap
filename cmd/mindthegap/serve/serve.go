@@ -8,8 +8,8 @@ import (
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
-	"github.com/mesosphere/mindthegap/cmd/mindthegap/serve/helmbundle"
-	"github.com/mesosphere/mindthegap/cmd/mindthegap/serve/imagebundle"
+	"github.com/mesosphere/mindthegap/cmd/mindthegap/serve/bundle"
+	"github.com/mesosphere/mindthegap/cmd/mindthegap/utils"
 )
 
 func NewCommand(out output.Output) *cobra.Command {
@@ -18,11 +18,18 @@ func NewCommand(out output.Output) *cobra.Command {
 		Short: "Serve image or Helm chart bundles from an OCI registry",
 	}
 
-	imageBundleCmd, _ := imagebundle.NewCommand(out)
+	imageBundleCmd, _ := bundle.NewCommand(out, "image-bundle")
+	imageBundleCmd.Deprecated = "Please use `serve bundle` command instead"
 	cmd.AddCommand(imageBundleCmd)
 
-	helmBundleCmd, _ := helmbundle.NewCommand(out)
+	helmBundleCmd, _ := bundle.NewCommand(out, "helm-bundle")
+	helmBundleCmd.Deprecated = "Please use `serve bundle` command instead"
+	// TODO Unhide this from DKP CLI once DKP supports OCI registry for Helm charts.
+	utils.AddCmdAnnotation(helmBundleCmd, "exclude-from-dkp-cli", "true")
 	cmd.AddCommand(helmBundleCmd)
+
+	bundleCmd, _ := bundle.NewCommand(out, "bundle")
+	cmd.AddCommand(bundleCmd)
 
 	return cmd
 }

@@ -47,10 +47,12 @@ windows/arm64
 All images in the images config file must support all the requested platforms.
 
 The output file will be a tarball that can be seeded into a registry,
-or that can be untarred and used as the storage directory for a Docker registry
+or that can be untarred and used as the storage directory for an OCI registry
 served via `registry:2`.
 
 #### Pushing an image bundle
+
+***This command is deprecated - see [Pushing a bundle](#pushing-a-bundle-supports-both-image-or-helm-chart)***
 
 ```shell
 mindthegap push image-bundle --image-bundle <path/to/images.tar> \
@@ -58,9 +60,11 @@ mindthegap push image-bundle --image-bundle <path/to/images.tar> \
   [--to-registry-insecure-skip-tls-verify]
 ```
 
-All images in the image bundle tar file will be pushed to the target docker registry.
+All images in the image bundle tar file will be pushed to the target OCI registry.
 
 #### Serving an image bundle
+
+***This command is deprecated - see [Serving a bundle](#serving-a-bundle-supports-both-image-or-helm-chart)***
 
 ```shell
 mindthegap serve image-bundle --image-bundle <path/to/images.tar> \
@@ -68,7 +72,7 @@ mindthegap serve image-bundle --image-bundle <path/to/images.tar> \
   [--listen-port <listen.port>]
 ```
 
-Start a Docker registry serving the contents of the image bundle. Note that the Docker registry will
+Start an OCI registry serving the contents of the image bundle. Note that the OCI registry will
 be in read-only mode to reflect the source of the data being a static tarball so pushes to this
 registry will fail.
 
@@ -96,10 +100,24 @@ See the [example helm-charts.yaml](helm-example.yaml) for the structure of the
 Helm charts config file.
 
 The output file will be a tarball that can be seeded into a registry,
-or that can be untarred and used as the storage directory for a Docker registry
+or that can be untarred and used as the storage directory for an OCI registry
 served via `registry:2`.
 
+#### Pushing a Helm chart bundle
+
+***This command is deprecated - see [Pushing a bundle](#pushing-a-bundle-supports-both-image-or-helm-chart)***
+
+```shell
+mindthegap push helm-bundle --image-bundle <path/to/helm-charts.tar> \
+  --to-registry <registry.address> \
+  [--to-registry-insecure-skip-tls-verify]
+```
+
+All Helm charts in the bundle tar file will be pushed to the target OCI registry.
+
 #### Serving a Helm chart bundle
+
+***This command is deprecated - see [Serving a bundle](#serving-a-bundle-supports-both-image-or-helm-chart)***
 
 ```shell
 mindthegap serve helm-bundle --helm-bundle <path/to/helm-charts.tar> \
@@ -108,19 +126,41 @@ mindthegap serve helm-bundle --helm-bundle <path/to/helm-charts.tar> \
   [--tls-cert-file <path/to/cert/file> --tls-private-key-file <path/to/key/file>]
 ```
 
-Start a Docker registry serving the contents of the image bundle. Note that the Docker registry will
+Start an OCI registry serving the contents of the image bundle. Note that the OCI registry will
+be in read-only mode to reflect the source of the data being a static tarball so pushes to this
+registry will fail.
+
+### Pushing a bundle (supports both image or Helm chart)
+
+```shell
+mindthegap push bundle --bundle <path/to/bundle.tar> \
+  --to-registry <registry.address> \
+  [--to-registry-insecure-skip-tls-verify]
+```
+
+All images in an image bundle tar file, or Helm charts in a chartsy bundle, will be pushed to the target OCI registry.
+
+### Serving a bundle (supports both image or Helm chart)
+
+```shell
+mindthegap serve bundle --bundle <path/to/bundle.tar> \
+  [--listen-address <listen.address>] \
+  [--listen-port <listen.port>]
+```
+
+Start an OCI registry serving the contents of the image bundle or Helm charts bundle. Note that the OCI registry will
 be in read-only mode to reflect the source of the data being a static tarball so pushes to this
 registry will fail.
 
 ## How does it work?
 
-`mindthegap` starts up a [Docker registry](https://docs.docker.com/registry/)
+`mindthegap` starts up an [OCI registry](https://docs.docker.com/registry/)
 and then uses [`crane`](https://github.com/google/go-containerregistry/blob/main/cmd/crane/doc/crane.md)
 as a library to copy the specified images for all specified platforms into the running registry. The
 resulting registry storage is then tarred up, resulting in a tarball of the specified images.
 
-The resulting tarball can be loaded into a running Docker registry, or
-be used as the initial storage for running your own registry from via Docker
+The resulting tarball can be loaded into a running OCI registry, or
+be used as the initial storage for running your own registry via Docker
 or in a Kubernetes cluster.
 
 ## Building

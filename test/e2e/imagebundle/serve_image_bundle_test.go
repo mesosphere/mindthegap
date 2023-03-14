@@ -21,7 +21,7 @@ import (
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
-	serveimagebundle "github.com/mesosphere/mindthegap/cmd/mindthegap/serve/imagebundle"
+	servebundle "github.com/mesosphere/mindthegap/cmd/mindthegap/serve/bundle"
 	"github.com/mesosphere/mindthegap/images/httputils"
 	"github.com/mesosphere/mindthegap/test/e2e/imagebundle/helpers"
 )
@@ -40,7 +40,7 @@ var _ = Describe("Serve Bundle", func() {
 
 		cmd = helpers.NewCommand(GinkgoT(), func(out output.Output) *cobra.Command {
 			var c *cobra.Command
-			c, stopCh = serveimagebundle.NewCommand(out)
+			c, stopCh = servebundle.NewCommand(out, "image-bundle")
 			return c
 		})
 	})

@@ -1,7 +1,7 @@
 // Copyright 2021 D2iQ, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-package imagebundle
+package bundle
 
 import (
 	"fmt"
@@ -19,25 +19,28 @@ import (
 	"github.com/mesosphere/mindthegap/docker/registry"
 )
 
-func NewCommand(out output.Output) (cmd *cobra.Command, stopCh chan struct{}) {
+func NewCommand(
+	out output.Output,
+	bundleCmdName string,
+) (cmd *cobra.Command, stopCh chan struct{}) {
 	var (
-		imageBundleFiles []string
-		listenAddress    string
-		listenPort       uint16
-		tlsCertificate   string
-		tlsKey           string
+		bundleFiles    []string
+		listenAddress  string
+		listenPort     uint16
+		tlsCertificate string
+		tlsKey         string
 	)
 
 	stopCh = make(chan struct{})
 
 	cmd = &cobra.Command{
-		Use:   "image-bundle",
-		Short: "Serve an OCI registry from image bundles",
+		Use:   bundleCmdName,
+		Short: "Serve an OCI registry from previously created bundles",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cleaner := cleanup.NewCleaner()
 			defer cleaner.Cleanup()
 			out.StartOperation("Creating temporary directory")
-			tempDir, err := os.MkdirTemp("", ".image-bundle-*")
+			tempDir, err := os.MkdirTemp("", ".bundle-*")
 			if err != nil {
 				out.EndOperation(false)
 				return fmt.Errorf("failed to create temporary directory: %w", err)
@@ -46,18 +49,26 @@ func NewCommand(out output.Output) (cmd *cobra.Command, stopCh chan struct{}) {
 
 			out.EndOperation(true)
 
-			imageBundleFiles, err = utils.FilesWithGlobs(imageBundleFiles)
+			bundleFiles, err = utils.FilesWithGlobs(bundleFiles)
 			if err != nil {
 				return err
 			}
-			cfg, _, err := utils.ExtractBundles(tempDir, out, imageBundleFiles...)
+			imagesCfg, chartsCfg, err := utils.ExtractBundles(tempDir, out, bundleFiles...)
 			if err != nil {
 				return err
 			}
 
 			// Write out the merged image bundle config to the target directory for completeness.
-			if err := config.WriteSanitizedImagesConfig(cfg, filepath.Join(tempDir, "images.yaml")); err != nil {
-				return err
+			if imagesCfg != nil {
+				if err := config.WriteSanitizedImagesConfig(*imagesCfg, filepath.Join(tempDir, "images.yaml")); err != nil {
+					return err
+				}
+			}
+			// Write out the merged chart bundle config to the target directory for completeness.
+			if chartsCfg != nil {
+				if err := config.WriteSanitizedHelmChartsConfig(*chartsCfg, filepath.Join(tempDir, "charts.yaml")); err != nil {
+					return err
+				}
 			}
 
 			out.StartOperation("Creating Docker registry")
@@ -90,9 +101,9 @@ func NewCommand(out output.Output) (cmd *cobra.Command, stopCh chan struct{}) {
 		},
 	}
 
-	cmd.Flags().StringSliceVar(&imageBundleFiles, "image-bundle", nil,
-		"Tarball of images to serve. Can also be a glob pattern.")
-	_ = cmd.MarkFlagRequired("image-bundle")
+	cmd.Flags().StringSliceVar(&bundleFiles, bundleCmdName, nil,
+		"Bundle to serve. Can also be a glob pattern.")
+	_ = cmd.MarkFlagRequired(bundleCmdName)
 	cmd.Flags().StringVar(&listenAddress, "listen-address", "localhost", "Address to listen on")
 	cmd.Flags().
 		Uint16Var(&listenPort, "listen-port", 0, "Port to listen on (0 means use any free port)")
