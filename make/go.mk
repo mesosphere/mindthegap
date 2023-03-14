@@ -79,7 +79,7 @@ E2E_FLAKE_ATTEMPTS ?= 1
 e2e-test: ## Runs e2e tests
 e2e-test: install-tool.golang install-tool.ginkgo install-tool.gojq
 	$(info $(M) running e2e tests$(if $(E2E_LABEL), labelled "$(E2E_LABEL)")$(if $(E2E_FOCUS), matching "$(E2E_FOCUS)"))
-	$(MAKE) GORELEASER_FLAGS=$$'--config=<(env GOOS=$(shell go env GOOS) GOARCH=$(shell go env GOARCH) gojq --yaml-input --yaml-output \'del(.builds[0].goarch) | del(.builds[0].goos) | .builds[0].targets|=(["linux_amd64","linux_arm64",env.GOOS+"_"+env.GOARCH] | unique | map(. | sub("_amd64";"_amd64_v1")))\' .goreleaser.yml) --rm-dist --skip-validate --skip-publish' release
+	$(MAKE) GORELEASER_FLAGS=$$'--config=<(env GOOS=$(shell go env GOOS) GOARCH=$(shell go env GOARCH) gojq --yaml-input --yaml-output \'del(.builds[0].goarch) | del(.builds[0].goos) | .builds[0].targets|=(["linux_amd64","linux_arm64",env.GOOS+"_"+env.GOARCH] | unique | map(. | sub("_amd64";"_amd64_v1")))\' .goreleaser.yml) --clean --skip-validate --skip-publish' release
 	ginkgo run \
 		--r \
 		--race \
@@ -89,7 +89,7 @@ e2e-test: install-tool.golang install-tool.ginkgo install-tool.gojq
 		--randomize-suites \
 		--fail-on-pending \
 		--keep-going \
-		$(if $(filter $(CI),true),--always-emit-ginkgo-writer) \
+		$(if $(filter $(CI),true),--vv) \
 		--covermode=atomic \
 		--coverprofile coverage-e2e.out \
 		--procs=$(E2E_PARALLEL_NODES) \
@@ -158,8 +158,9 @@ go-clean.%: install-tool.golang; $(info $(M) running go clean for $* module)
 go-generate: ## Runs go generate
 go-generate: install-tool.golang ; $(info $(M) running go generate)
 	go generate -x ./...
+	go fix ./...
 
 .PHONY: go-mod-upgrade
 go-mod-upgrade: ## Interactive check for direct module dependency upgrades
-go-mod-upgrade: install-tool.golang ; $(info $(M) checking for direct module dependency upgrades)
+go-mod-upgrade: install-tool.golang install-tool.go.go-mod-upgrade ; $(info $(M) checking for direct module dependency upgrades)
 	go-mod-upgrade

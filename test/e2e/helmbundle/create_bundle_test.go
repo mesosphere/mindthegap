@@ -50,7 +50,7 @@ var _ = Describe("Create Bundle", func() {
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(
 			MatchRegexp(
-				"dial tcp: lookup unknownchartrepository(?: on .+)?: (?:no such host|Temporary failure in name resolution)",
+				"dial tcp: lookup unknownchartrepository(?: on .+)?: (?:no such host|Temporary failure in name resolution|server misbehaving)",
 			),
 		)
 	})

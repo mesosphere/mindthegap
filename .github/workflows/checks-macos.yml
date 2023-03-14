@@ -30,9 +30,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install tools via asdf
-        uses: asdf-vm/actions/setup@master
+        uses: asdf-vm/actions/setup@v2.0.0
         with:
-          asdf_branch: v0.11.0
+          asdf_branch: v0.11.2
 
       - name: Build
         run: make SKIP_UPX=false build-snapshot
