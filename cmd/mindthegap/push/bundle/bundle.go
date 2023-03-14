@@ -296,7 +296,6 @@ func pushOCIArtifacts(
 				}
 
 				destChart := fmt.Sprintf("%s/%s:%s", destRegistry, chartName, chartVersion)
-				fmt.Println(destChart)
 				destChartRef, err := name.ParseReference(destChart, name.StrictValidation)
 				if err != nil {
 					out.EndOperation(false)

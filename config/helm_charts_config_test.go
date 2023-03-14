@@ -143,23 +143,24 @@ func TestMergeHelmConfig(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name string
-		a, b HelmChartsConfig
-		want HelmChartsConfig
+		src  *HelmChartsConfig
+		with HelmChartsConfig
+		want *HelmChartsConfig
 	}{
 		{
 			name: "empty",
-			want: HelmChartsConfig{},
+			want: &HelmChartsConfig{},
 		},
 		{
 			name: "empty to merge",
-			a: HelmChartsConfig{
+			src: &HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"a": {
 						Charts: map[string][]string{"1": {"v1"}},
 					},
 				},
 			},
-			want: HelmChartsConfig{
+			want: &HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"a": {
 						Charts: map[string][]string{"1": {"v1"}},
@@ -169,14 +170,14 @@ func TestMergeHelmConfig(t *testing.T) {
 		},
 		{
 			name: "empty from merge",
-			b: HelmChartsConfig{
+			with: HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"a": {
 						Charts: map[string][]string{"1": {"v1"}},
 					},
 				},
 			},
-			want: HelmChartsConfig{
+			want: &HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"a": {
 						Charts: map[string][]string{"1": {"v1"}},
@@ -186,21 +187,21 @@ func TestMergeHelmConfig(t *testing.T) {
 		},
 		{
 			name: "distinct repositories",
-			a: HelmChartsConfig{
+			src: &HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"a": {
 						Charts: map[string][]string{"1": {"v1"}},
 					},
 				},
 			},
-			b: HelmChartsConfig{
+			with: HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"b": {
 						Charts: map[string][]string{"2": {"v2"}},
 					},
 				},
 			},
-			want: HelmChartsConfig{
+			want: &HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"a": {
 						Charts: map[string][]string{"1": {"v1"}},
@@ -213,21 +214,21 @@ func TestMergeHelmConfig(t *testing.T) {
 		},
 		{
 			name: "duplicate repositories with same configuration",
-			a: HelmChartsConfig{
+			src: &HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"a": {
 						Charts: map[string][]string{"1": {"v1"}},
 					},
 				},
 			},
-			b: HelmChartsConfig{
+			with: HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"a": {
 						Charts: map[string][]string{"1": {"v1"}},
 					},
 				},
 			},
-			want: HelmChartsConfig{
+			want: &HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"a": {
 						Charts: map[string][]string{"1": {"v1"}},
@@ -237,21 +238,21 @@ func TestMergeHelmConfig(t *testing.T) {
 		},
 		{
 			name: "duplicate repositories with extra versions",
-			a: HelmChartsConfig{
+			src: &HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"a": {
 						Charts: map[string][]string{"1": {"v1"}},
 					},
 				},
 			},
-			b: HelmChartsConfig{
+			with: HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"a": {
 						Charts: map[string][]string{"1": {"v1", "v2"}},
 					},
 				},
 			},
-			want: HelmChartsConfig{
+			want: &HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"a": {
 						Charts: map[string][]string{"1": {"v1", "v2"}},
@@ -261,14 +262,14 @@ func TestMergeHelmConfig(t *testing.T) {
 		},
 		{
 			name: "duplicate registries with extra image",
-			a: HelmChartsConfig{
+			src: &HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"a": {
 						Charts: map[string][]string{"1": {"v1", "v3"}},
 					},
 				},
 			},
-			b: HelmChartsConfig{
+			with: HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"a": {
 						Charts: map[string][]string{
@@ -278,7 +279,7 @@ func TestMergeHelmConfig(t *testing.T) {
 					},
 				},
 			},
-			want: HelmChartsConfig{
+			want: &HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"a": {
 						Charts: map[string][]string{
@@ -291,7 +292,7 @@ func TestMergeHelmConfig(t *testing.T) {
 		},
 		{
 			name: "duplicate repositories with extra chart",
-			a: HelmChartsConfig{
+			src: &HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"a": {
 						Charts: map[string][]string{
@@ -301,7 +302,7 @@ func TestMergeHelmConfig(t *testing.T) {
 					},
 				},
 			},
-			b: HelmChartsConfig{
+			with: HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"a": {
 						Charts: map[string][]string{
@@ -310,7 +311,7 @@ func TestMergeHelmConfig(t *testing.T) {
 					},
 				},
 			},
-			want: HelmChartsConfig{
+			want: &HelmChartsConfig{
 				Repositories: map[string]HelmRepositorySyncConfig{
 					"a": {
 						Charts: map[string][]string{
@@ -327,7 +328,7 @@ func TestMergeHelmConfig(t *testing.T) {
 		tt := tests[ti]
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got := tt.a.Merge(tt.b)
+			got := tt.src.Merge(tt.with)
 			assert.Equal(t, tt.want, got)
 		})
 	}
