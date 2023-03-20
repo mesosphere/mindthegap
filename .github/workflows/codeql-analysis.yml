@@ -31,7 +31,7 @@ jobs:
         languages: ${{ matrix.language }}
 
     - name: Install tools via asdf
-      uses: asdf-vm/actions/install@v2.0.0
+      uses: asdf-vm/actions/install@v2.1.0
       with:
         asdf_branch: v0.11.2
 
