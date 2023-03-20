@@ -15,7 +15,7 @@ require (
 	github.com/docker/docker-credential-helpers v0.7.0
 	github.com/docker/go-connections v0.4.0
 	github.com/google/go-containerregistry v0.13.0
-	github.com/hashicorp/go-getter v1.7.0
+	github.com/hashicorp/go-getter v1.7.1
 	github.com/mesosphere/dkp-cli-runtime/core v0.7.1
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/onsi/ginkgo/v2 v2.9.1
