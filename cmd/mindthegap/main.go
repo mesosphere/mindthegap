@@ -4,14 +4,9 @@
 package main
 
 import (
-	"math/rand"
-	"time"
-
 	"github.com/mesosphere/mindthegap/cmd/mindthegap/root"
 )
 
 func main() {
-	rand.Seed(time.Now().UnixNano())
-
 	root.Execute()
 }

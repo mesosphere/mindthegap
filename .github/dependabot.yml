@@ -12,6 +12,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: github.com/docker/cli
+        update-types: semver-major
+      - dependency-name: github.com/docker/docker
+        update-types: semver-major
 
   - package-ecosystem: "github-actions"
     directory: "/"
