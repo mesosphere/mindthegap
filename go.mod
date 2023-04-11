@@ -12,7 +12,7 @@ replace (
 
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.18.19
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.18.8
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.18.9
 	github.com/containers/image/v5 v5.24.2
 	github.com/distribution/distribution/v3 v3.0.0-20230223072852-e5d5810851d1
 	github.com/docker/cli v23.0.2+incompatible
