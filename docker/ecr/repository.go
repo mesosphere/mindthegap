@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
@@ -17,10 +18,10 @@ import (
 )
 
 func EnsureRepositoryExistsFunc(registryAddress, ecrLifecyclePolicy string) func(
-	_, repositoryName string, _ ...string,
+	destRegistry, repositoryName string, _ ...string,
 ) error {
 	return func(
-		_, repositoryName string, _ ...string,
+		destRegistry, repositoryName string, _ ...string,
 	) error {
 		_, _, region, err := ParseECRRegistry(registryAddress)
 		if err != nil {
@@ -29,6 +30,11 @@ func EnsureRepositoryExistsFunc(registryAddress, ecrLifecyclePolicy string) func
 		cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
 		if err != nil {
 			log.Fatalf("unable to load SDK config, %v", err)
+		}
+
+		// if destRegistry has a path append it when creating the repository
+		if _, path, found := strings.Cut(destRegistry, "/"); found && len(path) > 0 {
+			repositoryName = fmt.Sprintf("%s/%s", path, repositoryName)
 		}
 
 		// Using the Config value, create the S3 client
