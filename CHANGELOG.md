@@ -274,6 +274,20 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.7.1 (2023-04-19)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix: support creating namespaced ECR repositories by @dkoshkin in https://github.com/mesosphere/mindthegap/pull/386
+### Other Changes
+* build: Upgrade all tools by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/380
+* build(deps): pin github.com/docker/* to v20.10.24+incompatible by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/379
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.7.0...v1.7.1
+
 ## [0.18.0](https://github.com/mesosphere/mindthegap/compare/v0.17.2...v0.18.0) (2022-08-10)
 
 
