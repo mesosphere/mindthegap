@@ -274,6 +274,17 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.7.2 (2023-04-20)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix: using wrong argument when building ECR repository by @dkoshkin in https://github.com/mesosphere/mindthegap/pull/387
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.7.1...v1.7.2
+
 ## 1.7.1 (2023-04-19)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
