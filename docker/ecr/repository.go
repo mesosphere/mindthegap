@@ -35,7 +35,7 @@ func EnsureRepositoryExistsFunc(registryAddress, ecrLifecyclePolicy string) func
 
 		// if destRegistry has a urlPath prepend it when creating the repository
 		if _, urlPath, found := strings.Cut(destRegistry, "/"); found && len(urlPath) > 0 {
-			repositoryName = path.Join(urlPath, destRegistry)
+			repositoryName = path.Join(urlPath, repositoryName)
 		}
 
 		// Using the Config value, create the S3 client
