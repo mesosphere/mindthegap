@@ -23,7 +23,7 @@ type configurableTLSTransport struct {
 }
 
 func (rt *configurableTLSTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	tr := rt.delegateTransport.Clone()
+	tr := rt.delegateTransport
 
 	if tr.TLSClientConfig.RootCAs == nil {
 		systemPool, err := tlsconfig.SystemCertPool()
