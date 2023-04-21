@@ -23,7 +23,14 @@ type configurableTLSTransport struct {
 }
 
 func (rt *configurableTLSTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	tr := rt.delegateTransport
+	tr := rt.delegateTransport.Clone()
+	// This function creates new http.Transport for every request.
+	// When creating an image bundle this results in ~8x of the number of images.
+	// Because this happens relatively fast, the OS may not clean up the TCP connections in time,
+	// leading to a "socket: too many open files" error.
+	// Because we need to use a new http.Transport based on the request's Host, the http.Transport cannot be reused,
+	// therefore we also need to force close the idle connections.
+	defer tr.CloseIdleConnections()
 
 	if tr.TLSClientConfig.RootCAs == nil {
 		systemPool, err := tlsconfig.SystemCertPool()
