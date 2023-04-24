@@ -78,6 +78,12 @@ func NewCommand(out output.Output) *cobra.Command {
 			}
 			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(ociExportsTempDir) })
 
+			sourceTLSRoundTripper, err := httputils.InsecureTLSRoundTripper(remote.DefaultTransport)
+			if err != nil {
+				out.Error(err, "error configuring TLS for source registry")
+				os.Exit(2)
+			}
+
 			// Import the images from the merged bundle config.
 			for registryName, registryConfig := range *cfg {
 				for imageName, imageTags := range registryConfig.Images {
@@ -95,13 +101,7 @@ func NewCommand(out output.Output) *cobra.Command {
 
 						v1Image, err := remote.Image(
 							ref,
-							remote.WithTransport(
-								httputils.NewConfigurableTLSRoundTripper(
-									httputils.TLSHostsConfig{
-										reg.Address(): httputils.TLSHostConfig{Insecure: true},
-									},
-								),
-							),
+							remote.WithTransport(sourceTLSRoundTripper),
 							remote.WithPlatform(
 								v1.Platform{OS: runtime.GOOS, Architecture: runtime.GOARCH},
 							),
