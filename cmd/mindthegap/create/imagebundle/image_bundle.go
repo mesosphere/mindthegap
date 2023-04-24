@@ -6,6 +6,7 @@ package imagebundle
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -108,24 +109,30 @@ func NewCommand(out output.Output) *cobra.Command {
 			logs.Debug.SetOutput(out.V(4).InfoWriter())
 			logs.Warn.SetOutput(out.InfoWriter())
 
+			destTLSRoundTripper, err := httputils.InsecureTLSRoundTripper(remote.DefaultTransport)
+			if err != nil {
+				out.Error(err, "error configuring TLS for destination registry")
+				os.Exit(2)
+			}
+			destRemoteOpts := []remote.Option{remote.WithTransport(destTLSRoundTripper)}
+
 			// Sort registries for deterministic ordering.
 			regNames := cfg.SortedRegistryNames()
 
 			for _, registryName := range regNames {
 				registryConfig := cfg[registryName]
 
-				var remoteOpts []remote.Option
-
-				var tlsHostsConfig httputils.TLSHostsConfig
-				if registryConfig.TLSVerify != nil && !*registryConfig.TLSVerify {
-					tlsHostsConfig = httputils.TLSHostsConfig{
-						registryName: httputils.TLSHostConfig{Insecure: true},
-					}
-				}
-				transport := httputils.NewConfigurableTLSRoundTripper(
-					tlsHostsConfig,
+				sourceTLSRoundTripper, err := httputils.TLSConfiguredRoundTripper(
+					remote.DefaultTransport,
+					registryName,
+					registryConfig.TLSVerify != nil && !*registryConfig.TLSVerify,
+					"",
 				)
-				remoteOpts = append(remoteOpts, remote.WithTransport(transport))
+				if err != nil {
+					out.Error(err, "error configuring TLS for source registry")
+					os.Exit(2)
+				}
+				sourceRemoteOpts := []remote.Option{remote.WithTransport(sourceTLSRoundTripper)}
 
 				keychain := authn.NewMultiKeychain(
 					authn.NewKeychainFromHelper(
@@ -134,7 +141,7 @@ func NewCommand(out output.Output) *cobra.Command {
 					authn.DefaultKeychain,
 				)
 
-				remoteOpts = append(remoteOpts, remote.WithAuthFromKeychain(keychain))
+				sourceRemoteOpts = append(sourceRemoteOpts, remote.WithAuthFromKeychain(keychain))
 
 				platformsStrings := make([]string, 0, len(platforms))
 				for _, p := range platforms {
@@ -157,7 +164,7 @@ func NewCommand(out output.Output) *cobra.Command {
 						imageIndex, err := images.ManifestListForImage(
 							srcImageName,
 							platformsStrings,
-							remoteOpts...)
+							sourceRemoteOpts...)
 						if err != nil {
 							out.EndOperation(false)
 							return err
@@ -170,13 +177,21 @@ func NewCommand(out output.Output) *cobra.Command {
 							return err
 						}
 
-						if err := remote.WriteIndex(ref, imageIndex, remoteOpts...); err != nil {
+						if err := remote.WriteIndex(ref, imageIndex, destRemoteOpts...); err != nil {
 							out.EndOperation(false)
 							return err
 						}
 
 						out.EndOperation(true)
 					}
+				}
+
+				if tr, ok := sourceTLSRoundTripper.(*http.Transport); ok {
+					tr.CloseIdleConnections()
+				}
+
+				if tr, ok := destTLSRoundTripper.(*http.Transport); ok {
+					tr.CloseIdleConnections()
 				}
 			}
 

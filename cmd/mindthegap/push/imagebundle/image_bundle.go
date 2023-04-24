@@ -57,7 +57,7 @@ func NewCommand(out output.Output) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			cfg, _, err := utils.ExtractBundles(tempDir, out, imageBundleFiles...)
+			imagesCfg, _, err := utils.ExtractBundles(tempDir, out, imageBundleFiles...)
 			if err != nil {
 				return err
 			}
@@ -81,22 +81,24 @@ func NewCommand(out output.Output) *cobra.Command {
 			logs.Debug.SetOutput(out.V(4).InfoWriter())
 			logs.Warn.SetOutput(out.InfoWriter())
 
-			var remoteOpts []remote.Option
+			sourceTLSRoundTripper, err := httputils.InsecureTLSRoundTripper(remote.DefaultTransport)
+			if err != nil {
+				out.Error(err, "error configuring TLS for source registry")
+				os.Exit(2)
+			}
+			sourceRemoteOpts := []remote.Option{remote.WithTransport(sourceTLSRoundTripper)}
 
-			insecure := flags.SkipTLSVerify(destRegistrySkipTLSVerify, destRegistryURI)
-			tlsHostsConfig := httputils.TLSHostsConfig{
-				reg.Address(): httputils.TLSHostConfig{Insecure: true},
-			}
-			if insecure || destRegistryCACertificateFile != "" {
-				tlsHostsConfig[destRegistryURI.Host()] = httputils.TLSHostConfig{
-					Insecure: insecure,
-					CAFile:   destRegistryCACertificateFile,
-				}
-			}
-			transport := httputils.NewConfigurableTLSRoundTripper(
-				tlsHostsConfig,
+			destTLSRoundTripper, err := httputils.TLSConfiguredRoundTripper(
+				remote.DefaultTransport,
+				destRegistryURI.Host(),
+				flags.SkipTLSVerify(destRegistrySkipTLSVerify, destRegistryURI),
+				destRegistryCACertificateFile,
 			)
-			remoteOpts = append(remoteOpts, remote.WithTransport(transport))
+			if err != nil {
+				out.Error(err, "error configuring TLS for destination registry")
+				os.Exit(2)
+			}
+			destRemoteOpts := []remote.Option{remote.WithTransport(destTLSRoundTripper)}
 
 			keychain := authn.DefaultKeychain
 			if destRegistryUsername != "" && destRegistryPassword != "" {
@@ -113,8 +115,7 @@ func NewCommand(out output.Output) *cobra.Command {
 					keychain,
 				)
 			}
-
-			remoteOpts = append(remoteOpts, remote.WithAuthFromKeychain(keychain))
+			destRemoteOpts = append(destRemoteOpts, remote.WithAuthFromKeychain(keychain))
 
 			// Determine type of destination registry.
 			var prePushFuncs []prePushFunc
@@ -126,10 +127,11 @@ func NewCommand(out output.Output) *cobra.Command {
 			}
 
 			return pushImages(
-				cfg,
+				imagesCfg,
 				reg.Address(),
+				sourceRemoteOpts,
 				destRegistryURI.Address(),
-				remoteOpts,
+				destRemoteOpts,
 				out,
 				prePushFuncs...,
 			)
@@ -165,8 +167,8 @@ type prePushFunc func(destRegistry, imageName string, imageTags ...string) error
 
 func pushImages(
 	cfg config.ImagesConfig,
-	sourceRegistry, destRegistry string,
-	remoteOpts []remote.Option,
+	sourceRegistry string, sourceRemoteOpts []remote.Option,
+	destRegistry string, destRemoteOpts []remote.Option,
 	out output.Output,
 	prePushFuncs ...prePushFunc,
 ) error {
@@ -210,13 +212,13 @@ func pushImages(
 					return err
 				}
 
-				idx, err := remote.Index(srcRef, remoteOpts...)
+				idx, err := remote.Index(srcRef, sourceRemoteOpts...)
 				if err != nil {
 					out.EndOperation(false)
 					return err
 				}
 
-				if err := remote.WriteIndex(dstRef, idx, remoteOpts...); err != nil {
+				if err := remote.WriteIndex(dstRef, idx, destRemoteOpts...); err != nil {
 					out.EndOperation(false)
 					return err
 				}
