@@ -140,6 +140,14 @@ var _ = Describe("Push Bundle", func() {
 
 		Expect(cmd.Execute()).To(Succeed())
 
+		testRoundTripper, err := httputils.TLSConfiguredRoundTripper(
+			remote.DefaultTransport,
+			net.JoinHostPort(ipAddr.String(), strconv.Itoa(port)),
+			false,
+			caCertFile,
+		)
+		Expect(err).NotTo(HaveOccurred())
+
 		helpers.ValidateImageIsAvailable(
 			GinkgoT(),
 			ipAddr.String(),
@@ -150,15 +158,7 @@ var _ = Describe("Push Bundle", func() {
 				OS:           "linux",
 				Architecture: runtime.GOARCH,
 			}},
-			remote.WithTransport(
-				httputils.NewConfigurableTLSRoundTripper(
-					httputils.TLSHostsConfig{
-						net.JoinHostPort(ipAddr.String(), strconv.Itoa(port)): httputils.TLSHostConfig{
-							CAFile: caCertFile,
-						},
-					},
-				),
-			),
+			remote.WithTransport(testRoundTripper),
 		)
 
 		Expect(reg.Shutdown(context.Background())).To((Succeed()))
@@ -214,6 +214,14 @@ var _ = Describe("Push Bundle", func() {
 
 		Expect(cmd.Execute()).To(Succeed())
 
+		testRoundTripper, err := httputils.TLSConfiguredRoundTripper(
+			remote.DefaultTransport,
+			net.JoinHostPort(ipAddr.String(), strconv.Itoa(port)),
+			false,
+			caCertFile,
+		)
+		Expect(err).NotTo(HaveOccurred())
+
 		helpers.ValidateImageIsAvailable(
 			GinkgoT(),
 			ipAddr.String(),
@@ -224,15 +232,7 @@ var _ = Describe("Push Bundle", func() {
 				OS:           "linux",
 				Architecture: runtime.GOARCH,
 			}},
-			remote.WithTransport(
-				httputils.NewConfigurableTLSRoundTripper(
-					httputils.TLSHostsConfig{
-						net.JoinHostPort(ipAddr.String(), strconv.Itoa(port)): httputils.TLSHostConfig{
-							CAFile: caCertFile,
-						},
-					},
-				),
-			),
+			remote.WithTransport(testRoundTripper),
 		)
 
 		Expect(reg.Shutdown(context.Background())).To((Succeed()))
