@@ -274,6 +274,20 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.7.3 (2023-04-24)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix: Separate out source and destination remote options by @dkoshkin in https://github.com/mesosphere/mindthegap/pull/389
+### Other Changes
+* build: Upgrade tools and distroless base image by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/390
+* build: Insert flexible year into license header (#391 by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/391
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.7.2...v1.7.3
+
 ## 1.7.2 (2023-04-20)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
