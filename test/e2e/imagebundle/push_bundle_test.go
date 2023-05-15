@@ -240,6 +240,68 @@ var _ = Describe("Push Bundle", func() {
 		Eventually(done).Should(BeClosed())
 	})
 
+	It("With non-TLS", func() {
+		helpers.CreateBundle(
+			GinkgoT(),
+			bundleFile,
+			filepath.Join("testdata", "create-success.yaml"),
+		)
+
+		ipAddr := helpers.GetFirstNonLoopbackIP(GinkgoT())
+
+		port, err := freeport.GetFreePort()
+		Expect(err).NotTo(HaveOccurred())
+		reg, err := registry.NewRegistry(registry.Config{
+			StorageDirectory: filepath.Join(tmpDir, "registry"),
+			Host:             ipAddr.String(),
+			Port:             uint16(port),
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		done := make(chan struct{})
+		go func() {
+			defer GinkgoRecover()
+
+			Expect(reg.ListenAndServe()).To(Succeed())
+
+			close(done)
+		}()
+
+		helpers.WaitForTCPPort(GinkgoT(), ipAddr.String(), port)
+
+		cmd.SetArgs([]string{
+			"--image-bundle", bundleFile,
+			"--to-registry", fmt.Sprintf("http://%s:%d", ipAddr, port),
+		})
+
+		Expect(cmd.Execute()).To(Succeed())
+
+		testRoundTripper, err := httputils.TLSConfiguredRoundTripper(
+			remote.DefaultTransport,
+			net.JoinHostPort(ipAddr.String(), strconv.Itoa(port)),
+			true,
+			"",
+		)
+		Expect(err).NotTo(HaveOccurred())
+
+		helpers.ValidateImageIsAvailable(
+			GinkgoT(),
+			ipAddr.String(),
+			port,
+			"stefanprodan/podinfo",
+			"6.2.0",
+			[]*v1.Platform{{
+				OS:           "linux",
+				Architecture: runtime.GOARCH,
+			}},
+			remote.WithTransport(testRoundTripper),
+		)
+
+		Expect(reg.Shutdown(context.Background())).To((Succeed()))
+
+		Eventually(done).Should(BeClosed())
+	})
+
 	It("Bundle does not exist", func() {
 		cmd.SetArgs([]string{
 			"--image-bundle", bundleFile,
