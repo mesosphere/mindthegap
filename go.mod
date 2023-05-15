@@ -32,7 +32,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.2
 	gopkg.in/yaml.v3 v3.0.1
-	helm.sh/helm/v3 v3.11.3
+	helm.sh/helm/v3 v3.12.0
 	k8s.io/apimachinery v0.27.1
 	k8s.io/klog/v2 v2.100.1
 	k8s.io/utils v0.0.0-20230308161112-d77c459e9343
@@ -88,7 +88,7 @@ require (
 	github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
-	github.com/go-errors/errors v1.0.1 // indirect
+	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-gorp/gorp/v3 v3.0.5 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -196,18 +196,18 @@ require (
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/api v0.26.2 // indirect
-	k8s.io/apiextensions-apiserver v0.26.0 // indirect
-	k8s.io/apiserver v0.26.2 // indirect
-	k8s.io/cli-runtime v0.26.0 // indirect
-	k8s.io/client-go v0.26.2 // indirect
-	k8s.io/component-base v0.26.2 // indirect
+	k8s.io/api v0.27.1 // indirect
+	k8s.io/apiextensions-apiserver v0.27.1 // indirect
+	k8s.io/apiserver v0.27.1 // indirect
+	k8s.io/cli-runtime v0.27.1 // indirect
+	k8s.io/client-go v0.27.1 // indirect
+	k8s.io/component-base v0.27.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230308215209-15aac26d736a // indirect
-	k8s.io/kubectl v0.26.0 // indirect
+	k8s.io/kubectl v0.27.1 // indirect
 	oras.land/oras-go v1.2.2 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
-	sigs.k8s.io/kustomize/api v0.12.1 // indirect
-	sigs.k8s.io/kustomize/kyaml v0.13.9 // indirect
+	sigs.k8s.io/kustomize/api v0.13.2 // indirect
+	sigs.k8s.io/kustomize/kyaml v0.14.1 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
