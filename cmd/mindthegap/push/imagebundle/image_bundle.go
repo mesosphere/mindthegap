@@ -100,6 +100,11 @@ func NewCommand(out output.Output) *cobra.Command {
 			}
 			destRemoteOpts := []remote.Option{remote.WithTransport(destTLSRoundTripper)}
 
+			var destNameOpts []name.Option
+			if flags.SkipTLSVerify(destRegistrySkipTLSVerify, destRegistryURI) {
+				destNameOpts = append(destNameOpts, name.Insecure)
+			}
+
 			keychain := authn.DefaultKeychain
 			if destRegistryUsername != "" && destRegistryPassword != "" {
 				keychain = authn.NewMultiKeychain(
@@ -132,6 +137,7 @@ func NewCommand(out output.Output) *cobra.Command {
 				sourceRemoteOpts,
 				destRegistryURI.Address(),
 				destRemoteOpts,
+				destNameOpts,
 				out,
 				prePushFuncs...,
 			)
@@ -168,7 +174,7 @@ type prePushFunc func(destRegistry, imageName string, imageTags ...string) error
 func pushImages(
 	cfg config.ImagesConfig,
 	sourceRegistry string, sourceRemoteOpts []remote.Option,
-	destRegistry string, destRemoteOpts []remote.Option,
+	destRegistry string, destRemoteOpts []remote.Option, destNameOpts []name.Option,
 	out output.Output,
 	prePushFuncs ...prePushFunc,
 ) error {
@@ -199,14 +205,16 @@ func pushImages(
 				)
 
 				srcImage := fmt.Sprintf("%s/%s:%s", sourceRegistry, imageName, imageTag)
-				srcRef, err := name.ParseReference(srcImage, name.StrictValidation)
+				srcRef, err := name.ParseReference(srcImage, name.Insecure, name.StrictValidation)
 				if err != nil {
 					out.EndOperation(false)
 					return err
 				}
 
 				destImage := fmt.Sprintf("%s/%s:%s", destRegistry, imageName, imageTag)
-				dstRef, err := name.ParseReference(destImage, name.StrictValidation)
+				dstRef, err := name.ParseReference(
+					destImage,
+					append(destNameOpts, name.StrictValidation)...)
 				if err != nil {
 					out.EndOperation(false)
 					return err
