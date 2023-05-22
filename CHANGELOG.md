@@ -274,6 +274,20 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.7.4 (2023-05-22)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix: Support http registries for pushing bundles by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/405
+### Other Changes
+* ci: Use updated parse-asdf-versions by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/407
+* build: Upgrade tools and distroless base image by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/413
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.7.3...v1.7.4
+
 ## 1.7.3 (2023-04-24)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
