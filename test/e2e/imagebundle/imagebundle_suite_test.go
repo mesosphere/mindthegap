@@ -23,10 +23,19 @@ func TestImagebundle(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	var err error
-	artifacts, err = helpers.ParseArtifactsFile(filepath.Join("..",
+	artifactsFileAbs, err := filepath.Abs(filepath.Join("..",
 		"..",
 		"..",
-		"dist", "artifacts.json"),
-	)
+		"dist", "artifacts.json"))
 	Expect(err).NotTo(HaveOccurred())
+	relArtifacts, err := helpers.ParseArtifactsFile(artifactsFileAbs)
+	Expect(err).NotTo(HaveOccurred())
+
+	artifacts = make(helpers.Artifacts, 0, len(relArtifacts))
+	for _, a := range relArtifacts {
+		if a.Path != "" {
+			a.Path = filepath.Join(filepath.Dir(artifactsFileAbs), "..", a.Path)
+		}
+		artifacts = append(artifacts, a)
+	}
 })
