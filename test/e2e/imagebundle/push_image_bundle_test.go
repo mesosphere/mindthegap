@@ -9,10 +9,12 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/http/httptest"
 	"path/filepath"
 	"runtime"
 	"strconv"
 
+	"github.com/elazarl/goproxy"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	. "github.com/onsi/ginkgo/v2"
@@ -45,103 +47,104 @@ var _ = Describe("Push Bundle", func() {
 		)
 	})
 
-	DescribeTable(
-		"Success",
-		func(
-			registryHost string,
-			registryScheme string,
-			registryInsecure bool,
-		) {
-			helpers.CreateBundle(
+	runTest := func(
+		registryHost string,
+		registryScheme string,
+		registryInsecure bool,
+	) {
+		helpers.CreateBundle(
+			GinkgoT(),
+			bundleFile,
+			filepath.Join("testdata", "create-success.yaml"),
+		)
+
+		registryCACertFile := ""
+		registryCertFile := ""
+		registryKeyFile := ""
+		if registryHost != "localhost" && registryScheme != "http" {
+			tempCertDir := GinkgoT().TempDir()
+			registryCACertFile, _, registryCertFile, registryKeyFile = helpers.GenerateCertificateAndKeyWithIPSAN(
 				GinkgoT(),
-				bundleFile,
-				filepath.Join("testdata", "create-success.yaml"),
+				tempCertDir,
+				net.ParseIP(registryHost),
 			)
+		}
 
-			registryCACertFile := ""
-			registryCertFile := ""
-			registryKeyFile := ""
-			if registryHost != "localhost" && registryScheme != "http" {
-				tempCertDir := GinkgoT().TempDir()
-				registryCACertFile, _, registryCertFile, registryKeyFile = helpers.GenerateCertificateAndKeyWithIPSAN(
-					GinkgoT(),
-					tempCertDir,
-					net.ParseIP(registryHost),
-				)
-			}
+		port, err := freeport.GetFreePort()
+		Expect(err).NotTo(HaveOccurred())
+		reg, err := registry.NewRegistry(registry.Config{
+			StorageDirectory: filepath.Join(tmpDir, "registry"),
+			Host:             registryHost,
+			Port:             uint16(port),
+			TLS: registry.TLS{
+				Certificate: registryCertFile,
+				Key:         registryKeyFile,
+			},
+		})
+		Expect(err).NotTo(HaveOccurred())
 
-			port, err := freeport.GetFreePort()
-			Expect(err).NotTo(HaveOccurred())
-			reg, err := registry.NewRegistry(registry.Config{
-				StorageDirectory: filepath.Join(tmpDir, "registry"),
-				Host:             registryHost,
-				Port:             uint16(port),
-				TLS: registry.TLS{
-					Certificate: registryCertFile,
-					Key:         registryKeyFile,
-				},
-			})
-			Expect(err).NotTo(HaveOccurred())
+		done := make(chan struct{})
+		go func() {
+			defer GinkgoRecover()
 
-			done := make(chan struct{})
-			go func() {
-				defer GinkgoRecover()
+			Expect(reg.ListenAndServe()).To(Succeed())
 
-				Expect(reg.ListenAndServe()).To(Succeed())
+			close(done)
+		}()
 
-				close(done)
-			}()
+		helpers.WaitForTCPPort(GinkgoT(), registryHost, port)
 
-			helpers.WaitForTCPPort(GinkgoT(), registryHost, port)
-
-			registryHostWithOptionalScheme := fmt.Sprintf("%s:%d", registryHost, port)
-			if registryScheme != "" {
-				registryHostWithOptionalScheme = fmt.Sprintf(
-					"%s://%s",
-					registryScheme,
-					registryHostWithOptionalScheme,
-				)
-			}
-
-			args := []string{
-				"--image-bundle", bundleFile,
-				"--to-registry", registryHostWithOptionalScheme,
-			}
-			if registryInsecure {
-				args = append(args, "--to-registry-insecure-skip-tls-verify")
-			} else if registryCACertFile != "" {
-				args = append(args, "--to-registry-ca-cert-file", registryCACertFile)
-			}
-
-			cmd.SetArgs(args)
-
-			Expect(cmd.Execute()).To(Succeed())
-
-			testRoundTripper, err := httputils.TLSConfiguredRoundTripper(
-				remote.DefaultTransport,
-				net.JoinHostPort(registryHost, strconv.Itoa(port)),
-				registryCACertFile != "",
-				registryCACertFile,
+		registryHostWithOptionalScheme := fmt.Sprintf("%s:%d", registryHost, port)
+		if registryScheme != "" {
+			registryHostWithOptionalScheme = fmt.Sprintf(
+				"%s://%s",
+				registryScheme,
+				registryHostWithOptionalScheme,
 			)
-			Expect(err).NotTo(HaveOccurred())
+		}
 
-			helpers.ValidateImageIsAvailable(
-				GinkgoT(),
-				registryHost,
-				port,
-				"stefanprodan/podinfo",
-				"6.2.0",
-				[]*v1.Platform{{
-					OS:           "linux",
-					Architecture: runtime.GOARCH,
-				}},
-				remote.WithTransport(testRoundTripper),
-			)
+		args := []string{
+			"--image-bundle", bundleFile,
+			"--to-registry", registryHostWithOptionalScheme,
+		}
+		if registryInsecure {
+			args = append(args, "--to-registry-insecure-skip-tls-verify")
+		} else if registryCACertFile != "" {
+			args = append(args, "--to-registry-ca-cert-file", registryCACertFile)
+		}
 
-			Expect(reg.Shutdown(context.Background())).To((Succeed()))
+		cmd.SetArgs(args)
 
-			Eventually(done).Should(BeClosed())
-		},
+		Expect(cmd.Execute()).To(Succeed())
+
+		testRoundTripper, err := httputils.TLSConfiguredRoundTripper(
+			remote.DefaultTransport,
+			net.JoinHostPort(registryHost, strconv.Itoa(port)),
+			registryCACertFile != "",
+			registryCACertFile,
+		)
+		Expect(err).NotTo(HaveOccurred())
+
+		helpers.ValidateImageIsAvailable(
+			GinkgoT(),
+			registryHost,
+			port,
+			"stefanprodan/podinfo",
+			"6.2.0",
+			[]*v1.Platform{{
+				OS:           "linux",
+				Architecture: runtime.GOARCH,
+			}},
+			remote.WithTransport(testRoundTripper),
+		)
+
+		Expect(reg.Shutdown(context.Background())).To((Succeed()))
+
+		Eventually(done).Should(BeClosed())
+	}
+
+	DescribeTable("Success",
+		runTest,
 
 		Entry("Without TLS", "localhost", "", true),
 
@@ -174,5 +177,19 @@ var _ = Describe("Push Bundle", func() {
 		Expect(
 			cmd.Execute(),
 		).To(MatchError(fmt.Sprintf("did find any matching files for %q", bundleFile)))
+	})
+
+	It("Success using a proxy", Serial, func() {
+		proxy := goproxy.NewProxyHttpServer()
+		proxy.Verbose = true
+		proxy.Logger = GinkgoWriter
+
+		proxyServer := httptest.NewServer(proxy)
+		defer proxyServer.Close()
+
+		GinkgoT().Setenv("http_proxy", proxyServer.URL)
+		GinkgoT().Setenv("https_proxy", proxyServer.URL)
+
+		runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", false)
 	})
 })
