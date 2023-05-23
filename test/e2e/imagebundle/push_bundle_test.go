@@ -10,10 +10,12 @@ import (
 	"fmt"
 	"net"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
 
+	"github.com/docker/cli/cli/config"
 	"github.com/elazarl/goproxy"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -187,5 +189,32 @@ var _ = Describe("Push Bundle", func() {
 		GinkgoT().Setenv("https_proxy", proxyServer.URL)
 
 		runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", false)
+	})
+
+	It("Success using a proxy and headers from Docker config", Serial, func() {
+		proxy := goproxy.NewProxyHttpServer()
+		proxy.Verbose = true
+		proxy.Logger = GinkgoWriter
+
+		proxyServer := httptest.NewServer(proxy)
+		defer proxyServer.Close()
+
+		GinkgoT().Setenv("http_proxy", proxyServer.URL)
+		GinkgoT().Setenv("https_proxy", proxyServer.URL)
+
+		runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", false)
+
+		dockerConfigDir := GinkgoT().TempDir()
+		GinkgoT().Setenv("DOCKER_CONFIG", dockerConfigDir)
+		err := os.WriteFile(
+			filepath.Join(dockerConfigDir, config.ConfigFileName),
+			[]byte(`{
+	"HttpHeaders": {
+		"MyHeader": "MyValue"
+	}
+}`),
+			0o644,
+		)
+		Expect(err).ToNot(HaveOccurred())
 	})
 })
