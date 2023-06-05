@@ -1,4 +1,1 @@
 github.com/oligot/go-mod-upgrade@v0.9.1
-gotest.tools/gotestsum@v1.10.0
-github.com/segmentio/golines@v0.11.0
-github.com/google/go-containerregistry/cmd/crane@v0.15.2

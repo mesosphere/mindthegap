@@ -17,15 +17,15 @@ on:
 
 jobs:
   unit-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Install asdf
-        uses: asdf-vm/actions/setup@v2.2.0
+      - name: Set up devenv.sh environment
+        uses: d2iq-labs/devenv.sh-action@v1
         with:
-          asdf_branch: v0.11.2
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run unit tests
         run: make test
@@ -37,17 +37,17 @@ jobs:
           test-results: test.json
 
   e2e-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Check out code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Install asdf
-        uses: asdf-vm/actions/setup@v2.2.0
+      - name: Set up devenv.sh environment
+        uses: d2iq-labs/devenv.sh-action@v1
         with:
-          asdf_branch: v0.11.2
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -60,42 +60,39 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Gather tool versions
-        uses: jimmidyson/asdf-parse-tool-versions@v2
-        id: versions
+      - name: Set up devenv.sh environment
+        uses: d2iq-labs/devenv.sh-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Export golang and golangci-lint versions
+        run: |
+          echo "GOLANGCI_LINT_VERSION=v$(golangci-lint version --format short)" >>$GITHUB_ENV
+          echo "GO_VERSION=$(go version | grep -o "[[:digit:]]\+.[[:digit:]]\+\(.[[:digit:]]\+\)\?")" >>$GITHUB_ENV
 
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v2
         with:
           fail_on_error: true
           reporter: github-pr-review
-          go_version: v${{ fromJson(steps.versions.outputs.tools).golang }}
-          golangci_lint_version: v${{ fromJson(steps.versions.outputs.tools).golangci-lint }}
+          golangci_lint_version: ${{ env.GOLANGCI_LINT_VERSION }}
+          go_version: ${{ env.GO_VERSION }}
 
   pre-commit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Gather tool versions
-        uses: jimmidyson/asdf-parse-tool-versions@v2
-        id: versions
-
-      - uses: actions/setup-go@v4
+      - name: Set up devenv.sh environment
+        uses: d2iq-labs/devenv.sh-action@v1
         with:
-          go-version: ${{ fromJson(steps.versions.outputs.tools).golang }}
-          check-latest: false
-          cache: true
-
-      - uses: mfinelli/setup-shfmt@v2
-        with:
-          shfmt-version: ${{ fromJson(steps.versions.outputs.tools).shfmt }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: pre-commit/action@v3.0.0
         with:

@@ -26,3 +26,8 @@ dist/
 
 *.tar.gz
 *.tar
+
+# Devenv
+.devenv*
+devenv.local.nix
+.direnv

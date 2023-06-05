@@ -45,7 +45,7 @@ endif
 
 .PHONY: test.%
 test.%: ## Runs go tests for a specific module
-test.%: install-tool.go.gotestsum; $(info $(M) running tests$(if $(GOTEST_RUN), matching "$(GOTEST_RUN)") for $* module)
+test.%: ; $(info $(M) running tests$(if $(GOTEST_RUN), matching "$(GOTEST_RUN)") for $* module)
 	$(if $(filter-out root,$*),cd $* && )$(call go_test)
 
 .PHONY: integration-test
@@ -77,7 +77,6 @@ E2E_FLAKE_ATTEMPTS ?= 1
 
 .PHONY: e2e-test
 e2e-test: ## Runs e2e tests
-e2e-test: install-tool.golang install-tool.ginkgo install-tool.gojq
 	$(info $(M) running e2e tests$(if $(E2E_LABEL), labelled "$(E2E_LABEL)")$(if $(E2E_FOCUS), matching "$(E2E_FOCUS)"))
 	$(MAKE) GORELEASER_FLAGS=$$'--config=<(env GOOS=$(shell go env GOOS) GOARCH=$(shell go env GOARCH) gojq --yaml-input --yaml-output \'del(.builds[0].goarch) | del(.builds[0].goos) | .builds[0].targets|=(["linux_amd64","linux_arm64",env.GOOS+"_"+env.GOARCH] | unique | map(. | sub("_amd64";"_amd64_v1")))\' .goreleaser.yml) --clean --skip-validate --skip-publish' release
 	ginkgo run \
@@ -120,8 +119,8 @@ endif
 
 .PHONY: lint.%
 lint.%: ## Runs golangci-lint for a specific module
-lint.%: install-tool.golangci-lint install-tool.go.golines; $(info $(M) linting $* module)
-	$(if $(filter-out root,$*),cd $* && )golines -w .
+lint.%: ; $(info $(M) linting $* module)
+	$(if $(filter-out root,$*),cd $* && )golines -w $$(go list ./... | sed "s|^$$(go list -m)|.|")
 	$(if $(filter-out root,$*),cd $* && )golangci-lint run --fix --config=$(GOLANGCI_CONFIG_FILE)
 	$(if $(filter-out root,$*),cd $* && )go fix ./...
 
@@ -136,7 +135,7 @@ endif
 
 .PHONY: mod-tidy.%
 mod-tidy.%: ## Runs go mod tidy for a specific module
-mod-tidy.%: install-tool.golang; $(info $(M) running go mod tidy for $* module)
+mod-tidy.%: ; $(info $(M) running go mod tidy for $* module)
 	$(if $(filter-out root,$*),cd $* && )go mod tidy -v -compat=1.17
 	$(if $(filter-out root,$*),cd $* && )go mod verify
 
@@ -151,16 +150,16 @@ endif
 
 .PHONY: go-clean.%
 go-clean.%: ## Cleans go build, test and modules caches for a specific module
-go-clean.%: install-tool.golang; $(info $(M) running go clean for $* module)
+go-clean.%: ; $(info $(M) running go clean for $* module)
 	$(if $(filter-out root,$*),cd $* && )go clean -r -i -cache -testcache -modcache
 
 .PHONY: go-generate
 go-generate: ## Runs go generate
-go-generate: install-tool.golang ; $(info $(M) running go generate)
+go-generate: ; $(info $(M) running go generate)
 	go generate -x ./...
 	go fix ./...
 
 .PHONY: go-mod-upgrade
 go-mod-upgrade: ## Interactive check for direct module dependency upgrades
-go-mod-upgrade: install-tool.golang install-tool.go.go-mod-upgrade ; $(info $(M) checking for direct module dependency upgrades)
+go-mod-upgrade: install-tool.go.go-mod-upgrade ; $(info $(M) checking for direct module dependency upgrades)
 	go-mod-upgrade
