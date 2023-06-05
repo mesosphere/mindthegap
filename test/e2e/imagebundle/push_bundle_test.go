@@ -9,10 +9,14 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
 
+	"github.com/docker/cli/cli/config"
+	"github.com/elazarl/goproxy"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	. "github.com/onsi/ginkgo/v2"
@@ -41,82 +45,38 @@ var _ = Describe("Push Bundle", func() {
 		cmd = helpers.NewCommand(GinkgoT(), pushimagebundle.NewCommand)
 	})
 
-	It("Without TLS", func() {
+	runTest := func(
+		registryHost string,
+		registryScheme string,
+		registryInsecure bool,
+	) {
 		helpers.CreateBundle(
 			GinkgoT(),
 			bundleFile,
 			filepath.Join("testdata", "create-success.yaml"),
 		)
 
-		port, err := freeport.GetFreePort()
-		Expect(err).NotTo(HaveOccurred())
-		reg, err := registry.NewRegistry(registry.Config{
-			StorageDirectory: filepath.Join(tmpDir, "registry"),
-			Port:             uint16(port),
-		})
-		Expect(err).NotTo(HaveOccurred())
-
-		done := make(chan struct{})
-		go func() {
-			defer GinkgoRecover()
-
-			Expect(reg.ListenAndServe()).To(Succeed())
-
-			close(done)
-		}()
-
-		helpers.WaitForTCPPort(GinkgoT(), "localhost", port)
-
-		cmd.SetArgs([]string{
-			"--image-bundle", bundleFile,
-			"--to-registry", fmt.Sprintf("localhost:%d", port),
-			"--to-registry-insecure-skip-tls-verify",
-		})
-
-		Expect(cmd.Execute()).To(Succeed())
-
-		helpers.ValidateImageIsAvailable(
-			GinkgoT(),
-			"localhost",
-			port,
-			"stefanprodan/podinfo",
-			"6.2.0",
-			[]*v1.Platform{{
-				OS:           "linux",
-				Architecture: runtime.GOARCH,
-			}},
-		)
-
-		Expect(reg.Shutdown(context.Background())).To((Succeed()))
-
-		Eventually(done).Should(BeClosed())
-	})
-
-	It("With TLS", func() {
-		helpers.CreateBundle(
-			GinkgoT(),
-			bundleFile,
-			filepath.Join("testdata", "create-success.yaml"),
-		)
-
-		ipAddr := helpers.GetFirstNonLoopbackIP(GinkgoT())
-
-		tempCertDir := GinkgoT().TempDir()
-		caCertFile, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(
-			GinkgoT(),
-			tempCertDir,
-			ipAddr,
-		)
+		registryCACertFile := ""
+		registryCertFile := ""
+		registryKeyFile := ""
+		if registryHost != "localhost" && registryScheme != "http" {
+			tempCertDir := GinkgoT().TempDir()
+			registryCACertFile, _, registryCertFile, registryKeyFile = helpers.GenerateCertificateAndKeyWithIPSAN(
+				GinkgoT(),
+				tempCertDir,
+				net.ParseIP(registryHost),
+			)
+		}
 
 		port, err := freeport.GetFreePort()
 		Expect(err).NotTo(HaveOccurred())
 		reg, err := registry.NewRegistry(registry.Config{
 			StorageDirectory: filepath.Join(tmpDir, "registry"),
-			Host:             ipAddr.String(),
+			Host:             registryHost,
 			Port:             uint16(port),
 			TLS: registry.TLS{
-				Certificate: certFile,
-				Key:         keyFile,
+				Certificate: registryCertFile,
+				Key:         registryKeyFile,
 			},
 		})
 		Expect(err).NotTo(HaveOccurred())
@@ -130,19 +90,42 @@ var _ = Describe("Push Bundle", func() {
 			close(done)
 		}()
 
-		helpers.WaitForTCPPort(GinkgoT(), ipAddr.String(), port)
+		helpers.WaitForTCPPort(GinkgoT(), registryHost, port)
 
-		cmd.SetArgs([]string{
+		registryHostWithOptionalScheme := fmt.Sprintf("%s:%d", registryHost, port)
+		if registryScheme != "" {
+			registryHostWithOptionalScheme = fmt.Sprintf(
+				"%s://%s",
+				registryScheme,
+				registryHostWithOptionalScheme,
+			)
+		}
+
+		args := []string{
 			"--image-bundle", bundleFile,
-			"--to-registry", fmt.Sprintf("%s:%d", ipAddr, port),
-			"--to-registry-ca-cert-file", caCertFile,
-		})
+			"--to-registry", registryHostWithOptionalScheme,
+		}
+		if registryInsecure {
+			args = append(args, "--to-registry-insecure-skip-tls-verify")
+		} else if registryCACertFile != "" {
+			args = append(args, "--to-registry-ca-cert-file", registryCACertFile)
+		}
+
+		cmd.SetArgs(args)
 
 		Expect(cmd.Execute()).To(Succeed())
 
+		testRoundTripper, err := httputils.TLSConfiguredRoundTripper(
+			remote.DefaultTransport,
+			net.JoinHostPort(registryHost, strconv.Itoa(port)),
+			registryCACertFile != "",
+			registryCACertFile,
+		)
+		Expect(err).NotTo(HaveOccurred())
+
 		helpers.ValidateImageIsAvailable(
 			GinkgoT(),
-			ipAddr.String(),
+			registryHost,
 			port,
 			"stefanprodan/podinfo",
 			"6.2.0",
@@ -150,95 +133,37 @@ var _ = Describe("Push Bundle", func() {
 				OS:           "linux",
 				Architecture: runtime.GOARCH,
 			}},
-			remote.WithTransport(
-				httputils.NewConfigurableTLSRoundTripper(
-					httputils.TLSHostsConfig{
-						net.JoinHostPort(ipAddr.String(), strconv.Itoa(port)): httputils.TLSHostConfig{
-							CAFile: caCertFile,
-						},
-					},
-				),
-			),
+			remote.WithTransport(testRoundTripper),
 		)
 
 		Expect(reg.Shutdown(context.Background())).To((Succeed()))
 
 		Eventually(done).Should(BeClosed())
-	})
+	}
 
-	It("With Insecure TLS", func() {
-		helpers.CreateBundle(
-			GinkgoT(),
-			bundleFile,
-			filepath.Join("testdata", "create-success.yaml"),
-		)
+	DescribeTable("Success",
+		runTest,
 
-		ipAddr := helpers.GetFirstNonLoopbackIP(GinkgoT())
+		Entry("Without TLS", "localhost", "", true),
 
-		tempCertDir := GinkgoT().TempDir()
-		caCertFile, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(
-			GinkgoT(),
-			tempCertDir,
-			ipAddr,
-		)
+		Entry("With TLS", helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", true),
 
-		port, err := freeport.GetFreePort()
-		Expect(err).NotTo(HaveOccurred())
-		reg, err := registry.NewRegistry(registry.Config{
-			StorageDirectory: filepath.Join(tmpDir, "registry"),
-			Host:             ipAddr.String(),
-			Port:             uint16(port),
-			TLS: registry.TLS{
-				Certificate: certFile,
-				Key:         keyFile,
-			},
-		})
-		Expect(err).NotTo(HaveOccurred())
+		Entry("With Insecure TLS", helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", true),
 
-		done := make(chan struct{})
-		go func() {
-			defer GinkgoRecover()
+		Entry(
+			"With http registry",
+			helpers.GetFirstNonLoopbackIP(GinkgoT()).String(),
+			"http",
+			true,
+		),
 
-			Expect(reg.ListenAndServe()).To(Succeed())
-
-			close(done)
-		}()
-
-		helpers.WaitForTCPPort(GinkgoT(), ipAddr.String(), port)
-
-		cmd.SetArgs([]string{
-			"--image-bundle", bundleFile,
-			"--to-registry", fmt.Sprintf("%s:%d", ipAddr, port),
-			"--to-registry-insecure-skip-tls-verify",
-		})
-
-		Expect(cmd.Execute()).To(Succeed())
-
-		helpers.ValidateImageIsAvailable(
-			GinkgoT(),
-			ipAddr.String(),
-			port,
-			"stefanprodan/podinfo",
-			"6.2.0",
-			[]*v1.Platform{{
-				OS:           "linux",
-				Architecture: runtime.GOARCH,
-			}},
-			remote.WithTransport(
-				httputils.NewConfigurableTLSRoundTripper(
-					httputils.TLSHostsConfig{
-						net.JoinHostPort(ipAddr.String(), strconv.Itoa(port)): httputils.TLSHostConfig{
-							CAFile: caCertFile,
-						},
-					},
-				),
-			),
-		)
-
-		Expect(reg.Shutdown(context.Background())).To((Succeed()))
-
-		Eventually(done).Should(BeClosed())
-	})
+		Entry(
+			"With http registry without TLS skip verify flag",
+			helpers.GetFirstNonLoopbackIP(GinkgoT()).String(),
+			"http",
+			false,
+		),
+	)
 
 	It("Bundle does not exist", func() {
 		cmd.SetArgs([]string{
@@ -250,5 +175,46 @@ var _ = Describe("Push Bundle", func() {
 		Expect(
 			cmd.Execute(),
 		).To(MatchError(fmt.Sprintf("did find any matching files for %q", bundleFile)))
+	})
+
+	It("Success using a proxy", Serial, func() {
+		proxy := goproxy.NewProxyHttpServer()
+		proxy.Verbose = true
+		proxy.Logger = GinkgoWriter
+
+		proxyServer := httptest.NewServer(proxy)
+		defer proxyServer.Close()
+
+		GinkgoT().Setenv("http_proxy", proxyServer.URL)
+		GinkgoT().Setenv("https_proxy", proxyServer.URL)
+
+		runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", false)
+	})
+
+	It("Success using a proxy and headers from Docker config", Serial, func() {
+		proxy := goproxy.NewProxyHttpServer()
+		proxy.Verbose = true
+		proxy.Logger = GinkgoWriter
+
+		proxyServer := httptest.NewServer(proxy)
+		defer proxyServer.Close()
+
+		GinkgoT().Setenv("http_proxy", proxyServer.URL)
+		GinkgoT().Setenv("https_proxy", proxyServer.URL)
+
+		runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", false)
+
+		dockerConfigDir := GinkgoT().TempDir()
+		GinkgoT().Setenv("DOCKER_CONFIG", dockerConfigDir)
+		err := os.WriteFile(
+			filepath.Join(dockerConfigDir, config.ConfigFileName),
+			[]byte(`{
+	"HttpHeaders": {
+		"MyHeader": "MyValue"
+	}
+}`),
+			0o644,
+		)
+		Expect(err).ToNot(HaveOccurred())
 	})
 })

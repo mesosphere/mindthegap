@@ -80,22 +80,17 @@ func NewCommand(out output.Output) *cobra.Command {
 			logs.Debug.SetOutput(out.V(4).InfoWriter())
 			logs.Warn.SetOutput(out.InfoWriter())
 
-			var remoteOpts []remote.Option
-
-			insecure := flags.SkipTLSVerify(destRegistrySkipTLSVerify, destRegistryURI)
-			tlsHostsConfig := httputils.TLSHostsConfig{
-				reg.Address(): httputils.TLSHostConfig{Insecure: true},
-			}
-			if insecure || destRegistryCACertificateFile != "" {
-				tlsHostsConfig[destRegistryURI.Host()] = httputils.TLSHostConfig{
-					Insecure: insecure,
-					CAFile:   destRegistryCACertificateFile,
-				}
-			}
-			transport := httputils.NewConfigurableTLSRoundTripper(
-				tlsHostsConfig,
+			destTLSRoundTripper, err := httputils.TLSConfiguredRoundTripper(
+				remote.DefaultTransport,
+				destRegistryURI.Host(),
+				flags.SkipTLSVerify(destRegistrySkipTLSVerify, destRegistryURI),
+				destRegistryCACertificateFile,
 			)
-			remoteOpts = append(remoteOpts, remote.WithTransport(transport))
+			if err != nil {
+				out.Error(err, "error configuring TLS for destination registry")
+				os.Exit(2)
+			}
+			remoteOpts := []remote.Option{remote.WithTransport(destTLSRoundTripper)}
 
 			keychain := authn.DefaultKeychain
 			if destRegistryUsername != "" && destRegistryPassword != "" {
