@@ -6,6 +6,7 @@ package root
 import (
 	"io"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -20,6 +21,24 @@ import (
 
 func NewCommand(in io.Reader, out, errOut io.Writer) (*cobra.Command, output.Output) {
 	rootCmd, rootOpts := root.NewCommand(out, errOut)
+
+	originalPreRun := rootCmd.PersistentPreRunE
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := originalPreRun(cmd, args); err != nil {
+			return err
+		}
+
+		for _, env := range os.Environ() {
+			envKey, _, _ := strings.Cut(env, "=")
+			if strings.HasPrefix(envKey, "REGISTRY_") {
+				if err := os.Unsetenv(envKey); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	}
 
 	rootCmd.AddCommand(create.NewCommand(rootOpts.Output))
 	rootCmd.AddCommand(push.NewCommand(rootOpts.Output))
