@@ -1,5 +1,5 @@
 gcloud 431.0.0
-ginkgo 2.9.5
+ginkgo 2.9.7
 gojq 0.12.12
 golang 1.20.4
 golangci-lint 1.52.2
