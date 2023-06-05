@@ -274,6 +274,22 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.7.5 (2023-06-05)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix: Unset REGISTRY_ prefixed env vars by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/424
+### Other Changes
+* test: Use table test for push image bundle by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/414
+* test: Add test using an http proxy by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/415
+* test: Add test for custom Docker config headers by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/417
+* build: Upgrade all tools by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/423
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.7.4...v1.7.5
+
 ## 1.7.4 (2023-05-22)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
