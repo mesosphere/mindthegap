@@ -181,44 +181,45 @@ var _ = Describe("Push Bundle", func() {
 		).To(MatchError(fmt.Sprintf("did find any matching files for %q", bundleFile)))
 	})
 
-	It("Success using a proxy", Serial, func() {
-		proxy := goproxy.NewProxyHttpServer()
-		proxy.Verbose = true
-		proxy.Logger = GinkgoWriter
+	Context("With proxy", func() {
+		BeforeEach(func() {
+			proxy := goproxy.NewProxyHttpServer()
+			proxy.Verbose = true
+			proxy.Logger = GinkgoWriter
 
-		proxyServer := httptest.NewServer(proxy)
-		defer proxyServer.Close()
+			proxyServer := httptest.NewServer(proxy)
+			DeferCleanup(proxyServer.Close)
 
-		GinkgoT().Setenv("http_proxy", proxyServer.URL)
-		GinkgoT().Setenv("https_proxy", proxyServer.URL)
+			DeferCleanup(os.Setenv, "http_proxy", os.Getenv("http_proxy"))
+			DeferCleanup(os.Setenv, "https_proxy", os.Getenv("http_proxy"))
+			Expect(os.Setenv("http_proxy", proxyServer.URL)).To(Succeed())
+			Expect(os.Setenv("https_proxy", proxyServer.URL)).To(Succeed())
+		})
 
-		runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", false)
-	})
+		It("Success using a proxy", Serial, func() {
+			runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", false)
+		})
 
-	It("Success using a proxy and headers from Docker config", Serial, func() {
-		proxy := goproxy.NewProxyHttpServer()
-		proxy.Verbose = true
-		proxy.Logger = GinkgoWriter
+		Context("With headers from Docker config", func() {
+			BeforeEach(func() {
+				dockerConfigDir := GinkgoT().TempDir()
+				DeferCleanup(os.Setenv, "DOCKER_CONFIG", os.Getenv("DOCKER_CONFIG"))
+				Expect(os.Setenv("DOCKER_CONFIG", dockerConfigDir)).To(Succeed())
+				err := os.WriteFile(
+					filepath.Join(dockerConfigDir, config.ConfigFileName),
+					[]byte(`{
+			"HttpHeaders": {
+				"MyHeader": "MyValue"
+			}
+		}`),
+					0o644,
+				)
+				Expect(err).ToNot(HaveOccurred())
+			})
 
-		proxyServer := httptest.NewServer(proxy)
-		defer proxyServer.Close()
-
-		GinkgoT().Setenv("http_proxy", proxyServer.URL)
-		GinkgoT().Setenv("https_proxy", proxyServer.URL)
-
-		runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", false)
-
-		dockerConfigDir := GinkgoT().TempDir()
-		GinkgoT().Setenv("DOCKER_CONFIG", dockerConfigDir)
-		err := os.WriteFile(
-			filepath.Join(dockerConfigDir, config.ConfigFileName),
-			[]byte(`{
-	"HttpHeaders": {
-		"MyHeader": "MyValue"
-	}
-}`),
-			0o644,
-		)
-		Expect(err).ToNot(HaveOccurred())
+			It("Success using a proxy", Serial, func() {
+				runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", false)
+			})
+		})
 	})
 })
