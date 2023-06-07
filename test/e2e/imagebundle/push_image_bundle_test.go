@@ -181,7 +181,7 @@ var _ = Describe("Push Bundle", func() {
 		).To(MatchError(fmt.Sprintf("did find any matching files for %q", bundleFile)))
 	})
 
-	Context("With proxy", func() {
+	Context("With proxy", Serial, func() {
 		BeforeEach(func() {
 			proxy := goproxy.NewProxyHttpServer()
 			proxy.Verbose = true
@@ -191,12 +191,12 @@ var _ = Describe("Push Bundle", func() {
 			DeferCleanup(proxyServer.Close)
 
 			DeferCleanup(os.Setenv, "http_proxy", os.Getenv("http_proxy"))
-			DeferCleanup(os.Setenv, "https_proxy", os.Getenv("http_proxy"))
+			DeferCleanup(os.Setenv, "https_proxy", os.Getenv("https_proxy"))
 			Expect(os.Setenv("http_proxy", proxyServer.URL)).To(Succeed())
 			Expect(os.Setenv("https_proxy", proxyServer.URL)).To(Succeed())
 		})
 
-		It("Success using a proxy", Serial, func() {
+		It("Success using a proxy", func() {
 			runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", false)
 		})
 
@@ -217,7 +217,7 @@ var _ = Describe("Push Bundle", func() {
 				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("Success using a proxy", Serial, func() {
+			It("Success using a proxy", func() {
 				runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", false)
 			})
 		})
