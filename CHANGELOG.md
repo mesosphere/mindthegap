@@ -274,6 +274,19 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.7.6 (2023-06-08)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Other Changes
+* test: Fix proxy env vars set up in push bundle by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/429
+* test: Ensure proxy tests are all run in serial by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/431
+* ci: Trigger release tag workflow on release please success by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/432
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.7.5...v1.7.6
+
 ## 1.7.5 (2023-06-05)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
