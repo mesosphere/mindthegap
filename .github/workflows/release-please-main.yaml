@@ -23,3 +23,10 @@ jobs:
           package-name: mindthegap
           pull-request-title-pattern: "build${scope}: release${component} ${version}"
           changelog-notes-type: github
+
+      - if: ${{ steps.release-please.outputs.release_created }}
+        name: Run release workflow
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: release-tag.yaml
+          ref: ${{ steps.release-please.outputs.tag_name }}
