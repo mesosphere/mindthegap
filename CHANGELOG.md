@@ -274,6 +274,17 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.7.7 (2023-06-08)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Other Changes
+* ci: Add write actions permissions for release please workflow by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/433
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.7.6...v1.7.7
+
 ## 1.7.6 (2023-06-08)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
