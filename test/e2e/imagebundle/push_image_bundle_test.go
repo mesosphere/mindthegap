@@ -54,11 +54,16 @@ var _ = Describe("Push Bundle", func() {
 		registryScheme string,
 		registryInsecure bool,
 	) {
+		httpProxy := os.Getenv("http_proxy")
+		httpsProxy := os.Getenv("https_proxy")
+		Expect(os.Unsetenv(httpProxy)).To(Succeed())
 		helpers.CreateBundle(
 			GinkgoT(),
 			bundleFile,
 			filepath.Join("testdata", "create-success.yaml"),
 		)
+		Expect(os.Setenv("http_proxy", httpProxy)).To(Succeed())
+		Expect(os.Setenv("https_proxy", httpsProxy)).To(Succeed())
 
 		registryCACertFile := ""
 		registryCertFile := ""
@@ -196,7 +201,7 @@ var _ = Describe("Push Bundle", func() {
 			Expect(os.Setenv("https_proxy", proxyServer.URL)).To(Succeed())
 		})
 
-		It("Success using a proxy", func() {
+		It("Success", func() {
 			runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", false)
 		})
 
@@ -217,7 +222,7 @@ var _ = Describe("Push Bundle", func() {
 				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("Success using a proxy", func() {
+			It("Success", func() {
 				runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", false)
 			})
 		})
