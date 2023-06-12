@@ -9,6 +9,8 @@ contrib=contrib-title-conventional-commits
 # Do not require a body in the git commit.
 ignore=body-is-missing
 
+regex-style-search = True
+
 [body-max-line-length]
 line-length=120
 
