@@ -10,7 +10,7 @@ endif
 endif
 
 .PHONY: update-distroless-base-image
-update-distroless-base-image: install-tool.gcloud install-tool.gojq install-tool.go.crane; $(info $(M) updating distroless base image)
+update-distroless-base-image: ; $(info $(M) updating distroless base image)
 	LATEST_DISTROLESS_NONROOT_DIGEST="$$(gcloud container images list-tags gcr.io/distroless/static --format=json | gojq -r '.[] | select(.tags | index("nonroot")) | .digest')"; \
 	DISTROLESS_AMD64_DIGEST="$$(crane manifest gcr.io/distroless/static@$${LATEST_DISTROLESS_NONROOT_DIGEST} | gojq -r '.manifests[] | select(.platform.os == "linux" and .platform.architecture == "amd64").digest')"; \
 	DISTROLESS_ARM64_DIGEST="$$(crane manifest gcr.io/distroless/static@$${LATEST_DISTROLESS_NONROOT_DIGEST} | gojq -r '.manifests[] | select(.platform.os == "linux" and .platform.architecture == "arm64").digest')"; \

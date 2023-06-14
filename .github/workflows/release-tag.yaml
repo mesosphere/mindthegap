@@ -22,17 +22,10 @@ jobs:
           ref: ${{ github.ref }}
           fetch-depth: 0
 
-      - name: Install tools via asdf
-        uses: asdf-vm/actions/setup@v2.2.0
+      - name: Set up devenv.sh environment
+        uses: d2iq-labs/devenv.sh-action@v1
         with:
-          asdf_branch: v0.11.2
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor  }}
-          password: ${{ secrets.GITHUB_TOKEN  }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release
         run: make release

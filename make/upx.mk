@@ -11,7 +11,6 @@ upx: ; $(info $(M) skipping packing $(UPX_REAL_TARGET) - $(GOOS)/$(GOARCH) is no
 else ifeq ($(GOOS),darwin)
 upx: ; $(info $(M) skipping packing $(UPX_REAL_TARGET) - $(GOOS) has a bug in packing especially on Ventura - https://github.com/upx/upx/issues/612)
 else
-upx: install-tool.upx
 upx: ## Pack executable using upx
 upx: ; $(info $(M) packing $(UPX_REAL_TARGET))
 	(upx -l $(UPX_REAL_TARGET) &>/dev/null && echo $(UPX_REAL_TARGET) is already packed) || upx -9 --lzma $(UPX_REAL_TARGET)

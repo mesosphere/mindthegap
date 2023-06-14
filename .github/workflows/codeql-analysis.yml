@@ -10,7 +10,7 @@ on:
 jobs:
   analyze:
     name: Analyze
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       actions: read
       contents: read
@@ -22,21 +22,21 @@ jobs:
         language: [ 'go' ]
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
-      with:
-        languages: ${{ matrix.language }}
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
 
-    - name: Install tools via asdf
-      uses: asdf-vm/actions/install@v2.2.0
-      with:
-        asdf_branch: v0.11.2
+      - name: Set up devenv.sh environment
+        uses: d2iq-labs/devenv.sh-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build
-      run: make build-snapshot
+      - name: Build
+        run: make build-snapshot
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2

@@ -52,7 +52,7 @@ served via `registry:2`.
 
 #### Pushing an image bundle
 
-***This command is deprecated - see [Pushing a bundle](#pushing-a-bundle-supports-both-image-or-helm-chart)***
+**_This command is deprecated - see [Pushing a bundle](#pushing-a-bundle-supports-both-image-or-helm-chart)_**
 
 ```shell
 mindthegap push image-bundle --image-bundle <path/to/images.tar> \
@@ -64,7 +64,7 @@ All images in the image bundle tar file will be pushed to the target OCI registr
 
 #### Serving an image bundle
 
-***This command is deprecated - see [Serving a bundle](#serving-a-bundle-supports-both-image-or-helm-chart)***
+**_This command is deprecated - see [Serving a bundle](#serving-a-bundle-supports-both-image-or-helm-chart)_**
 
 ```shell
 mindthegap serve image-bundle --image-bundle <path/to/images.tar> \
@@ -105,7 +105,7 @@ served via `registry:2`.
 
 #### Pushing a Helm chart bundle
 
-***This command is deprecated - see [Pushing a bundle](#pushing-a-bundle-supports-both-image-or-helm-chart)***
+**_This command is deprecated - see [Pushing a bundle](#pushing-a-bundle-supports-both-image-or-helm-chart)_**
 
 ```shell
 mindthegap push helm-bundle --image-bundle <path/to/helm-charts.tar> \
@@ -117,7 +117,7 @@ All Helm charts in the bundle tar file will be pushed to the target OCI registry
 
 #### Serving a Helm chart bundle
 
-***This command is deprecated - see [Serving a bundle](#serving-a-bundle-supports-both-image-or-helm-chart)***
+**_This command is deprecated - see [Serving a bundle](#serving-a-bundle-supports-both-image-or-helm-chart)_**
 
 ```shell
 mindthegap serve helm-bundle --helm-bundle <path/to/helm-charts.tar> \
@@ -163,9 +163,58 @@ The resulting tarball can be loaded into a running OCI registry, or
 be used as the initial storage for running your own registry via Docker
 or in a Kubernetes cluster.
 
-## Building
+## Contributing
 
-### Building the CLI
+This project uses <https://devenv.sh> to create a reproducible build environment. If you do not have `nix` ior `devenv`
+configured, then the following instructions should work for you. For further details, see
+<https://devenv.sh/getting-started/#installation> and <https://devenv.sh/automatic-shell-activation/>.
+
+### Install `nix`
+
+`devenv.sh` uses `nix` for creating reproducible build environments.
+
+On Linux run:
+
+```bash
+sh <(curl -fsSL https://nixos.org/nix/install) --daemon --no-channel-add --daemon-user-count 6 --yes
+```
+
+On macOS run:
+
+```bash
+sh <(curl -fsSL https://nixos.org/nix/install) --no-channel-add --daemon-user-count 6 --yes
+```
+
+Restart your shell.
+
+### Install `cachix`
+
+`devenv.sh` recommends using `cachix` to speeds up the installation by providing binaries for packages.
+
+```bash
+nix-env -iA cachix -f https://cachix.org/api/v1/install
+echo "trusted-users = root ${USER}" | sudo tee -a /etc/nix/nix.conf && sudo pkill nix-daemon
+cachix use devenv
+nix-env -if https://github.com/cachix/devenv/tarball/latest
+```
+
+### Integrate with `direnv` for automatic shell integration
+
+Install direnv: <https://direnv.net/docs/installation.html#from-system-packages>.
+
+Hook direnv into your shell if you haven't already: <https://direnv.net/docs/hook.html>.
+
+### Configure global go mod cache
+
+By default `devenv` will use an isolated go mod cache for each project which is great from an isolation point of view,
+but terrible for disk space (duplication!). To configure a global go mod cache, add the following after the `direnv`
+integration above to your shell config file, adapting the path as appropriate:
+
+```bash
+export GOMODCACHE=~/go/pkg/mod
+```
+
+## Building the CLI
 
 Build the CLI using `make build-snapshot` that will output binary into
 `dist/mindthegap_$(GOOS)_$(GOARCH)/mindthegap` and put it in `$PATH`.

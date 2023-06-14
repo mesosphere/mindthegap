@@ -9,7 +9,7 @@ on:
       - edited
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: amannn/action-semantic-pull-request@v5
         env:
