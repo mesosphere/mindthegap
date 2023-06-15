@@ -105,6 +105,34 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 				destNameOpts = append(destNameOpts, name.Insecure)
 			}
 
+			// Determine type of destination registry.
+			var prePushFuncs []prePushFunc
+			if ecr.IsECRRegistry(destRegistryURI.Host()) {
+				ecrClient, err := ecr.ClientForRegistry(destRegistryURI.Host())
+				if err != nil {
+					return err
+				}
+
+				prePushFuncs = append(
+					prePushFuncs,
+					ecr.EnsureRepositoryExistsFunc(ecrClient, ecrLifecyclePolicy),
+				)
+
+				// If a password hasn't been specified, then try to retrieve a token.
+				if destRegistryPassword == "" {
+					out.StartOperation("Retrieving ECR credentials")
+					destRegistryUsername, destRegistryPassword, err = ecr.RetrieveUsernameAndToken(ecrClient)
+					if err != nil {
+						out.EndOperation(false)
+						return fmt.Errorf(
+							"failed to retrieve ECR credentials: %w\n\nPlease ensure you have authenticated to AWS and try again",
+							err,
+						)
+					}
+					out.EndOperation(true)
+				}
+			}
+
 			keychain := authn.DefaultKeychain
 			if destRegistryUsername != "" && destRegistryPassword != "" {
 				keychain = authn.NewMultiKeychain(
@@ -121,15 +149,6 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 				)
 			}
 			destRemoteOpts = append(destRemoteOpts, remote.WithAuthFromKeychain(keychain))
-
-			// Determine type of destination registry.
-			var prePushFuncs []prePushFunc
-			if ecr.IsECRRegistry(destRegistryURI.Host()) {
-				prePushFuncs = append(
-					prePushFuncs,
-					ecr.EnsureRepositoryExistsFunc(destRegistryURI.Host(), ecrLifecyclePolicy),
-				)
-			}
 
 			if imagesCfg != nil {
 				err := pushImages(
@@ -184,6 +203,10 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 		"Username to use to log in to destination registry")
 	cmd.Flags().StringVar(&destRegistryPassword, "to-registry-password", "",
 		"Password to use to log in to destination registry")
+	cmd.MarkFlagsRequiredTogether(
+		"to-registry-username",
+		"to-registry-password",
+	)
 	cmd.Flags().StringVar(&ecrLifecyclePolicy, "ecr-lifecycle-policy-file", "",
 		"File containing ECR lifecycle policy for newly created repositories "+
 			"(only applies if target registry is hosted on ECR, ignored otherwise)")

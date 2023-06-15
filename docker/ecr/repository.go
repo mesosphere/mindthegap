@@ -5,42 +5,45 @@ package ecr
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"k8s.io/utils/pointer"
 )
 
-func EnsureRepositoryExistsFunc(registryAddress, ecrLifecyclePolicy string) func(
+func ClientForRegistry(registryAddress string) (*ecr.Client, error) {
+	_, _, region, err := ParseECRRegistry(registryAddress)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse ECR registry host URI: %w", err)
+	}
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
+	if err != nil {
+		return nil, fmt.Errorf("unable to load SDK config, %w", err)
+	}
+
+	// Using the Config value, create the ECR client
+	return ecr.NewFromConfig(cfg), nil
+}
+
+func EnsureRepositoryExistsFunc(ecrClient *ecr.Client, ecrLifecyclePolicy string) func(
 	destRegistry, repositoryName string, _ ...string,
 ) error {
 	return func(
 		destRegistry, repositoryName string, _ ...string,
 	) error {
-		_, _, region, err := ParseECRRegistry(registryAddress)
-		if err != nil {
-			return fmt.Errorf("failed to parse ECR registry host URI: %w", err)
-		}
-		cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
-		if err != nil {
-			log.Fatalf("unable to load SDK config, %v", err)
-		}
-
 		// if destRegistry has a urlPath prepend it when creating the repository
 		if _, urlPath, found := strings.Cut(destRegistry, "/"); found && len(urlPath) > 0 {
 			repositoryName = path.Join(urlPath, repositoryName)
 		}
-
-		// Using the Config value, create the S3 client
-		svc := ecr.NewFromConfig(cfg)
-		repos, err := svc.DescribeRepositories(
+		repos, err := ecrClient.DescribeRepositories(
 			context.TODO(),
 			&ecr.DescribeRepositoriesInput{
 				RepositoryNames: []string{repositoryName},
@@ -54,7 +57,7 @@ func EnsureRepositoryExistsFunc(registryAddress, ecrLifecyclePolicy string) func
 			return nil
 		}
 
-		_, err = svc.CreateRepository(
+		_, err = ecrClient.CreateRepository(
 			context.TODO(),
 			&ecr.CreateRepositoryInput{
 				RepositoryName:             &repositoryName,
@@ -76,7 +79,7 @@ func EnsureRepositoryExistsFunc(registryAddress, ecrLifecyclePolicy string) func
 				err,
 			)
 		}
-		_, err = svc.PutLifecyclePolicy(
+		_, err = ecrClient.PutLifecyclePolicy(
 			context.TODO(),
 			&ecr.PutLifecyclePolicyInput{
 				RepositoryName:      &repositoryName,
@@ -89,4 +92,24 @@ func EnsureRepositoryExistsFunc(registryAddress, ecrLifecyclePolicy string) func
 
 		return nil
 	}
+}
+
+func RetrieveUsernameAndToken(ecrClient *ecr.Client) (username, token string, err error) {
+	// Passing nil as second parameter as passing registry ID is deprecated and does not affect authorization.
+	out, err := ecrClient.GetAuthorizationToken(context.Background(), nil)
+	if err != nil {
+		return "", "", err
+	}
+	// Returned token is a base64-encoded `<username>:<password>``. Username will normally be AWS but that is not
+	// guaranteed.
+	base64EncodedAuthorizationToken := aws.ToString(out.AuthorizationData[0].AuthorizationToken)
+
+	fmt.Printf("%q", base64EncodedAuthorizationToken)
+
+	decodedAuthorizationToken, err := base64.StdEncoding.DecodeString(base64EncodedAuthorizationToken)
+	if err != nil {
+		return "", "", err
+	}
+	username, token, _ = strings.Cut(string(decodedAuthorizationToken), ":")
+	return username, token, nil
 }
