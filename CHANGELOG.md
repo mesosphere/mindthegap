@@ -274,6 +274,20 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.8.0 (2023-06-15)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: Automatic retrieval of ECR credentials if using ECR as registry by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/440
+### Other Changes
+* test: Ensure proxy settings do not affect bundle creation before test by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/438
+* build: Try using devenv.sh by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/428
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.7.7...v1.8.0
+
 ## 1.7.7 (2023-06-08)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
