@@ -26,7 +26,7 @@ import (
 	"github.com/mesosphere/mindthegap/test/e2e/imagebundle/helpers"
 )
 
-var _ = Describe("Import Bundle", Label("import"), func() {
+var _ = Describe("Import Bundle", Label("import"), Serial, func() {
 	DescribeTable(
 		"Success",
 		func(image, opsys, arch, expectedDigest string) {
