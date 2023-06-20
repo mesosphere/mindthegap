@@ -64,11 +64,11 @@ var _ = Describe("Push Bundle", func() {
 			close(done)
 		}()
 
-		helpers.WaitForTCPPort(GinkgoT(), "localhost", port)
+		helpers.WaitForTCPPort(GinkgoT(), "127.0.0.1", port)
 
 		cmd.SetArgs([]string{
 			"--helm-bundle", bundleFile,
-			"--to-registry", fmt.Sprintf("localhost:%d/charts", port),
+			"--to-registry", fmt.Sprintf("127.0.0.1:%d/charts", port),
 			"--to-registry-insecure-skip-tls-verify",
 		})
 
@@ -76,7 +76,7 @@ var _ = Describe("Push Bundle", func() {
 
 		helpers.ValidateChartIsAvailable(
 			GinkgoT(),
-			"localhost",
+			"127.0.0.1",
 			port,
 			"podinfo",
 			"6.2.0",
@@ -203,7 +203,7 @@ var _ = Describe("Push Bundle", func() {
 	It("Bundle does not exist", func() {
 		cmd.SetArgs([]string{
 			"--helm-bundle", bundleFile,
-			"--to-registry", "localhost:0/charts",
+			"--to-registry", "127.0.0.1:0/charts",
 			"--to-registry-insecure-skip-tls-verify",
 		})
 

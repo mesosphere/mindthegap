@@ -79,7 +79,7 @@ log:
 		port = uint16(freePort)
 	}
 
-	host := "localhost"
+	host := "127.0.0.1"
 	if c.Host != "" {
 		host = c.Host
 	}

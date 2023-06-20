@@ -64,11 +64,11 @@ var _ = Describe("Serve Bundle", func() {
 			close(done)
 		}()
 
-		helpers.WaitForTCPPort(GinkgoT(), "localhost", port)
+		helpers.WaitForTCPPort(GinkgoT(), "127.0.0.1", port)
 
 		helpers.ValidateChartIsAvailable(
 			GinkgoT(),
-			"localhost",
+			"127.0.0.1",
 			port,
 			"podinfo",
 			"6.2.0",
@@ -118,7 +118,7 @@ var _ = Describe("Serve Bundle", func() {
 		helpers.WaitForTCPPort(GinkgoT(), ipAddr.String(), port)
 
 		// TODO Reenable once Helm supports custom CA certs and self-signed certs.
-		// helpers.ValidateChartIsAvailable(GinkgoT(), "localhost", port, "podinfo", "6.2.0", helm.CAFileOpt(caCertFile))
+		// helpers.ValidateChartIsAvailable(GinkgoT(), "127.0.0.1", port, "podinfo", "6.2.0", helm.CAFileOpt(caCertFile))
 
 		close(stopCh)
 

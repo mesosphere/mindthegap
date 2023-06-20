@@ -104,7 +104,7 @@ func NewCommand(
 	cmd.Flags().StringSliceVar(&bundleFiles, bundleCmdName, nil,
 		"Bundle to serve. Can also be a glob pattern.")
 	_ = cmd.MarkFlagRequired(bundleCmdName)
-	cmd.Flags().StringVar(&listenAddress, "listen-address", "localhost", "Address to listen on")
+	cmd.Flags().StringVar(&listenAddress, "listen-address", "127.0.0.1", "Address to listen on")
 	cmd.Flags().
 		Uint16Var(&listenPort, "listen-port", 0, "Port to listen on (0 means use any free port)")
 	cmd.Flags().StringVar(&tlsCertificate, "tls-cert-file", "", "TLS certificate file")

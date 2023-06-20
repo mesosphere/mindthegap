@@ -68,7 +68,7 @@ var _ = Describe("Push Bundle", func() {
 		registryCACertFile := ""
 		registryCertFile := ""
 		registryKeyFile := ""
-		if registryHost != "localhost" && registryScheme != "http" {
+		if registryHost != "127.0.0.1" && registryScheme != "http" {
 			tempCertDir := GinkgoT().TempDir()
 			registryCACertFile, _, registryCertFile, registryKeyFile = helpers.GenerateCertificateAndKeyWithIPSAN(
 				GinkgoT(),
@@ -153,7 +153,7 @@ var _ = Describe("Push Bundle", func() {
 	DescribeTable("Success",
 		runTest,
 
-		Entry("Without TLS", "localhost", "", true),
+		Entry("Without TLS", "127.0.0.1", "", true),
 
 		Entry("With TLS", helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", true),
 
@@ -177,7 +177,7 @@ var _ = Describe("Push Bundle", func() {
 	It("Bundle does not exist", func() {
 		cmd.SetArgs([]string{
 			"--image-bundle", bundleFile,
-			"--to-registry", "localhost:0/charts",
+			"--to-registry", "127.0.0.1:0/charts",
 			"--to-registry-insecure-skip-tls-verify",
 		})
 

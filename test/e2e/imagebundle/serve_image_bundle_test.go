@@ -68,11 +68,11 @@ var _ = Describe("Serve Bundle", func() {
 			close(done)
 		}()
 
-		helpers.WaitForTCPPort(GinkgoT(), "localhost", port)
+		helpers.WaitForTCPPort(GinkgoT(), "127.0.0.1", port)
 
 		helpers.ValidateImageIsAvailable(
 			GinkgoT(),
-			"localhost",
+			"127.0.0.1",
 			port,
 			"stefanprodan/podinfo",
 			"6.2.0",
