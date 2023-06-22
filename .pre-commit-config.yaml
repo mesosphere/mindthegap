@@ -6,7 +6,9 @@ repos:
   rev: v1.0.0-rc.1
   hooks:
   - id: go-mod-tidy
+    stages: [commit]
   - id: golangci-lint-mod
+    stages: [commit]
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v4.4.0
   hooks:

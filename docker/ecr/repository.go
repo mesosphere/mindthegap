@@ -102,7 +102,9 @@ func RetrieveUsernameAndToken(ecrClient *ecr.Client) (username, token string, er
 	// guaranteed.
 	base64EncodedAuthorizationToken := aws.ToString(out.AuthorizationData[0].AuthorizationToken)
 
-	decodedAuthorizationToken, err := base64.StdEncoding.DecodeString(base64EncodedAuthorizationToken)
+	decodedAuthorizationToken, err := base64.StdEncoding.DecodeString(
+		base64EncodedAuthorizationToken,
+	)
 	if err != nil {
 		return "", "", err
 	}
