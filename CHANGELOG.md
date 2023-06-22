@@ -274,6 +274,23 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.9.0 (2023-06-22)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: Add --on-existing-tag flag to push bundle by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/449
+### Fixes 🔧
+* fix: Do not log base64 encoded ECR token by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/450
+### Other Changes
+* test: Use IPv4 localhost address instead of localhost hostname by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/447
+* ci: Run macOS tests on Ventura by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/448
+* build: Tweak golangci-lint configuration by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/451
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.8.0...v1.9.0
+
 ## 1.8.0 (2023-06-15)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
