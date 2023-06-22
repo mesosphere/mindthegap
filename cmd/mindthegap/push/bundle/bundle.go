@@ -4,15 +4,21 @@
 package bundle
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
+	"strings"
 
 	"github.com/containers/image/v5/types"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/logs"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/spf13/cobra"
+	"github.com/thediveo/enumflag/v2"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
@@ -26,6 +32,20 @@ import (
 	"github.com/mesosphere/mindthegap/images/httputils"
 )
 
+type onExistingTagMode enumflag.Flag
+
+const (
+	Overwrite onExistingTagMode = iota
+	Error
+	Skip
+)
+
+var onExistingTagModes = map[onExistingTagMode][]string{
+	Overwrite: {"overwrite"},
+	Error:     {"error"},
+	Skip:      {"skip"},
+}
+
 func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 	var (
 		bundleFiles                   []string
@@ -35,6 +55,7 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 		destRegistryUsername          string
 		destRegistryPassword          string
 		ecrLifecyclePolicy            string
+		onExistingTag                 = Overwrite
 	)
 
 	cmd := &cobra.Command{
@@ -47,11 +68,11 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 			out.StartOperation("Creating temporary directory")
 			tempDir, err := os.MkdirTemp("", ".bundle-*")
 			if err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return fmt.Errorf("failed to create temporary directory: %w", err)
 			}
 			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempDir) })
-			out.EndOperation(true)
+			out.EndOperationWithStatus(output.Success())
 
 			bundleFiles, err = utils.FilesWithGlobs(bundleFiles)
 			if err != nil {
@@ -67,7 +88,7 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 				registry.Config{StorageDirectory: tempDir, ReadOnly: true},
 			)
 			if err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return fmt.Errorf("failed to create local Docker registry: %w", err)
 			}
 			go func() {
@@ -76,7 +97,7 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 					os.Exit(2)
 				}
 			}()
-			out.EndOperation(true)
+			out.EndOperationWithStatus(output.Success())
 
 			logs.Debug.SetOutput(out.V(4).InfoWriter())
 			logs.Warn.SetOutput(out.InfoWriter())
@@ -91,7 +112,7 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 			destTLSRoundTripper, err := httputils.TLSConfiguredRoundTripper(
 				remote.DefaultTransport,
 				destRegistryURI.Host(),
-				flags.SkipTLSVerify(destRegistrySkipTLSVerify, destRegistryURI),
+				flags.SkipTLSVerify(destRegistrySkipTLSVerify, &destRegistryURI),
 				destRegistryCACertificateFile,
 			)
 			if err != nil {
@@ -101,7 +122,7 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 			destRemoteOpts := []remote.Option{remote.WithTransport(destTLSRoundTripper)}
 
 			var destNameOpts []name.Option
-			if flags.SkipTLSVerify(destRegistrySkipTLSVerify, destRegistryURI) {
+			if flags.SkipTLSVerify(destRegistrySkipTLSVerify, &destRegistryURI) {
 				destNameOpts = append(destNameOpts, name.Insecure)
 			}
 
@@ -123,13 +144,13 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 					out.StartOperation("Retrieving ECR credentials")
 					destRegistryUsername, destRegistryPassword, err = ecr.RetrieveUsernameAndToken(ecrClient)
 					if err != nil {
-						out.EndOperation(false)
+						out.EndOperationWithStatus(output.Failure())
 						return fmt.Errorf(
 							"failed to retrieve ECR credentials: %w\n\nPlease ensure you have authenticated to AWS and try again",
 							err,
 						)
 					}
-					out.EndOperation(true)
+					out.EndOperationWithStatus(output.Success())
 				}
 			}
 
@@ -150,14 +171,24 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 			}
 			destRemoteOpts = append(destRemoteOpts, remote.WithAuthFromKeychain(keychain))
 
+			srcRegistry, err := name.NewRegistry(reg.Address(), name.Insecure, name.StrictValidation)
+			if err != nil {
+				return err
+			}
+			destRegistry, err := name.NewRegistry(destRegistryURI.Host(), append(destNameOpts, name.StrictValidation)...)
+			if err != nil {
+				return err
+			}
+
 			if imagesCfg != nil {
 				err := pushImages(
 					*imagesCfg,
-					reg.Address(),
+					srcRegistry,
 					sourceRemoteOpts,
-					destRegistryURI.Address(),
+					destRegistry,
+					destRegistryURI.Path(),
 					destRemoteOpts,
-					destNameOpts,
+					onExistingTag,
 					out,
 					prePushFuncs...,
 				)
@@ -166,12 +197,22 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 				}
 			}
 
+			chartsSrcRegistry, err := name.NewRegistry(
+				reg.Address(),
+				name.Insecure,
+			)
+			if err != nil {
+				return err
+			}
+
 			if chartsCfg != nil {
 				err := pushOCIArtifacts(
 					*chartsCfg,
-					fmt.Sprintf("%s/charts", reg.Address()),
+					chartsSrcRegistry,
+					"/charts",
 					sourceRemoteOpts,
-					destRegistryURI.Address(),
+					destRegistry,
+					destRegistryURI.Path(),
 					destRemoteOpts,
 					out,
 					prePushFuncs...,
@@ -211,18 +252,30 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 		"File containing ECR lifecycle policy for newly created repositories "+
 			"(only applies if target registry is hosted on ECR, ignored otherwise)")
 
+	cmd.Flags().Var(
+		enumflag.New(&onExistingTag, "string", onExistingTagModes, enumflag.EnumCaseSensitive),
+		"on-existing-tag",
+		`how to handle existing tags: one of "overwrite", "error", or "skip"`,
+	)
+
 	return cmd
 }
 
-type prePushFunc func(destRegistry, imageName string, imageTags ...string) error
+type prePushFunc func(destRepositoryName name.Repository, imageTags ...string) error
 
 func pushImages(
 	cfg config.ImagesConfig,
-	sourceRegistry string, sourceRemoteOpts []remote.Option,
-	destRegistry string, destRemoteOpts []remote.Option, destNameOpts []name.Option,
+	sourceRegistry name.Registry, sourceRemoteOpts []remote.Option,
+	destRegistry name.Registry, destRegistryPath string, destRemoteOpts []remote.Option,
+	onExistingTag onExistingTagMode,
 	out output.Output,
 	prePushFuncs ...prePushFunc,
 ) error {
+	puller, err := remote.NewPuller(destRemoteOpts...)
+	if err != nil {
+		return nil
+	}
+
 	// Sort registries for deterministic ordering.
 	regNames := cfg.SortedRegistryNames()
 
@@ -233,50 +286,60 @@ func pushImages(
 		imageNames := registryConfig.SortedImageNames()
 
 		for _, imageName := range imageNames {
+			srcRepository := sourceRegistry.Repo(imageName)
+			destRepository := destRegistry.Repo(strings.TrimLeft(destRegistryPath, "/"), imageName)
+
 			imageTags := registryConfig.Images[imageName]
 
 			for _, prePush := range prePushFuncs {
-				if err := prePush(destRegistry, imageName, imageTags...); err != nil {
+				if err := prePush(destRepository, imageTags...); err != nil {
 					return fmt.Errorf("pre-push func failed: %w", err)
 				}
 			}
 
+			existingImageTags, err := getExistingImages(context.Background(), onExistingTag, puller, destRepository)
+			if err != nil {
+				return err
+			}
+
 			for _, imageTag := range imageTags {
+				srcImage := srcRepository.Tag(imageTag)
+				destImage := destRepository.Tag(imageTag)
+
 				out.StartOperation(
-					fmt.Sprintf("Copying %s/%s:%s (from bundle) to %s/%s:%s",
-						registryName, imageName, imageTag,
-						destRegistry, imageName, imageTag,
+					fmt.Sprintf("Copying %s (from bundle) to %s",
+						srcImage.Name(),
+						destImage.Name(),
 					),
 				)
 
-				srcImage := fmt.Sprintf("%s/%s:%s", sourceRegistry, imageName, imageTag)
-				srcRef, err := name.ParseReference(srcImage, name.Insecure, name.StrictValidation)
+				switch onExistingTag {
+				case Overwrite:
+					// Do nothing, just attempt to overwrite
+				case Skip:
+					if _, exists := existingImageTags[imageTag]; exists {
+						out.EndOperationWithStatus(output.Skipped())
+						continue
+					}
+				case Error:
+					if _, exists := existingImageTags[imageTag]; exists {
+						out.EndOperationWithStatus(output.Failure())
+						return fmt.Errorf("image tag already exists in destination registry")
+					}
+				}
+
+				idx, err := remote.Index(srcImage, sourceRemoteOpts...)
 				if err != nil {
-					out.EndOperation(false)
+					out.EndOperationWithStatus(output.Failure())
 					return err
 				}
 
-				destImage := fmt.Sprintf("%s/%s:%s", destRegistry, imageName, imageTag)
-				dstRef, err := name.ParseReference(
-					destImage,
-					append(destNameOpts, name.StrictValidation)...)
-				if err != nil {
-					out.EndOperation(false)
+				if err := remote.WriteIndex(destImage, idx, destRemoteOpts...); err != nil {
+					out.EndOperationWithStatus(output.Failure())
 					return err
 				}
 
-				idx, err := remote.Index(srcRef, sourceRemoteOpts...)
-				if err != nil {
-					out.EndOperation(false)
-					return err
-				}
-
-				if err := remote.WriteIndex(dstRef, idx, destRemoteOpts...); err != nil {
-					out.EndOperation(false)
-					return err
-				}
-
-				out.EndOperation(true)
+				out.EndOperationWithStatus(output.Success())
 			}
 		}
 	}
@@ -286,8 +349,8 @@ func pushImages(
 
 func pushOCIArtifacts(
 	cfg config.HelmChartsConfig,
-	sourceRegistry string, sourceRemoteOpts []remote.Option,
-	destRegistry string, destRemoteOpts []remote.Option,
+	sourceRegistry name.Registry, sourceRegistryPath string, sourceRemoteOpts []remote.Option,
+	destRegistry name.Registry, destRegistryPath string, destRemoteOpts []remote.Option,
 	out output.Output,
 	prePushFuncs ...prePushFunc,
 ) error {
@@ -301,50 +364,71 @@ func pushOCIArtifacts(
 		chartNames := repoConfig.SortedChartNames()
 
 		for _, chartName := range chartNames {
+			srcRepository := sourceRegistry.Repo(strings.TrimLeft(sourceRegistryPath, "/"), chartName)
+			destRepository := destRegistry.Repo(strings.TrimLeft(destRegistryPath, "/"), chartName)
+
 			chartVersions := repoConfig.Charts[chartName]
 
 			for _, prePush := range prePushFuncs {
-				if err := prePush("", destRegistry); err != nil {
+				if err := prePush(destRepository, chartVersions...); err != nil {
 					return fmt.Errorf("pre-push func failed: %w", err)
 				}
 			}
 
 			for _, chartVersion := range chartVersions {
+				destChart := destRepository.Tag(chartVersion)
+
 				out.StartOperation(
-					fmt.Sprintf("Copying %s:%s (from bundle) to %s/%s:%s",
+					fmt.Sprintf("Copying %s:%s (from bundle) to %s",
 						chartName, chartVersion,
-						destRegistry, chartName, chartVersion,
+						destChart.Name(),
 					),
 				)
 
-				srcChart := fmt.Sprintf("%s/%s:%s", sourceRegistry, chartName, chartVersion)
-				srcChartRef, err := name.ParseReference(srcChart, name.StrictValidation)
+				srcChart := srcRepository.Tag(chartVersion)
+				src, err := remote.Image(srcChart, sourceRemoteOpts...)
 				if err != nil {
-					out.EndOperation(false)
-					return err
-				}
-				src, err := remote.Image(srcChartRef, sourceRemoteOpts...)
-				if err != nil {
-					out.EndOperation(false)
+					out.EndOperationWithStatus(output.Failure())
 					return err
 				}
 
-				destChart := fmt.Sprintf("%s/%s:%s", destRegistry, chartName, chartVersion)
-				destChartRef, err := name.ParseReference(destChart, name.StrictValidation)
-				if err != nil {
-					out.EndOperation(false)
+				if err := remote.Write(destChart, src, destRemoteOpts...); err != nil {
+					out.EndOperationWithStatus(output.Failure())
 					return err
 				}
 
-				if err := remote.Write(destChartRef, src, destRemoteOpts...); err != nil {
-					out.EndOperation(false)
-					return err
-				}
-
-				out.EndOperation(true)
+				out.EndOperationWithStatus(output.Success())
 			}
 		}
 	}
 
 	return nil
+}
+
+func getExistingImages(
+	ctx context.Context, onExistingTag onExistingTagMode, puller *remote.Puller, repo name.Repository,
+) (map[string]struct{}, error) {
+	if onExistingTag == Overwrite {
+		return nil, nil
+	}
+
+	tags, err := puller.List(ctx, repo)
+	if err != nil {
+		var terr *transport.Error
+		if errors.As(err, &terr) {
+			// Some registries create repository on first push, so listing tags will fail.
+			// If we see 404 or 403, assume we failed because the repository hasn't been created yet.
+			if terr.StatusCode == http.StatusNotFound || terr.StatusCode == http.StatusForbidden {
+				return nil, nil
+			}
+		}
+		return nil, fmt.Errorf("failed to list existing tags: %w", err)
+	}
+
+	existingTags := make(map[string]struct{}, len(tags))
+	for _, t := range tags {
+		existingTags[t] = struct{}{}
+	}
+
+	return existingTags, nil
 }

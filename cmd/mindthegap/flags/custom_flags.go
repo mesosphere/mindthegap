@@ -18,26 +18,27 @@ type RegistryURI struct {
 	scheme  string
 	address string
 	host    string
+	path    string
 }
 
-func (v RegistryURI) String() string {
+func (v *RegistryURI) String() string {
 	return v.raw
 }
 
 func (v *RegistryURI) Set(value string) (err error) {
 	v.raw = value
-	v.scheme, v.address, v.host, err = parsePossibleURI(value)
+	v.scheme, v.address, v.host, v.path, err = parsePossibleURI(value)
 
 	return
 }
 
-func parsePossibleURI(raw string) (scheme, address, host string, err error) {
+func parsePossibleURI(raw string) (scheme, address, host, subpath string, err error) {
 	u, err := url.ParseRequestURI(raw)
 	if err != nil || u.Host == "" {
 		// parse again with a scheme to make it a valid URI
 		u, err = url.ParseRequestURI("unused://" + raw)
 		if err != nil {
-			return "", "", "", fmt.Errorf("could not parse raw url: %q, error: %w", raw, err)
+			return "", "", "", "", fmt.Errorf("could not parse raw url: %q, error: %w", raw, err)
 		}
 	} else {
 		// only set the scheme when set by the caller
@@ -46,19 +47,23 @@ func parsePossibleURI(raw string) (scheme, address, host string, err error) {
 
 	address = path.Join(u.Host, u.Path)
 
-	return scheme, address, u.Host, nil
+	return scheme, address, u.Host, u.Path, nil
 }
 
-func (v RegistryURI) Scheme() string {
+func (v *RegistryURI) Scheme() string {
 	return v.scheme
 }
 
-func (v RegistryURI) Address() string {
+func (v *RegistryURI) Address() string {
 	return v.address
 }
 
-func (v RegistryURI) Host() string {
+func (v *RegistryURI) Host() string {
 	return v.host
+}
+
+func (v *RegistryURI) Path() string {
+	return v.path
 }
 
 func (*RegistryURI) Type() string {

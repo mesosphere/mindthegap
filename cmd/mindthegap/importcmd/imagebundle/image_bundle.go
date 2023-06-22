@@ -41,11 +41,11 @@ func NewCommand(out output.Output) *cobra.Command {
 			out.StartOperation("Creating temporary directory")
 			tempDir, err := os.MkdirTemp("", ".image-bundle-*")
 			if err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return fmt.Errorf("failed to create temporary directory: %w", err)
 			}
 			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempDir) })
-			out.EndOperation(true)
+			out.EndOperationWithStatus(output.Success())
 
 			imageBundleFiles, err = utils.FilesWithGlobs(imageBundleFiles)
 			if err != nil {
@@ -61,7 +61,7 @@ func NewCommand(out output.Output) *cobra.Command {
 				registry.Config{StorageDirectory: tempDir, ReadOnly: true},
 			)
 			if err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return fmt.Errorf("failed to create local Docker registry: %w", err)
 			}
 			go func() {
@@ -70,7 +70,7 @@ func NewCommand(out output.Output) *cobra.Command {
 					os.Exit(2)
 				}
 			}()
-			out.EndOperation(true)
+			out.EndOperationWithStatus(output.Success())
 
 			ociExportsTempDir, err := os.MkdirTemp("", ".oci-exports-*")
 			if err != nil {
@@ -95,7 +95,7 @@ func NewCommand(out output.Output) *cobra.Command {
 
 						ref, err := name.ParseReference(srcImageName, name.StrictValidation)
 						if err != nil {
-							out.EndOperation(false)
+							out.EndOperationWithStatus(output.Failure())
 							return err
 						}
 
@@ -107,20 +107,20 @@ func NewCommand(out output.Output) *cobra.Command {
 							),
 						)
 						if err != nil {
-							out.EndOperation(false)
+							out.EndOperationWithStatus(output.Failure())
 							return err
 						}
 
 						tag, err := name.NewTag(destImageName, name.StrictValidation)
 						if err != nil {
-							out.EndOperation(false)
+							out.EndOperationWithStatus(output.Failure())
 							return err
 						}
 
 						exportTarball := filepath.Join(ociExportsTempDir, "docker-archive.tar")
 
 						if err := tarball.MultiWriteToFile(exportTarball, map[name.Tag]v1.Image{tag: v1Image}); err != nil {
-							out.EndOperation(false)
+							out.EndOperationWithStatus(output.Failure())
 							return err
 						}
 
@@ -129,7 +129,7 @@ func NewCommand(out output.Output) *cobra.Command {
 						)
 						if err != nil {
 							out.Warn(string(ctrOutput))
-							out.EndOperation(false)
+							out.EndOperationWithStatus(output.Failure())
 							return err
 						}
 
@@ -137,7 +137,7 @@ func NewCommand(out output.Output) *cobra.Command {
 
 						_ = os.Remove(exportTarball)
 
-						out.EndOperation(true)
+						out.EndOperationWithStatus(output.Success())
 					}
 				}
 			}

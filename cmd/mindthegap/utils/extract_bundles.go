@@ -44,24 +44,24 @@ func ExtractBundles(
 		out.StartOperation(fmt.Sprintf("Unarchiving image bundle %q", imageBundleFile))
 		err := archive.UnarchiveToDirectory(imageBundleFile, dest)
 		if err != nil {
-			out.EndOperation(false)
+			out.EndOperationWithStatus(output.Failure())
 			return nil, nil, fmt.Errorf(
 				"failed to unarchive image bundle: %w",
 				err,
 			)
 		}
-		out.EndOperation(true)
+		out.EndOperationWithStatus(output.Success())
 
 		imagesCfgFile := filepath.Join(dest, "images.yaml")
 		if _, err := os.Lstat(imagesCfgFile); err == nil {
 			out.StartOperation("Parsing image bundle config")
 			imageBundleCfg, err := config.ParseImagesConfigFile(imagesCfgFile)
 			if err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return nil, nil, err
 			}
 			out.V(4).Infof("Images config: %+v", imageBundleCfg)
-			out.EndOperation(true)
+			out.EndOperationWithStatus(output.Success())
 
 			imagesCfg = imagesCfg.Merge(imageBundleCfg)
 		}
@@ -71,11 +71,11 @@ func ExtractBundles(
 			out.StartOperation("Parsing Helm charts bundle config")
 			helmChartsBundleCfg, err := config.ParseHelmChartsConfigFile(helmChartsCfgFile)
 			if err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return nil, nil, err
 			}
 			out.V(4).Infof("Helm charts config: %+v", helmChartsBundleCfg)
-			out.EndOperation(true)
+			out.EndOperationWithStatus(output.Success())
 
 			helmChartsCfg = helmChartsCfg.Merge(helmChartsBundleCfg)
 		}

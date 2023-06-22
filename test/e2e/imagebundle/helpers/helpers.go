@@ -16,8 +16,10 @@ import (
 	"math/big"
 	"net"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/go-containerregistry/pkg/name"
@@ -185,13 +187,14 @@ func ValidateImageIsAvailable(
 	t ginkgo.GinkgoTInterface,
 	addr string,
 	port int,
-	image, tag string,
+	registryPath, image, tag string,
 	platforms []*v1.Platform,
 	opts ...remote.Option,
 ) {
 	t.Helper()
 
-	imageName := fmt.Sprintf("%s:%d/%s:%s", addr, port, image, tag)
+	imagePath := path.Join(strings.TrimLeft(registryPath, "/"), image)
+	imageName := fmt.Sprintf("%s:%d/%s:%s", addr, port, imagePath, tag)
 	ref, err := name.ParseReference(imageName, name.StrictValidation)
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 	idx, err := remote.Index(

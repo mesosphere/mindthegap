@@ -40,30 +40,30 @@ func NewCommand(out output.Output) *cobra.Command {
 				_, err := os.Stat(outputFile)
 				switch {
 				case err == nil:
-					out.EndOperation(false)
+					out.EndOperationWithStatus(output.Failure())
 					return fmt.Errorf(
 						"%s already exists: specify --overwrite to overwrite existing file",
 						outputFile,
 					)
 				case !errors.Is(err, os.ErrNotExist):
-					out.EndOperation(false)
+					out.EndOperationWithStatus(output.Failure())
 					return fmt.Errorf(
 						"failed to check if output file %s already exists: %w",
 						outputFile,
 						err,
 					)
 				default:
-					out.EndOperation(true)
+					out.EndOperationWithStatus(output.Success())
 				}
 			}
 
 			out.StartOperation("Parsing Helm chart bundle config")
 			cfg, err := config.ParseHelmChartsConfigFile(configFile)
 			if err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return err
 			}
-			out.EndOperation(true)
+			out.EndOperationWithStatus(output.Success())
 			out.V(4).Infof("Helm charts config: %+v", cfg)
 
 			configFileAbs, err := filepath.Abs(configFile)
@@ -74,7 +74,7 @@ func NewCommand(out output.Output) *cobra.Command {
 			out.StartOperation("Creating temporary OCI registry directory")
 			outputFileAbs, err := filepath.Abs(outputFile)
 			if err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return fmt.Errorf(
 					"failed to determine where to create temporary directory: %w",
 					err,
@@ -86,16 +86,16 @@ func NewCommand(out output.Output) *cobra.Command {
 
 			tempRegistryDir, err := os.MkdirTemp(filepath.Dir(outputFileAbs), ".helm-bundle-*")
 			if err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return fmt.Errorf("failed to create temporary directory for OCI registry: %w", err)
 			}
 			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempRegistryDir) })
-			out.EndOperation(true)
+			out.EndOperationWithStatus(output.Success())
 
 			out.StartOperation("Starting temporary OCI registry")
 			reg, err := registry.NewRegistry(registry.Config{StorageDirectory: tempRegistryDir})
 			if err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return fmt.Errorf("failed to create local OCI registry: %w", err)
 			}
 			go func() {
@@ -104,20 +104,20 @@ func NewCommand(out output.Output) *cobra.Command {
 					os.Exit(2)
 				}
 			}()
-			out.EndOperation(true)
+			out.EndOperationWithStatus(output.Success())
 
 			out.StartOperation("Creating temporary chart storage directory")
 
 			tempHelmChartStorageDir, err := os.MkdirTemp("", ".helm-bundle-temp-storage-*")
 			if err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return fmt.Errorf(
 					"failed to create temporary directory for Helm chart storage: %w",
 					err,
 				)
 			}
 			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempHelmChartStorageDir) })
-			out.EndOperation(true)
+			out.EndOperationWithStatus(output.Success())
 
 			helmClient, helmCleanup := helm.NewClient(out)
 			cleaner.AddCleanupFn(func() { _ = helmCleanup() })
@@ -157,14 +157,14 @@ func NewCommand(out output.Output) *cobra.Command {
 							opts...,
 						)
 						if err != nil {
-							out.EndOperation(false)
+							out.EndOperationWithStatus(output.Failure())
 							return fmt.Errorf("failed to create Helm chart bundle: %v", err)
 						}
 
 						if err := helmClient.PushHelmChartToOCIRegistry(
 							downloaded, ociAddress,
 						); err != nil {
-							out.EndOperation(false)
+							out.EndOperationWithStatus(output.Failure())
 							return fmt.Errorf(
 								"failed to push Helm chart to temporary registry: %w",
 								err,
@@ -175,7 +175,7 @@ func NewCommand(out output.Output) *cobra.Command {
 						// directory anyway.
 						_ = os.Remove(downloaded)
 					}
-					out.EndOperation(true)
+					out.EndOperationWithStatus(output.Success())
 				}
 			}
 			for _, chartURL := range cfg.ChartURLs {
@@ -186,13 +186,13 @@ func NewCommand(out output.Output) *cobra.Command {
 					filepath.Dir(configFileAbs),
 				)
 				if err != nil {
-					out.EndOperation(false)
+					out.EndOperationWithStatus(output.Failure())
 					return fmt.Errorf("failed to create Helm chart bundle: %v", err)
 				}
 
 				chrt, err := helm.LoadChart(downloaded)
 				if err != nil {
-					out.EndOperation(false)
+					out.EndOperationWithStatus(output.Failure())
 					return fmt.Errorf(
 						"failed to extract Helm chart details from local chart: %w",
 						err,
@@ -217,7 +217,7 @@ func NewCommand(out output.Output) *cobra.Command {
 				if err := helmClient.PushHelmChartToOCIRegistry(
 					downloaded, ociAddress,
 				); err != nil {
-					out.EndOperation(false)
+					out.EndOperationWithStatus(output.Failure())
 					return fmt.Errorf("failed to push Helm chart to temporary registry: %w", err)
 				}
 
@@ -225,7 +225,7 @@ func NewCommand(out output.Output) *cobra.Command {
 				// directory anyway.
 				_ = os.Remove(downloaded)
 
-				out.EndOperation(true)
+				out.EndOperationWithStatus(output.Success())
 			}
 
 			if err := config.WriteSanitizedHelmChartsConfig(cfg, filepath.Join(tempRegistryDir, "charts.yaml")); err != nil {
@@ -234,10 +234,10 @@ func NewCommand(out output.Output) *cobra.Command {
 
 			out.StartOperation(fmt.Sprintf("Archiving Helm charts to %s", outputFile))
 			if err := archive.ArchiveDirectory(tempRegistryDir, outputFile); err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return fmt.Errorf("failed to create Helm charts bundle tarball: %w", err)
 			}
-			out.EndOperation(true)
+			out.EndOperationWithStatus(output.Success())
 
 			return nil
 		},
