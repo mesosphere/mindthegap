@@ -74,6 +74,7 @@ var _ = Describe("Serve Bundle", func() {
 			GinkgoT(),
 			"127.0.0.1",
 			port,
+			"",
 			"stefanprodan/podinfo",
 			"6.2.0",
 			[]*v1.Platform{{
@@ -136,6 +137,7 @@ var _ = Describe("Serve Bundle", func() {
 			GinkgoT(),
 			ipAddr.String(),
 			port,
+			"",
 			"stefanprodan/podinfo",
 			"6.2.0",
 			[]*v1.Platform{{

@@ -42,12 +42,12 @@ func NewCommand(
 			out.StartOperation("Creating temporary directory")
 			tempDir, err := os.MkdirTemp("", ".bundle-*")
 			if err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return fmt.Errorf("failed to create temporary directory: %w", err)
 			}
 			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempDir) })
 
-			out.EndOperation(true)
+			out.EndOperationWithStatus(output.Success())
 
 			bundleFiles, err = utils.FilesWithGlobs(bundleFiles)
 			if err != nil {
@@ -83,10 +83,10 @@ func NewCommand(
 				},
 			})
 			if err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return fmt.Errorf("failed to create local Docker registry: %w", err)
 			}
-			out.EndOperation(true)
+			out.EndOperationWithStatus(output.Success())
 			out.Infof("Listening on %s\n", reg.Address())
 
 			go func() {

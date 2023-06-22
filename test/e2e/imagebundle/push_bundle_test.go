@@ -6,6 +6,7 @@
 package imagebundle_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net"
@@ -14,6 +15,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 
 	"github.com/docker/cli/cli/config"
 	"github.com/elazarl/goproxy"
@@ -52,6 +54,7 @@ var _ = Describe("Push Bundle", func() {
 	runTest := func(
 		registryHost string,
 		registryScheme string,
+		registryPath string,
 		registryInsecure bool,
 	) {
 		httpProxy := os.Getenv("http_proxy")
@@ -101,7 +104,7 @@ var _ = Describe("Push Bundle", func() {
 
 		helpers.WaitForTCPPort(GinkgoT(), registryHost, port)
 
-		registryHostWithOptionalScheme := fmt.Sprintf("%s:%d", registryHost, port)
+		registryHostWithOptionalScheme := fmt.Sprintf("%s:%d/%s", registryHost, port, strings.TrimLeft(registryPath, "/"))
 		if registryScheme != "" {
 			registryHostWithOptionalScheme = fmt.Sprintf(
 				"%s://%s",
@@ -136,6 +139,7 @@ var _ = Describe("Push Bundle", func() {
 			GinkgoT(),
 			registryHost,
 			port,
+			registryPath,
 			"stefanprodan/podinfo",
 			"6.2.0",
 			[]*v1.Platform{{
@@ -153,16 +157,17 @@ var _ = Describe("Push Bundle", func() {
 	DescribeTable("Success",
 		runTest,
 
-		Entry("Without TLS", "127.0.0.1", "", true),
+		Entry("Without TLS", "127.0.0.1", "", "", true),
 
-		Entry("With TLS", helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", true),
+		Entry("With TLS", helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "", false),
 
-		Entry("With Insecure TLS", helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", true),
+		Entry("With Insecure TLS", helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "", true),
 
 		Entry(
 			"With http registry",
 			helpers.GetFirstNonLoopbackIP(GinkgoT()).String(),
 			"http",
+			"",
 			true,
 		),
 
@@ -170,8 +175,11 @@ var _ = Describe("Push Bundle", func() {
 			"With http registry without TLS skip verify flag",
 			helpers.GetFirstNonLoopbackIP(GinkgoT()).String(),
 			"http",
+			"",
 			false,
 		),
+
+		Entry("With Subpath", helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "/nested/path/for/registry", false),
 	)
 
 	It("Bundle does not exist", func() {
@@ -202,7 +210,7 @@ var _ = Describe("Push Bundle", func() {
 		})
 
 		It("Success", func() {
-			runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", false)
+			runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "", false)
 		})
 
 		Context("With headers from Docker config", func() {
@@ -223,8 +231,137 @@ var _ = Describe("Push Bundle", func() {
 			})
 
 			It("Success", func() {
-				runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", false)
+				runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "", false)
 			})
+		})
+	})
+
+	Context("On existing tag", Ordered, func() {
+		var (
+			registryAddress string
+			outputBuf       *bytes.Buffer
+		)
+
+		BeforeAll(func() {
+			port, err := freeport.GetFreePort()
+			Expect(err).NotTo(HaveOccurred())
+			reg, err := registry.NewRegistry(registry.Config{
+				StorageDirectory: filepath.Join(tmpDir, "registry"),
+				Host:             "127.0.0.1",
+				Port:             uint16(port),
+			})
+			Expect(err).NotTo(HaveOccurred())
+			registryAddress = fmt.Sprintf("http://127.0.0.1:%d", port)
+
+			done := make(chan struct{})
+			go func() {
+				defer GinkgoRecover()
+
+				Expect(reg.ListenAndServe()).To(Succeed())
+
+				close(done)
+			}()
+
+			DeferCleanup(func() {
+				Expect(reg.Shutdown(context.Background())).To((Succeed()))
+
+				Eventually(done).Should(BeClosed())
+			})
+
+			helpers.WaitForTCPPort(GinkgoT(), "127.0.0.1", port)
+		})
+
+		BeforeEach(func() {
+			helpers.CreateBundle(
+				GinkgoT(),
+				bundleFile,
+				filepath.Join("testdata", "create-success.yaml"),
+			)
+
+			DeferCleanup(GinkgoWriter.ClearTeeWriters)
+			outputBuf = bytes.NewBuffer(nil)
+			GinkgoWriter.TeeTo(outputBuf)
+		})
+
+		It("Successful push with explicit --on-existing-tag=skip flag even though doesn't exist yet", func() {
+			args := []string{
+				"--image-bundle", bundleFile,
+				"--to-registry", registryAddress,
+				"--to-registry-insecure-skip-tls-verify",
+			}
+
+			cmd.SetArgs(args)
+
+			Expect(cmd.Execute()).To(Succeed())
+
+			Expect(outputBuf.String()).To(ContainSubstring("✓"))
+			Expect(outputBuf.String()).ToNot(ContainSubstring("∅"))
+			Expect(outputBuf.String()).ToNot(ContainSubstring("✗"))
+		})
+
+		It("Successful push without on-existing-tag flag (default to overwrite)", func() {
+			args := []string{
+				"--image-bundle", bundleFile,
+				"--to-registry", registryAddress,
+				"--to-registry-insecure-skip-tls-verify",
+			}
+
+			cmd.SetArgs(args)
+
+			Expect(cmd.Execute()).To(Succeed())
+
+			Expect(outputBuf.String()).To(ContainSubstring("✓"))
+			Expect(outputBuf.String()).ToNot(ContainSubstring("∅"))
+			Expect(outputBuf.String()).ToNot(ContainSubstring("✗"))
+		})
+
+		It("Successful push with explicit --on-existing-tag=overwrite", func() {
+			args := []string{
+				"--image-bundle", bundleFile,
+				"--to-registry", registryAddress,
+				"--to-registry-insecure-skip-tls-verify",
+				"--on-existing-tag=overwrite",
+			}
+
+			cmd.SetArgs(args)
+
+			Expect(cmd.Execute()).To(Succeed())
+
+			Expect(outputBuf.String()).To(ContainSubstring("✓"))
+			Expect(outputBuf.String()).ToNot(ContainSubstring("∅"))
+			Expect(outputBuf.String()).ToNot(ContainSubstring("✗"))
+		})
+
+		It("Successful push with explicit --on-existing-tag=skip", func() {
+			args := []string{
+				"--image-bundle", bundleFile,
+				"--to-registry", registryAddress,
+				"--to-registry-insecure-skip-tls-verify",
+				"--on-existing-tag=skip",
+			}
+
+			cmd.SetArgs(args)
+
+			Expect(cmd.Execute()).To(Succeed())
+
+			Expect(outputBuf.String()).To(ContainSubstring("∅"))
+			Expect(outputBuf.String()).ToNot(ContainSubstring("✗"))
+		})
+
+		It("Failed push with explicit --on-existing-tag=error", func() {
+			args := []string{
+				"--image-bundle", bundleFile,
+				"--to-registry", registryAddress,
+				"--to-registry-insecure-skip-tls-verify",
+				"--on-existing-tag=error",
+			}
+
+			cmd.SetArgs(args)
+
+			Expect(cmd.Execute()).To(HaveOccurred())
+
+			Expect(outputBuf.String()).To(ContainSubstring("✗"))
+			Expect(outputBuf.String()).ToNot(ContainSubstring("∅"))
 		})
 	})
 })

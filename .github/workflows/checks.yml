@@ -30,11 +30,13 @@ jobs:
       - name: Run unit tests
         run: make test
 
-      - name: Annotate tests
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
-        uses: guyarb/golang-test-annotations@v0.6.0
         with:
-          test-results: test.json
+          check_name: "Unit test results"
+          files: |
+            junit-report.xml
 
   e2e-test:
     runs-on: ubuntu-22.04
@@ -58,6 +60,14 @@ jobs:
         run: make e2e-test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          check_name: "e2e test results"
+          files: |
+            junit-e2e.xml
 
   lint:
     runs-on: ubuntu-22.04

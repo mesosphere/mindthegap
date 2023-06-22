@@ -5,6 +5,6 @@ package flags
 
 // SkipTLSVerify returns true if registrySkipTLSVerify is true
 // or registryURI URI is http.
-func SkipTLSVerify(registrySkipTLSVerify bool, registryURI RegistryURI) bool {
+func SkipTLSVerify(registrySkipTLSVerify bool, registryURI *RegistryURI) bool {
 	return registrySkipTLSVerify || registryURI.Scheme() == httpScheme
 }

@@ -44,36 +44,36 @@ func NewCommand(out output.Output) *cobra.Command {
 				_, err := os.Stat(outputFile)
 				switch {
 				case err == nil:
-					out.EndOperation(false)
+					out.EndOperationWithStatus(output.Failure())
 					return fmt.Errorf(
 						"%s already exists: specify --overwrite to overwrite existing file",
 						outputFile,
 					)
 				case !errors.Is(err, os.ErrNotExist):
-					out.EndOperation(false)
+					out.EndOperationWithStatus(output.Failure())
 					return fmt.Errorf(
 						"failed to check if output file %s already exists: %w",
 						outputFile,
 						err,
 					)
 				default:
-					out.EndOperation(true)
+					out.EndOperationWithStatus(output.Success())
 				}
 			}
 
 			out.StartOperation("Parsing image bundle config")
 			cfg, err := config.ParseImagesConfigFile(configFile)
 			if err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return err
 			}
-			out.EndOperation(true)
+			out.EndOperationWithStatus(output.Success())
 			out.V(4).Infof("Images config: %+v", cfg)
 
 			out.StartOperation("Creating temporary directory")
 			outputFileAbs, err := filepath.Abs(outputFile)
 			if err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return fmt.Errorf(
 					"failed to determine where to create temporary directory: %w",
 					err,
@@ -85,17 +85,17 @@ func NewCommand(out output.Output) *cobra.Command {
 
 			tempDir, err := os.MkdirTemp(filepath.Dir(outputFileAbs), ".image-bundle-*")
 			if err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return fmt.Errorf("failed to create temporary directory: %w", err)
 			}
 			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempDir) })
 
-			out.EndOperation(true)
+			out.EndOperationWithStatus(output.Success())
 
 			out.StartOperation("Starting temporary Docker registry")
 			reg, err := registry.NewRegistry(registry.Config{StorageDirectory: tempDir})
 			if err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return fmt.Errorf("failed to create local Docker registry: %w", err)
 			}
 			go func() {
@@ -104,7 +104,7 @@ func NewCommand(out output.Output) *cobra.Command {
 					os.Exit(2)
 				}
 			}()
-			out.EndOperation(true)
+			out.EndOperationWithStatus(output.Success())
 
 			logs.Debug.SetOutput(out.V(4).InfoWriter())
 			logs.Warn.SetOutput(out.InfoWriter())
@@ -166,23 +166,23 @@ func NewCommand(out output.Output) *cobra.Command {
 							platformsStrings,
 							sourceRemoteOpts...)
 						if err != nil {
-							out.EndOperation(false)
+							out.EndOperationWithStatus(output.Failure())
 							return err
 						}
 
 						destImageName := fmt.Sprintf("%s/%s:%s", reg.Address(), imageName, imageTag)
 						ref, err := name.ParseReference(destImageName, name.StrictValidation)
 						if err != nil {
-							out.EndOperation(false)
+							out.EndOperationWithStatus(output.Failure())
 							return err
 						}
 
 						if err := remote.WriteIndex(ref, imageIndex, destRemoteOpts...); err != nil {
-							out.EndOperation(false)
+							out.EndOperationWithStatus(output.Failure())
 							return err
 						}
 
-						out.EndOperation(true)
+						out.EndOperationWithStatus(output.Success())
 					}
 				}
 
@@ -201,10 +201,10 @@ func NewCommand(out output.Output) *cobra.Command {
 
 			out.StartOperation(fmt.Sprintf("Archiving images to %s", outputFile))
 			if err := archive.ArchiveDirectory(tempDir, outputFile); err != nil {
-				out.EndOperation(false)
+				out.EndOperationWithStatus(output.Failure())
 				return fmt.Errorf("failed to create image bundle tarball: %w", err)
 			}
-			out.EndOperation(true)
+			out.EndOperationWithStatus(output.Success())
 
 			return nil
 		},

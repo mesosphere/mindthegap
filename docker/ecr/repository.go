@@ -9,13 +9,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
+	"github.com/google/go-containerregistry/pkg/name"
 	"k8s.io/utils/pointer"
 )
 
@@ -34,15 +34,13 @@ func ClientForRegistry(registryAddress string) (*ecr.Client, error) {
 }
 
 func EnsureRepositoryExistsFunc(ecrClient *ecr.Client, ecrLifecyclePolicy string) func(
-	destRegistry, repositoryName string, _ ...string,
+	destRepositoryName name.Repository, _ ...string,
 ) error {
 	return func(
-		destRegistry, repositoryName string, _ ...string,
+		destRepositoryName name.Repository, _ ...string,
 	) error {
-		// if destRegistry has a urlPath prepend it when creating the repository
-		if _, urlPath, found := strings.Cut(destRegistry, "/"); found && len(urlPath) > 0 {
-			repositoryName = path.Join(urlPath, repositoryName)
-		}
+		_, repositoryName, _ := strings.Cut(destRepositoryName.Name(), "/")
+
 		repos, err := ecrClient.DescribeRepositories(
 			context.TODO(),
 			&ecr.DescribeRepositoriesInput{

@@ -18,6 +18,7 @@ func Test_parsePossibleURI(t *testing.T) {
 		expectedScheme  string
 		expectedAddress string
 		expectedHost    string
+		expectedPath    string
 	}{
 		{
 			name:            "no scheme",
@@ -44,6 +45,7 @@ func Test_parsePossibleURI(t *testing.T) {
 			in:              "0.0.0.0:5000/dkp",
 			expectedAddress: "0.0.0.0:5000/dkp",
 			expectedHost:    "0.0.0.0:5000",
+			expectedPath:    "/dkp",
 		},
 		{
 			name:            "http scheme with path",
@@ -51,6 +53,7 @@ func Test_parsePossibleURI(t *testing.T) {
 			expectedScheme:  "https",
 			expectedAddress: "0.0.0.0:5000/dkp",
 			expectedHost:    "0.0.0.0:5000",
+			expectedPath:    "/dkp",
 		},
 		{
 			name:            "https scheme with path",
@@ -58,16 +61,18 @@ func Test_parsePossibleURI(t *testing.T) {
 			expectedScheme:  "https",
 			expectedAddress: "0.0.0.0:5000/dkp",
 			expectedHost:    "0.0.0.0:5000",
+			expectedPath:    "/dkp",
 		},
 	}
 	for ti := range tests {
 		tt := tests[ti]
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			scheme, address, host, _ := parsePossibleURI(tt.in)
+			scheme, address, host, path, _ := parsePossibleURI(tt.in)
 			require.Equal(t, tt.expectedScheme, scheme)
 			require.Equal(t, tt.expectedAddress, address)
 			require.Equal(t, tt.expectedHost, host)
+			require.Equal(t, tt.expectedPath, path)
 		})
 	}
 }
