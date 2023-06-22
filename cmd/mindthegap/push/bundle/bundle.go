@@ -142,7 +142,9 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 				// If a password hasn't been specified, then try to retrieve a token.
 				if destRegistryPassword == "" {
 					out.StartOperation("Retrieving ECR credentials")
-					destRegistryUsername, destRegistryPassword, err = ecr.RetrieveUsernameAndToken(ecrClient)
+					destRegistryUsername, destRegistryPassword, err = ecr.RetrieveUsernameAndToken(
+						ecrClient,
+					)
 					if err != nil {
 						out.EndOperationWithStatus(output.Failure())
 						return fmt.Errorf(
@@ -171,11 +173,17 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 			}
 			destRemoteOpts = append(destRemoteOpts, remote.WithAuthFromKeychain(keychain))
 
-			srcRegistry, err := name.NewRegistry(reg.Address(), name.Insecure, name.StrictValidation)
+			srcRegistry, err := name.NewRegistry(
+				reg.Address(),
+				name.Insecure,
+				name.StrictValidation,
+			)
 			if err != nil {
 				return err
 			}
-			destRegistry, err := name.NewRegistry(destRegistryURI.Host(), append(destNameOpts, name.StrictValidation)...)
+			destRegistry, err := name.NewRegistry(
+				destRegistryURI.Host(),
+				append(destNameOpts, name.StrictValidation)...)
 			if err != nil {
 				return err
 			}
@@ -297,7 +305,12 @@ func pushImages(
 				}
 			}
 
-			existingImageTags, err := getExistingImages(context.Background(), onExistingTag, puller, destRepository)
+			existingImageTags, err := getExistingImages(
+				context.Background(),
+				onExistingTag,
+				puller,
+				destRepository,
+			)
 			if err != nil {
 				return err
 			}
@@ -364,7 +377,10 @@ func pushOCIArtifacts(
 		chartNames := repoConfig.SortedChartNames()
 
 		for _, chartName := range chartNames {
-			srcRepository := sourceRegistry.Repo(strings.TrimLeft(sourceRegistryPath, "/"), chartName)
+			srcRepository := sourceRegistry.Repo(
+				strings.TrimLeft(sourceRegistryPath, "/"),
+				chartName,
+			)
 			destRepository := destRegistry.Repo(strings.TrimLeft(destRegistryPath, "/"), chartName)
 
 			chartVersions := repoConfig.Charts[chartName]
@@ -406,7 +422,10 @@ func pushOCIArtifacts(
 }
 
 func getExistingImages(
-	ctx context.Context, onExistingTag onExistingTagMode, puller *remote.Puller, repo name.Repository,
+	ctx context.Context,
+	onExistingTag onExistingTagMode,
+	puller *remote.Puller,
+	repo name.Repository,
 ) (map[string]struct{}, error) {
 	if onExistingTag == Overwrite {
 		return nil, nil
