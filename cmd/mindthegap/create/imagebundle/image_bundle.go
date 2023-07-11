@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/logs"
@@ -112,13 +113,6 @@ func NewCommand(out output.Output) *cobra.Command {
 			logs.Debug.SetOutput(out.V(4).InfoWriter())
 			logs.Warn.SetOutput(out.InfoWriter())
 
-			destTLSRoundTripper, err := httputils.InsecureTLSRoundTripper(remote.DefaultTransport)
-			if err != nil {
-				out.Error(err, "error configuring TLS for destination registry")
-				os.Exit(2)
-			}
-			destRemoteOpts := []remote.Option{remote.WithTransport(destTLSRoundTripper)}
-
 			// Sort registries for deterministic ordering.
 			regNames := cfg.SortedRegistryNames()
 
@@ -129,9 +123,23 @@ func NewCommand(out output.Output) *cobra.Command {
 			pullGauge.SetCapacity(cfg.TotalImages())
 			pullGauge.SetStatus("Pulling requested images")
 
+			destTLSRoundTripper, err := httputils.InsecureTLSRoundTripper(remote.DefaultTransport)
+			if err != nil {
+				out.Error(err, "error configuring TLS for destination registry")
+				os.Exit(2)
+			}
+			defer func() {
+				if tr, ok := destTLSRoundTripper.(*http.Transport); ok {
+					tr.CloseIdleConnections()
+				}
+			}()
+			destRemoteOpts := []remote.Option{remote.WithTransport(destTLSRoundTripper), remote.WithContext(egCtx)}
+
 			out.StartOperationWithProgress(pullGauge)
 
-			for _, registryName := range regNames {
+			for idx := range regNames {
+				registryName := regNames[idx]
+
 				registryConfig := cfg[registryName]
 
 				sourceTLSRoundTripper, err := httputils.TLSConfiguredRoundTripper(
@@ -145,7 +153,6 @@ func NewCommand(out output.Output) *cobra.Command {
 					out.Error(err, "error configuring TLS for source registry")
 					os.Exit(2)
 				}
-				sourceRemoteOpts := []remote.Option{remote.WithTransport(sourceTLSRoundTripper)}
 
 				keychain := authn.NewMultiKeychain(
 					authn.NewKeychainFromHelper(
@@ -154,7 +161,11 @@ func NewCommand(out output.Output) *cobra.Command {
 					authn.DefaultKeychain,
 				)
 
-				sourceRemoteOpts = append(sourceRemoteOpts, remote.WithAuthFromKeychain(keychain))
+				sourceRemoteOpts := []remote.Option{
+					remote.WithTransport(sourceTLSRoundTripper),
+					remote.WithAuthFromKeychain(keychain),
+					remote.WithContext(egCtx),
+				}
 
 				platformsStrings := make([]string, 0, len(platforms))
 				for _, p := range platforms {
@@ -164,17 +175,19 @@ func NewCommand(out output.Output) *cobra.Command {
 				// Sort images for deterministic ordering.
 				imageNames := registryConfig.SortedImageNames()
 
-				destRemoteOpts = append(destRemoteOpts, remote.WithContext(egCtx))
-				sourceRemoteOpts = append(sourceRemoteOpts, remote.WithContext(egCtx))
+				wg := new(sync.WaitGroup)
 
 				for i := range imageNames {
 					imageName := imageNames[i]
 					imageTags := registryConfig.Images[imageName]
 
+					wg.Add(len(imageTags))
 					for j := range imageTags {
 						imageTag := imageTags[j]
 
 						eg.Go(func() error {
+							defer wg.Done()
+
 							srcImageName := fmt.Sprintf("%s/%s:%s", registryName, imageName, imageTag)
 
 							imageIndex, err := images.ManifestListForImage(
@@ -203,19 +216,18 @@ func NewCommand(out output.Output) *cobra.Command {
 					}
 				}
 
-				err = eg.Wait()
+				go func() {
+					wg.Wait()
 
-				if tr, ok := sourceTLSRoundTripper.(*http.Transport); ok {
-					tr.CloseIdleConnections()
-				}
-				if tr, ok := destTLSRoundTripper.(*http.Transport); ok {
-					tr.CloseIdleConnections()
-				}
+					if tr, ok := sourceTLSRoundTripper.(*http.Transport); ok {
+						tr.CloseIdleConnections()
+					}
+				}()
+			}
 
-				if err != nil {
-					out.EndOperationWithStatus(output.Failure())
-					return err
-				}
+			if err := eg.Wait(); err != nil {
+				out.EndOperationWithStatus(output.Failure())
+				return err
 			}
 
 			out.EndOperationWithStatus(output.Success())
