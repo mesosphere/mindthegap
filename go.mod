@@ -6,8 +6,8 @@ module github.com/mesosphere/mindthegap
 go 1.20
 
 replace (
-	github.com/docker/cli => github.com/docker/cli v20.10.24+incompatible
-	github.com/docker/docker => github.com/docker/docker v20.10.24+incompatible
+	github.com/docker/cli => github.com/docker/cli v20.10.25+incompatible
+	github.com/docker/docker => github.com/docker/docker v20.10.25+incompatible
 )
 
 require (
@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.18.27
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.18.13
 	github.com/containers/image/v5 v5.26.1
-	github.com/distribution/distribution/v3 v3.0.0-20230223072852-e5d5810851d1
+	github.com/distribution/distribution/v3 v3.0.0-20230711080520-40ef2353fa4f
 	github.com/docker/cli v23.0.5+incompatible
 	github.com/docker/docker v24.0.2+incompatible
 	github.com/docker/docker-credential-helpers v0.7.0
@@ -46,7 +46,7 @@ require (
 	cloud.google.com/go/compute v1.19.1 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v0.13.0 // indirect
-	cloud.google.com/go/storage v1.28.1 // indirect
+	cloud.google.com/go/storage v1.30.1 // indirect
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20230106234847-43070de90fa1 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
