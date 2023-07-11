@@ -4,6 +4,7 @@
 package imagebundle
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/spf13/cobra"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
@@ -29,10 +31,11 @@ import (
 
 func NewCommand(out output.Output) *cobra.Command {
 	var (
-		configFile string
-		platforms  []platform
-		outputFile string
-		overwrite  bool
+		configFile           string
+		platforms            []platform
+		outputFile           string
+		overwrite            bool
+		imagePullConcurrency int
 	)
 
 	cmd := &cobra.Command{
@@ -119,6 +122,15 @@ func NewCommand(out output.Output) *cobra.Command {
 			// Sort registries for deterministic ordering.
 			regNames := cfg.SortedRegistryNames()
 
+			eg, egCtx := errgroup.WithContext(context.Background())
+			eg.SetLimit(imagePullConcurrency)
+
+			pullGauge := &output.ProgressGauge{}
+			pullGauge.SetCapacity(cfg.TotalImages())
+			pullGauge.SetStatus("Pulling requested images")
+
+			out.StartOperationWithProgress(pullGauge)
+
 			for _, registryName := range regNames {
 				registryConfig := cfg[registryName]
 
@@ -129,6 +141,7 @@ func NewCommand(out output.Output) *cobra.Command {
 					"",
 				)
 				if err != nil {
+					out.EndOperationWithStatus(output.Failure())
 					out.Error(err, "error configuring TLS for source registry")
 					os.Exit(2)
 				}
@@ -151,49 +164,61 @@ func NewCommand(out output.Output) *cobra.Command {
 				// Sort images for deterministic ordering.
 				imageNames := registryConfig.SortedImageNames()
 
-				for _, imageName := range imageNames {
+				destRemoteOpts = append(destRemoteOpts, remote.WithContext(egCtx))
+				sourceRemoteOpts = append(sourceRemoteOpts, remote.WithContext(egCtx))
+
+				for i := range imageNames {
+					imageName := imageNames[i]
 					imageTags := registryConfig.Images[imageName]
-					for _, imageTag := range imageTags {
-						srcImageName := fmt.Sprintf("%s/%s:%s", registryName, imageName, imageTag)
-						out.StartOperation(
-							fmt.Sprintf("Copying %s (platforms: %v)",
-								srcImageName, platforms,
-							),
-						)
 
-						imageIndex, err := images.ManifestListForImage(
-							srcImageName,
-							platformsStrings,
-							sourceRemoteOpts...)
-						if err != nil {
-							out.EndOperationWithStatus(output.Failure())
-							return err
-						}
+					for j := range imageTags {
+						imageTag := imageTags[j]
 
-						destImageName := fmt.Sprintf("%s/%s:%s", reg.Address(), imageName, imageTag)
-						ref, err := name.ParseReference(destImageName, name.StrictValidation)
-						if err != nil {
-							out.EndOperationWithStatus(output.Failure())
-							return err
-						}
+						eg.Go(func() error {
+							srcImageName := fmt.Sprintf("%s/%s:%s", registryName, imageName, imageTag)
 
-						if err := remote.WriteIndex(ref, imageIndex, destRemoteOpts...); err != nil {
-							out.EndOperationWithStatus(output.Failure())
-							return err
-						}
+							imageIndex, err := images.ManifestListForImage(
+								srcImageName,
+								platformsStrings,
+								sourceRemoteOpts...,
+							)
+							if err != nil {
+								return err
+							}
 
-						out.EndOperationWithStatus(output.Success())
+							destImageName := fmt.Sprintf("%s/%s:%s", reg.Address(), imageName, imageTag)
+							ref, err := name.ParseReference(destImageName, name.StrictValidation)
+							if err != nil {
+								return err
+							}
+
+							if err := remote.WriteIndex(ref, imageIndex, destRemoteOpts...); err != nil {
+								return err
+							}
+
+							pullGauge.Inc()
+
+							return nil
+						})
 					}
 				}
+
+				err = eg.Wait()
 
 				if tr, ok := sourceTLSRoundTripper.(*http.Transport); ok {
 					tr.CloseIdleConnections()
 				}
-
 				if tr, ok := destTLSRoundTripper.(*http.Transport); ok {
 					tr.CloseIdleConnections()
 				}
+
+				if err != nil {
+					out.EndOperationWithStatus(output.Failure())
+					return err
+				}
 			}
+
+			out.EndOperationWithStatus(output.Success())
 
 			if err := config.WriteSanitizedImagesConfig(cfg, filepath.Join(tempDir, "images.yaml")); err != nil {
 				return err
@@ -220,6 +245,8 @@ func NewCommand(out output.Output) *cobra.Command {
 		StringVar(&outputFile, "output-file", "images.tar", "Output file to write image bundle to")
 	cmd.Flags().
 		BoolVar(&overwrite, "overwrite", false, "Overwrite image bundle file if it already exists")
+	cmd.Flags().
+		IntVar(&imagePullConcurrency, "image-pull-concurrency", 1, "Image pull concurrency")
 
 	return cmd
 }
