@@ -274,6 +274,17 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.10.1 (2023-07-11)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix: Correctly handle multiple registries by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/459
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.10.0...v1.10.1
+
 ## 1.10.0 (2023-07-11)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
