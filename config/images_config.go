@@ -37,6 +37,14 @@ func (rsc RegistrySyncConfig) SortedImageNames() []string {
 	return imageNames
 }
 
+func (rsc RegistrySyncConfig) TotalImages() int {
+	n := 0
+	for _, imgTag := range rsc.Images {
+		n += len(imgTag)
+	}
+	return n
+}
+
 func (rsc RegistrySyncConfig) Clone() RegistrySyncConfig {
 	images := make(map[string][]string, len(rsc.Images))
 	for k, v := range rsc.Images {
@@ -134,6 +142,14 @@ func (ic ImagesConfig) SortedRegistryNames() []string {
 	}
 	sort.Strings(regNames)
 	return regNames
+}
+
+func (ic ImagesConfig) TotalImages() int {
+	n := 0
+	for _, rsc := range ic {
+		n += rsc.TotalImages()
+	}
+	return n
 }
 
 func ParseImagesConfigFile(configFile string) (ImagesConfig, error) {
