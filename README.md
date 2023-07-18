@@ -165,38 +165,9 @@ or in a Kubernetes cluster.
 
 ## Contributing
 
-This project uses <https://devenv.sh> to create a reproducible build environment. If you do not have `nix` ior `devenv`
-configured, then the following instructions should work for you. For further details, see
-<https://devenv.sh/getting-started/#installation> and <https://devenv.sh/automatic-shell-activation/>.
-
-### Install `nix`
-
-`devenv.sh` uses `nix` for creating reproducible build environments.
-
-On Linux run:
-
-```bash
-sh <(curl -fsSL https://nixos.org/nix/install) --daemon --no-channel-add --daemon-user-count 6 --yes
-```
-
-On macOS run:
-
-```bash
-sh <(curl -fsSL https://nixos.org/nix/install) --no-channel-add --daemon-user-count 6 --yes
-```
-
-Restart your shell.
-
-### Install `cachix`
-
-`devenv.sh` recommends using `cachix` to speeds up the installation by providing binaries for packages.
-
-```bash
-nix-env -iA cachix -f https://cachix.org/api/v1/install
-echo "trusted-users = root ${USER}" | sudo tee -a /etc/nix/nix.conf && sudo pkill nix-daemon
-cachix use devenv
-nix-env -if https://github.com/cachix/devenv/tarball/latest
-```
+This project uses <https://www.jetpack.io/devbox/> to create a reproducible build environment. If you do not have
+`devbox` configured, then the following instructions should work for you. For further details, see
+<https://www.jetpack.io/devbox/docs/installing_devbox/>.
 
 ### Integrate with `direnv` for automatic shell integration
 

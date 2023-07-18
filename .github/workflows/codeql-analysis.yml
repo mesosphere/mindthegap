@@ -30,13 +30,21 @@ jobs:
         with:
           languages: ${{ matrix.language }}
 
-      - name: Set up devenv.sh environment
-        uses: d2iq-labs/devenv.sh-action@v1
+      # Setup github authentication to ensure Github's rate limits are not hit.
+      - name: Configure nix GitHub access-tokens
+        run: |
+          mkdir -p ~/.config/nix
+          echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
+
+      - name: Install devbox
+        uses: jetpack-io/devbox-install-action@v0.4.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          enable-cache: true
+        env:
+          NIX_USER_COUNT: 4
 
       - name: Build
-        run: make build-snapshot
+        run: devbox run -- make build-snapshot
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2

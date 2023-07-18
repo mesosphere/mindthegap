@@ -1,0 +1,119 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "bash@latest": {
+      "last_modified": "2023-05-07T06:59:10Z",
+      "resolved": "github:NixOS/nixpkgs/eb751d65225ec53de9cf3d88acbf08d275882389#bash",
+      "source": "devbox-search",
+      "version": "5.2-p15"
+    },
+    "coreutils@latest": {
+      "last_modified": "2023-06-29T16:20:38Z",
+      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#coreutils",
+      "source": "devbox-search",
+      "version": "9.3"
+    },
+    "crane@latest": {
+      "last_modified": "2023-06-29T16:20:38Z",
+      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#crane",
+      "source": "devbox-search",
+      "version": "0.15.2"
+    },
+    "findutils@latest": {
+      "last_modified": "2023-05-07T06:59:10Z",
+      "resolved": "github:NixOS/nixpkgs/eb751d65225ec53de9cf3d88acbf08d275882389#findutils",
+      "source": "devbox-search",
+      "version": "4.9.0"
+    },
+    "ginkgo@latest": {
+      "last_modified": "2023-06-29T16:20:38Z",
+      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#ginkgo",
+      "source": "devbox-search",
+      "version": "2.11.0"
+    },
+    "git@latest": {
+      "last_modified": "2023-06-29T16:20:38Z",
+      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#git",
+      "source": "devbox-search",
+      "version": "2.41.0"
+    },
+    "gnugrep@latest": {
+      "last_modified": "2023-06-29T16:20:38Z",
+      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#gnugrep",
+      "source": "devbox-search",
+      "version": "3.11"
+    },
+    "gnumake@latest": {
+      "last_modified": "2023-05-07T06:59:10Z",
+      "resolved": "github:NixOS/nixpkgs/eb751d65225ec53de9cf3d88acbf08d275882389#gnumake",
+      "source": "devbox-search",
+      "version": "4.4.1"
+    },
+    "gnused@latest": {
+      "last_modified": "2023-05-07T06:59:10Z",
+      "resolved": "github:NixOS/nixpkgs/eb751d65225ec53de9cf3d88acbf08d275882389#gnused",
+      "source": "devbox-search",
+      "version": "4.9"
+    },
+    "go@latest": {
+      "last_modified": "2023-06-29T16:20:38Z",
+      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#go",
+      "source": "devbox-search",
+      "version": "1.20.5"
+    },
+    "gojq@latest": {
+      "last_modified": "2023-06-29T16:20:38Z",
+      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#gojq",
+      "source": "devbox-search",
+      "version": "0.12.13"
+    },
+    "golangci-lint@latest": {
+      "last_modified": "2023-06-29T16:20:38Z",
+      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#golangci-lint",
+      "source": "devbox-search",
+      "version": "1.53.3"
+    },
+    "golines@latest": {
+      "last_modified": "2023-05-07T06:59:10Z",
+      "resolved": "github:NixOS/nixpkgs/eb751d65225ec53de9cf3d88acbf08d275882389#golines",
+      "source": "devbox-search",
+      "version": "0.11.0"
+    },
+    "goreleaser@latest": {
+      "last_modified": "2023-06-29T16:20:38Z",
+      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#goreleaser",
+      "source": "devbox-search",
+      "version": "1.18.2"
+    },
+    "gotestsum@latest": {
+      "last_modified": "2023-05-07T06:59:10Z",
+      "resolved": "github:NixOS/nixpkgs/eb751d65225ec53de9cf3d88acbf08d275882389#gotestsum",
+      "source": "devbox-search",
+      "version": "1.10.0"
+    },
+    "kubernetes-helm@latest": {
+      "last_modified": "2023-06-29T16:20:38Z",
+      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#kubernetes-helm",
+      "source": "devbox-search",
+      "version": "3.12.1"
+    },
+    "pre-commit@latest": {
+      "last_modified": "2023-06-29T16:20:38Z",
+      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#pre-commit",
+      "source": "devbox-search",
+      "version": "3.3.3"
+    },
+    "shfmt@latest": {
+      "last_modified": "2023-06-29T16:20:38Z",
+      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#shfmt",
+      "source": "devbox-search",
+      "version": "3.7.0"
+    },
+    "upx@latest": {
+      "last_modified": "2023-05-07T06:59:10Z",
+      "resolved": "github:NixOS/nixpkgs/eb751d65225ec53de9cf3d88acbf08d275882389#upx",
+      "source": "devbox-search",
+      "version": "4.0.2"
+    }
+  }
+}

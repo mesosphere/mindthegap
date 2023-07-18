@@ -25,13 +25,21 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Set up devenv.sh environment
-        uses: d2iq-labs/devenv.sh-action@v1
+      # Setup github authentication to ensure Github's rate limits are not hit.
+      - name: Configure nix GitHub access-tokens
+        run: |
+          mkdir -p ~/.config/nix
+          echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
+
+      - name: Install devbox
+        uses: jetpack-io/devbox-install-action@v0.4.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          enable-cache: true
+        env:
+          NIX_USER_COUNT: 4
 
       - name: Run unit tests
-        run: make test
+        run: devbox run -- make test
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -52,10 +60,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up devenv.sh environment
-        uses: d2iq-labs/devenv.sh-action@v1
+      # Setup github authentication to ensure Github's rate limits are not hit.
+      - name: Configure nix GitHub access-tokens
+        run: |
+          mkdir -p ~/.config/nix
+          echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
+
+      - name: Install devbox
+        uses: jetpack-io/devbox-install-action@v0.4.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          enable-cache: true
+        env:
+          NIX_USER_COUNT: 4
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -63,7 +79,7 @@ jobs:
           platforms: arm64
 
       - name: Run e2e tests
-        run: make e2e-test
+        run: devbox run -- make e2e-test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -81,15 +97,23 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Set up devenv.sh environment
-        uses: d2iq-labs/devenv.sh-action@v1
+      # Setup github authentication to ensure Github's rate limits are not hit.
+      - name: Configure nix GitHub access-tokens
+        run: |
+          mkdir -p ~/.config/nix
+          echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
+
+      - name: Install devbox
+        uses: jetpack-io/devbox-install-action@v0.4.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          enable-cache: true
+        env:
+          NIX_USER_COUNT: 4
 
       - name: Export golang and golangci-lint versions
         run: |
-          echo "GOLANGCI_LINT_VERSION=v$(golangci-lint version --format short)" >>$GITHUB_ENV
-          echo "GO_VERSION=$(go version | grep -o "[[:digit:]]\+.[[:digit:]]\+\(.[[:digit:]]\+\)\?")" >>$GITHUB_ENV
+          echo "GOLANGCI_LINT_VERSION=v$(devbox run -- golangci-lint version --format short)" >>$GITHUB_ENV
+          echo "GO_VERSION=$(devbox run -- go version | grep -o "[[:digit:]]\+.[[:digit:]]\+\(.[[:digit:]]\+\)\?")" >>$GITHUB_ENV
 
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v2
@@ -105,13 +129,26 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Set up devenv.sh environment
-        uses: d2iq-labs/devenv.sh-action@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+      # Setup github authentication to ensure Github's rate limits are not hit.
+      - name: Configure nix GitHub access-tokens
+        run: |
+          mkdir -p ~/.config/nix
+          echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
 
-      - uses: pre-commit/action@v3.0.0
+      - name: Install devbox
+        uses: jetpack-io/devbox-install-action@v0.4.0
         with:
-          extra_args: --all-files --show-diff-on-failure
+          enable-cache: true
+        env:
+          NIX_USER_COUNT: 4
+
+      - name: Set up pre-commit cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-3|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Run pre-commit
+        run: devbox run -- make pre-commit
         env:
           SKIP: no-commit-to-branch,golangci-lint
