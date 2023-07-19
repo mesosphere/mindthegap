@@ -1,0 +1,33 @@
+{
+  "packages": [
+    "go@latest",
+    "bash@latest",
+    "coreutils@latest",
+    "crane@latest",
+    "findutils@latest",
+    "ginkgo@latest",
+    "git@latest",
+    "gnused@latest",
+    "gnugrep@latest",
+    "gnumake@latest",
+    "gojq@latest",
+    "golangci-lint@latest",
+    "golines@latest",
+    "goreleaser@latest",
+    "gotestsum@latest",
+    "kubernetes-helm@latest",
+    "pre-commit@latest",
+    "shfmt@latest",
+    "upx@latest"
+  ],
+  "shell": {
+    "init_hook": [
+      "echo 'Welcome to devbox!' > /dev/null"
+    ],
+    "scripts": {
+      "test": [
+        "echo \"Error: no test specified\" && exit 1"
+      ]
+    }
+  }
+}
