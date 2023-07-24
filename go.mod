@@ -6,8 +6,8 @@ module github.com/mesosphere/mindthegap
 go 1.20
 
 replace (
-	github.com/docker/cli => github.com/docker/cli v20.10.25+incompatible
-	github.com/docker/docker => github.com/docker/docker v20.10.25+incompatible
+	github.com/docker/cli => github.com/docker/cli v23.0.6+incompatible
+	github.com/docker/docker => github.com/docker/docker v23.0.6+incompatible
 )
 
 require (

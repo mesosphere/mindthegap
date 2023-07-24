@@ -37,8 +37,7 @@ func TLSConfiguredRoundTripper(
 		tr.TLSClientConfig.RootCAs = systemPool
 	}
 
-	// Always returns nil error...
-	hostDockerCertsDir, _ := registry.HostCertsDir(host)
+	hostDockerCertsDir := registry.HostCertsDir(host)
 	fs, err := os.ReadDir(hostDockerCertsDir)
 	if err != nil && !os.IsNotExist(err) {
 		return nil, fmt.Errorf("failed to read from Docker registry certs: %w", err)
