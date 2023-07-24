@@ -18,7 +18,7 @@ require (
 	github.com/distribution/distribution/v3 v3.0.0-20230711080520-40ef2353fa4f
 	github.com/docker/cli v23.0.5+incompatible
 	github.com/docker/docker v24.0.2+incompatible
-	github.com/docker/docker-credential-helpers v0.7.0
+	github.com/docker/docker-credential-helpers v0.8.0
 	github.com/docker/go-connections v0.4.0
 	github.com/elazarl/goproxy v0.0.0-20221015165544-a0805db90819
 	github.com/google/go-containerregistry v0.15.2
