@@ -30,18 +30,10 @@ jobs:
         with:
           languages: ${{ matrix.language }}
 
-      # Setup github authentication to ensure Github's rate limits are not hit.
-      - name: Configure nix GitHub access-tokens
-        run: |
-          mkdir -p ~/.config/nix
-          echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
-
       - name: Install devbox
-        uses: jetpack-io/devbox-install-action@v0.4.0
+        uses: jetpack-io/devbox-install-action@main
         with:
           enable-cache: true
-        env:
-          NIX_USER_COUNT: 4
 
       - name: Build
         run: devbox run -- make build-snapshot
