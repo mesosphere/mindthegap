@@ -274,6 +274,22 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.11.0 (2023-07-31)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: Add mindthegap to useragent by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/476
+* feat: Image push concurrency by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/477
+### Other Changes
+* build: Try devbox instead of devenv by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/465
+* build(deps): Upgrade commit based deps by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/470
+* ci: Use latest devbox install action by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/471
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.10.1...v1.11.0
+
 ## 1.10.1 (2023-07-11)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
