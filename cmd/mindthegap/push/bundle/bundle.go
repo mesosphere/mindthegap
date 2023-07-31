@@ -107,7 +107,10 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 				out.Error(err, "error configuring TLS for source registry")
 				os.Exit(2)
 			}
-			sourceRemoteOpts := []remote.Option{remote.WithTransport(sourceTLSRoundTripper)}
+			sourceRemoteOpts := []remote.Option{
+				remote.WithTransport(sourceTLSRoundTripper),
+				remote.WithUserAgent(utils.Useragent()),
+			}
 
 			destTLSRoundTripper, err := httputils.TLSConfiguredRoundTripper(
 				remote.DefaultTransport,
@@ -119,7 +122,10 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 				out.Error(err, "error configuring TLS for destination registry")
 				os.Exit(2)
 			}
-			destRemoteOpts := []remote.Option{remote.WithTransport(destTLSRoundTripper)}
+			destRemoteOpts := []remote.Option{
+				remote.WithTransport(destTLSRoundTripper),
+				remote.WithUserAgent(utils.Useragent()),
+			}
 
 			var destNameOpts []name.Option
 			if flags.SkipTLSVerify(destRegistrySkipTLSVerify, &destRegistryURI) {
