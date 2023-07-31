@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/containers/image/v5/types"
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -19,6 +20,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag/v2"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
@@ -56,6 +58,7 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 		destRegistryPassword          string
 		ecrLifecyclePolicy            string
 		onExistingTag                 = Overwrite
+		imagePushConcurrency          int
 	)
 
 	cmd := &cobra.Command{
@@ -203,6 +206,7 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 					destRegistryURI.Path(),
 					destRemoteOpts,
 					onExistingTag,
+					imagePushConcurrency,
 					out,
 					prePushFuncs...,
 				)
@@ -271,6 +275,8 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 		"on-existing-tag",
 		`how to handle existing tags: one of "overwrite", "error", or "skip"`,
 	)
+	cmd.Flags().
+		IntVar(&imagePushConcurrency, "image-push-concurrency", 1, "Image push concurrency")
 
 	return cmd
 }
@@ -282,6 +288,7 @@ func pushImages(
 	sourceRegistry name.Registry, sourceRemoteOpts []remote.Option,
 	destRegistry name.Registry, destRegistryPath string, destRemoteOpts []remote.Option,
 	onExistingTag onExistingTagMode,
+	imagePushConcurrency int,
 	out output.Output,
 	prePushFuncs ...prePushFunc,
 ) error {
@@ -293,77 +300,120 @@ func pushImages(
 	// Sort registries for deterministic ordering.
 	regNames := cfg.SortedRegistryNames()
 
-	for _, registryName := range regNames {
+	eg, egCtx := errgroup.WithContext(context.Background())
+	eg.SetLimit(imagePushConcurrency)
+
+	sourceRemoteOpts = append(sourceRemoteOpts, remote.WithContext(egCtx))
+	destRemoteOpts = append(destRemoteOpts, remote.WithContext(egCtx))
+
+	pushGauge := &output.ProgressGauge{}
+	pushGauge.SetCapacity(cfg.TotalImages())
+	pushGauge.SetStatus("Pushing bundled images")
+
+	out.StartOperationWithProgress(pushGauge)
+
+	for registryIdx := range regNames {
+		registryName := regNames[registryIdx]
+
 		registryConfig := cfg[registryName]
 
 		// Sort images for deterministic ordering.
 		imageNames := registryConfig.SortedImageNames()
 
-		for _, imageName := range imageNames {
+		for imageIdx := range imageNames {
+			imageName := imageNames[imageIdx]
+
 			srcRepository := sourceRegistry.Repo(imageName)
 			destRepository := destRegistry.Repo(strings.TrimLeft(destRegistryPath, "/"), imageName)
 
 			imageTags := registryConfig.Images[imageName]
 
-			for _, prePush := range prePushFuncs {
-				if err := prePush(destRepository, imageTags...); err != nil {
-					return fmt.Errorf("pre-push func failed: %w", err)
-				}
-			}
-
-			existingImageTags, err := getExistingImages(
-				context.Background(),
-				onExistingTag,
-				puller,
-				destRepository,
+			var (
+				imageTagPrePushSync sync.Once
+				imageTagPrePushErr  error
+				existingImageTags   map[string]struct{}
 			)
-			if err != nil {
-				return err
-			}
 
-			for _, imageTag := range imageTags {
-				srcImage := srcRepository.Tag(imageTag)
-				destImage := destRepository.Tag(imageTag)
+			for tagIdx := range imageTags {
+				imageTag := imageTags[tagIdx]
 
-				out.StartOperation(
-					fmt.Sprintf("Copying %s (from bundle) to %s",
-						srcImage.Name(),
-						destImage.Name(),
-					),
-				)
+				eg.Go(func() error {
+					imageTagPrePushSync.Do(func() {
+						for _, prePush := range prePushFuncs {
+							if err := prePush(destRepository, imageTags...); err != nil {
+								imageTagPrePushErr = fmt.Errorf("pre-push func failed: %w", err)
+							}
+						}
 
-				switch onExistingTag {
-				case Overwrite:
-					// Do nothing, just attempt to overwrite
-				case Skip:
-					if _, exists := existingImageTags[imageTag]; exists {
-						out.EndOperationWithStatus(output.Skipped())
-						continue
+						existingImageTags, imageTagPrePushErr = getExistingImages(
+							context.Background(),
+							onExistingTag,
+							puller,
+							destRepository,
+						)
+					})
+
+					if imageTagPrePushErr != nil {
+						return imageTagPrePushErr
 					}
-				case Error:
-					if _, exists := existingImageTags[imageTag]; exists {
-						out.EndOperationWithStatus(output.Failure())
-						return fmt.Errorf("image tag already exists in destination registry")
+
+					srcImage := srcRepository.Tag(imageTag)
+					destImage := destRepository.Tag(imageTag)
+
+					pushFn := pushTag
+
+					switch onExistingTag {
+					case Overwrite:
+						// Do nothing, just attempt to overwrite
+					case Skip:
+						// If tag exists already then do nothing.
+						if _, exists := existingImageTags[imageTag]; exists {
+							pushFn = func(_ name.Reference, _ []remote.Option, _ name.Reference, _ []remote.Option) error {
+								return nil
+							}
+						}
+					case Error:
+						if _, exists := existingImageTags[imageTag]; exists {
+							return fmt.Errorf(
+								"image tag already exists in destination registry",
+							)
+						}
 					}
-				}
 
-				idx, err := remote.Index(srcImage, sourceRemoteOpts...)
-				if err != nil {
-					out.EndOperationWithStatus(output.Failure())
-					return err
-				}
+					if err := pushFn(srcImage, sourceRemoteOpts, destImage, destRemoteOpts); err != nil {
+						return err
+					}
 
-				if err := remote.WriteIndex(destImage, idx, destRemoteOpts...); err != nil {
-					out.EndOperationWithStatus(output.Failure())
-					return err
-				}
+					pushGauge.Inc()
 
-				out.EndOperationWithStatus(output.Success())
+					return nil
+				})
 			}
 		}
 	}
 
+	if err := eg.Wait(); err != nil {
+		out.EndOperationWithStatus(output.Failure())
+		return err
+	}
+
+	out.EndOperationWithStatus(output.Success())
+
 	return nil
+}
+
+func pushTag(
+	srcImage name.Reference,
+	sourceRemoteOpts []remote.Option,
+	destImage name.Reference,
+	destRemoteOpts []remote.Option,
+) error {
+	idx, err := remote.Index(srcImage, sourceRemoteOpts...)
+	if err != nil {
+		return err
+	}
+
+	return remote.WriteIndex(destImage, idx, destRemoteOpts...)
 }
 
 func pushOCIArtifacts(
