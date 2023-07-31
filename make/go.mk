@@ -78,7 +78,9 @@ E2E_FLAKE_ATTEMPTS ?= 1
 .PHONY: e2e-test
 e2e-test: ## Runs e2e tests
 	$(info $(M) running e2e tests$(if $(E2E_LABEL), labelled "$(E2E_LABEL)")$(if $(E2E_FOCUS), matching "$(E2E_FOCUS)"))
+ifndef E2E_SKIP_BUILD
 	$(MAKE) GORELEASER_FLAGS=$$'--config=<(env GOOS=$(shell go env GOOS) GOARCH=$(shell go env GOARCH) gojq --yaml-input --yaml-output \'del(.builds[0].goarch) | del(.builds[0].goos) | .builds[0].targets|=(["linux_amd64","linux_arm64",env.GOOS+"_"+env.GOARCH] | unique | map(. | sub("_amd64";"_amd64_v1")))\' .goreleaser.yml) --clean --skip-validate --skip-publish' release
+endif
 	ginkgo run \
 		--r \
 		--race \
@@ -120,6 +122,7 @@ endif
 .PHONY: lint.%
 lint.%: ## Runs golangci-lint for a specific module
 lint.%: ; $(info $(M) linting $* module)
+	$(if $(filter-out root,$*),cd $* && )golines -w $$(go list ./... | sed "s|^$$(go list -m)|.|")
 	$(if $(filter-out root,$*),cd $* && )golangci-lint run --fix --config=$(GOLANGCI_CONFIG_FILE)
 	$(if $(filter-out root,$*),cd $* && )golines -w $$(go list ./... | sed "s|^$$(go list -m)|.|")
 	$(if $(filter-out root,$*),cd $* && )go fix ./...

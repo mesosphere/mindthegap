@@ -142,8 +142,8 @@ func NewCommand(out output.Output) *cobra.Command {
 
 			out.StartOperationWithProgress(pullGauge)
 
-			for idx := range regNames {
-				registryName := regNames[idx]
+			for registryIdx := range regNames {
+				registryName := regNames[registryIdx]
 
 				registryConfig := cfg[registryName]
 
@@ -183,8 +183,8 @@ func NewCommand(out output.Output) *cobra.Command {
 
 				wg := new(sync.WaitGroup)
 
-				for i := range imageNames {
-					imageName := imageNames[i]
+				for imageIdx := range imageNames {
+					imageName := imageNames[imageIdx]
 					imageTags := registryConfig.Images[imageName]
 
 					wg.Add(len(imageTags))
@@ -194,7 +194,12 @@ func NewCommand(out output.Output) *cobra.Command {
 						eg.Go(func() error {
 							defer wg.Done()
 
-							srcImageName := fmt.Sprintf("%s/%s:%s", registryName, imageName, imageTag)
+							srcImageName := fmt.Sprintf(
+								"%s/%s:%s",
+								registryName,
+								imageName,
+								imageTag,
+							)
 
 							imageIndex, err := images.ManifestListForImage(
 								srcImageName,
@@ -205,7 +210,12 @@ func NewCommand(out output.Output) *cobra.Command {
 								return err
 							}
 
-							destImageName := fmt.Sprintf("%s/%s:%s", reg.Address(), imageName, imageTag)
+							destImageName := fmt.Sprintf(
+								"%s/%s:%s",
+								reg.Address(),
+								imageName,
+								imageTag,
+							)
 							ref, err := name.ParseReference(destImageName, name.StrictValidation)
 							if err != nil {
 								return err
