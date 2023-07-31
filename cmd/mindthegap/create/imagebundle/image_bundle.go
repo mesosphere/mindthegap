@@ -23,6 +23,7 @@ import (
 
 	"github.com/mesosphere/mindthegap/archive"
 	"github.com/mesosphere/mindthegap/cleanup"
+	"github.com/mesosphere/mindthegap/cmd/mindthegap/utils"
 	"github.com/mesosphere/mindthegap/config"
 	"github.com/mesosphere/mindthegap/docker/registry"
 	"github.com/mesosphere/mindthegap/images"
@@ -133,7 +134,11 @@ func NewCommand(out output.Output) *cobra.Command {
 					tr.CloseIdleConnections()
 				}
 			}()
-			destRemoteOpts := []remote.Option{remote.WithTransport(destTLSRoundTripper), remote.WithContext(egCtx)}
+			destRemoteOpts := []remote.Option{
+				remote.WithTransport(destTLSRoundTripper),
+				remote.WithContext(egCtx),
+				remote.WithUserAgent(utils.Useragent()),
+			}
 
 			out.StartOperationWithProgress(pullGauge)
 
@@ -165,6 +170,7 @@ func NewCommand(out output.Output) *cobra.Command {
 					remote.WithTransport(sourceTLSRoundTripper),
 					remote.WithAuthFromKeychain(keychain),
 					remote.WithContext(egCtx),
+					remote.WithUserAgent(utils.Useragent()),
 				}
 
 				platformsStrings := make([]string, 0, len(platforms))
