@@ -1,6 +1,6 @@
 {
   "packages": [
-    "go@latest",
+    "go@1.20.5",
     "bash@latest",
     "coreutils@latest",
     "crane@latest",
@@ -19,15 +19,5 @@
     "pre-commit@latest",
     "shfmt@latest",
     "upx@latest"
-  ],
-  "shell": {
-    "init_hook": [
-      "echo 'Welcome to devbox!' > /dev/null"
-    ],
-    "scripts": {
-      "test": [
-        "echo \"Error: no test specified\" && exit 1"
-      ]
-    }
-  }
+  ]
 }

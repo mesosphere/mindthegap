@@ -55,8 +55,8 @@
       "source": "devbox-search",
       "version": "4.9"
     },
-    "go@latest": {
-      "last_modified": "2023-06-29T16:20:38Z",
+    "go@1.20.5": {
+      "last_modified": "2023-06-30T04:44:22Z",
       "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#go",
       "source": "devbox-search",
       "version": "1.20.5"
@@ -80,22 +80,22 @@
       "version": "0.11.0"
     },
     "goreleaser@latest": {
-      "last_modified": "2023-06-29T16:20:38Z",
-      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#goreleaser",
+      "last_modified": "2023-07-23T03:35:12Z",
+      "resolved": "github:NixOS/nixpkgs/af8cd5ded7735ca1df1a1174864daab75feeb64a#goreleaser",
       "source": "devbox-search",
-      "version": "1.18.2"
+      "version": "1.19.2"
     },
     "gotestsum@latest": {
-      "last_modified": "2023-05-07T06:59:10Z",
-      "resolved": "github:NixOS/nixpkgs/eb751d65225ec53de9cf3d88acbf08d275882389#gotestsum",
+      "last_modified": "2023-07-23T03:35:12Z",
+      "resolved": "github:NixOS/nixpkgs/af8cd5ded7735ca1df1a1174864daab75feeb64a#gotestsum",
       "source": "devbox-search",
-      "version": "1.10.0"
+      "version": "1.10.1"
     },
     "kubernetes-helm@latest": {
-      "last_modified": "2023-06-29T16:20:38Z",
-      "resolved": "github:NixOS/nixpkgs/3c614fbc76fc152f3e1bc4b2263da6d90adf80fb#kubernetes-helm",
+      "last_modified": "2023-07-23T03:35:12Z",
+      "resolved": "github:NixOS/nixpkgs/af8cd5ded7735ca1df1a1174864daab75feeb64a#kubernetes-helm",
       "source": "devbox-search",
-      "version": "3.12.1"
+      "version": "3.12.2"
     },
     "pre-commit@latest": {
       "last_modified": "2023-06-29T16:20:38Z",
