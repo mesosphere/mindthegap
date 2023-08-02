@@ -1,6 +1,6 @@
 {
   "packages": [
-    "go@latest",
+    "go@1.20.5",
     "bash@latest",
     "coreutils@latest",
     "crane@latest",
