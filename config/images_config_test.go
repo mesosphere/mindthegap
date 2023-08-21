@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func TestParseImagesFile(t *testing.T) {
@@ -86,17 +86,17 @@ func TestParseImagesFile(t *testing.T) {
 		name: "single registry with tls config",
 		want: ImagesConfig{
 			"test.registry.io": RegistrySyncConfig{
-				TLSVerify: pointer.Bool(false),
+				TLSVerify: ptr.To(false),
 			},
 		},
 	}, {
 		name: "multiple registries with tls config",
 		want: ImagesConfig{
 			"test.registry.io": RegistrySyncConfig{
-				TLSVerify: pointer.Bool(false),
+				TLSVerify: ptr.To(false),
 			},
 			"test.registry2.io": RegistrySyncConfig{
-				TLSVerify: pointer.Bool(true),
+				TLSVerify: ptr.To(true),
 			},
 		},
 	}, {
