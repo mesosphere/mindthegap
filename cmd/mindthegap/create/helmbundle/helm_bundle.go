@@ -12,7 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"helm.sh/helm/v3/pkg/action"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
@@ -144,7 +144,7 @@ func NewCommand(out output.Output) *cobra.Command {
 							helm.UsernamePasswordOpt(repoConfig.Username, repoConfig.Password),
 						)
 					}
-					if !pointer.BoolDeref(repoConfig.TLSVerify, true) {
+					if !ptr.Deref(repoConfig.TLSVerify, true) {
 						opts = append(opts, helm.InsecureSkipTLSverifyOpt())
 					}
 					for _, chartVersion := range chartVersions {

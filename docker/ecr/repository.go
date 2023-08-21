@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/google/go-containerregistry/pkg/name"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 func ClientForRegistry(registryAddress string) (*ecr.Client, error) {
@@ -81,7 +81,7 @@ func EnsureRepositoryExistsFunc(ecrClient *ecr.Client, ecrLifecyclePolicy string
 			context.TODO(),
 			&ecr.PutLifecyclePolicyInput{
 				RepositoryName:      &repositoryName,
-				LifecyclePolicyText: pointer.String(string(ecrLifecyclePolicyText)),
+				LifecyclePolicyText: ptr.To(string(ecrLifecyclePolicyText)),
 			},
 		)
 		if err != nil {
