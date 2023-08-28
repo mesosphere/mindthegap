@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install devbox
-        uses: jetpack-io/devbox-install-action@v0.5.0
+        uses: jetpack-io/devbox-install-action@v0.6.0
         with:
           enable-cache: true
 
