@@ -103,7 +103,7 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 			out.EndOperationWithStatus(output.Success())
 
 			logs.Debug.SetOutput(out.V(4).InfoWriter())
-			logs.Warn.SetOutput(out.InfoWriter())
+			logs.Warn.SetOutput(out.V(2).InfoWriter())
 
 			sourceTLSRoundTripper, err := httputils.InsecureTLSRoundTripper(remote.DefaultTransport)
 			if err != nil {
