@@ -274,6 +274,21 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.11.1 (2023-09-15)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix: Hide crane warnings by default by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/507
+### Other Changes
+* build(deps): Bump goproxy dependency for CVE by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/479
+* test: Try to fix proxy flaky tests by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/480
+* build: Upgrade tools by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/481
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.11.0...v1.11.1
+
 ## 1.11.0 (2023-07-31)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
