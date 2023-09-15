@@ -112,7 +112,7 @@ func NewCommand(out output.Output) *cobra.Command {
 			out.EndOperationWithStatus(output.Success())
 
 			logs.Debug.SetOutput(out.V(4).InfoWriter())
-			logs.Warn.SetOutput(out.InfoWriter())
+			logs.Warn.SetOutput(out.V(2).InfoWriter())
 
 			// Sort registries for deterministic ordering.
 			regNames := cfg.SortedRegistryNames()
