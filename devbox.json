@@ -1,6 +1,5 @@
 {
   "packages": [
-    "go@1.20.5",
     "bash@latest",
     "coreutils@latest",
     "crane@latest",
@@ -11,8 +10,9 @@
     "gnused@latest",
     "gnugrep@latest",
     "gnumake@latest",
+    "go@latest",
     "gojq@latest",
-    "golangci-lint@latest",
+    "path:./hack/flakes/golangci-lint",
     "golines@latest",
     "goreleaser@latest",
     "gotestsum@latest",

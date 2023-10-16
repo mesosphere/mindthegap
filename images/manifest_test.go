@@ -417,7 +417,7 @@ func TestManifestListForImage_RemoteImage(t *testing.T) {
 
 			mux := http.NewServeMux()
 			mux.Handle("/v2/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(200)
+				w.WriteHeader(http.StatusOK)
 			}))
 			mux.Handle(
 				"/v2/mesosphere/kube-apiserver/manifests/v1.24.4_fips.0",
