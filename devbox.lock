@@ -80,10 +80,24 @@
       "version": "0.11.0"
     },
     "goreleaser@latest": {
-      "last_modified": "2023-07-23T03:35:12Z",
-      "resolved": "github:NixOS/nixpkgs/af8cd5ded7735ca1df1a1174864daab75feeb64a#goreleaser",
+      "last_modified": "2023-10-01T23:11:39Z",
+      "resolved": "github:NixOS/nixpkgs/f8be2c43b4b1c1aec02f741ae909696b8410ebc1#goreleaser",
       "source": "devbox-search",
-      "version": "1.19.2"
+      "version": "1.21.2",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/x9zmzrlmgwrvh8873yj4gyfwirzmr56q-goreleaser-1.21.2"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/p33a0pj50ajjhqr5af7p3gz9m4x6kxps-goreleaser-1.21.2"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/bcxrzsd200xxj50y3rm214brig4g4gbb-goreleaser-1.21.2"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/qn65854flb2l2kb0168c3ci24ra0irm6-goreleaser-1.21.2"
+        }
+      }
     },
     "gotestsum@latest": {
       "last_modified": "2023-07-23T03:35:12Z",

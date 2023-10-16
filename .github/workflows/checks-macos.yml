@@ -18,6 +18,9 @@ on:
 jobs:
   build-and-run:
     runs-on: macos-13
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Check out code
         uses: actions/checkout@v4
