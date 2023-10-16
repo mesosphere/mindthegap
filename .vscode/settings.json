@@ -1,0 +1,4 @@
+{
+  "go.buildTags": "e2e",
+  "ginkgotestexplorer.buildTags": "e2e"
+}
