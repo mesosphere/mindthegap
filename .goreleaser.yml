@@ -47,9 +47,21 @@ builds:
       - amd64
       - arm64
     mod_timestamp: '{{ .CommitTimestamp }}'
-    hooks:
-      post:
-        - cmd: make SKIP_UPX={{ if index .Env "SKIP_UPX" }}{{ .Env.SKIP_UPX }}{{ else }}{{ .IsSnapshot }}{{ end }} GOOS={{ .Os }} GOARCH={{ .Arch }} UPX_TARGET={{ .Path }} upx
+
+upx:
+  - enabled: "{{ not .IsSnapshot }}"
+    goos:
+      - linux
+    compress: "9"
+    lzma: true
+  - enabled: "{{ not .IsSnapshot }}"
+    goos:
+      - windows
+    goarch:
+      - amd64
+    compress: "9"
+    lzma: true
+
 archives:
   - name_template: '{{ .ProjectName }}_v{{trimprefix .Version "v"}}_{{ .Os }}_{{ .Arch }}'
     format_overrides:
@@ -58,51 +70,24 @@ archives:
     builds:
       - mindthegap
     rlcp: true
-dockers:
-  - image_templates:
-      # Specify the image tag including `-amd64` suffix if the build is not a snapshot build or is not being built on
-      # arm64 machine. This allows for using the snapshot image build without the archtecture specific suffix
-      # consistently on local machines, i.e. can always use `ghcr.io/mesosphere/mindthegap:v<VERSION>` on the machine the snapshot
-      # is built on.
-      #
-      # For a release build the `-amd64` suffix will always be included and the `docker_manifests` specification below
-      # will create the final multiplatform manifest to be pushed to the registry.
-      - 'ghcr.io/mesosphere/mindthegap:v{{trimprefix .Version "v"}}{{ if or (not .IsSnapshot) (not (eq .Runtime.Goarch "amd64")) }}-amd64{{ end }}'
-    use: buildx
-    dockerfile: Dockerfile
-    build_flag_templates:
-      - "--platform=linux/amd64"
-      - "--pull"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title=mindthegap"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-  - image_templates:
-      # Specify the image tag including `-amd64v8` suffix if the build is not a snapshot build or is not being built on
-      # arm64 machine. This allows for using the snapshot image build without the archtecture specific suffix
-      # consistently on local machines, i.e. can always use `ghcr.io/mesosphere/mindthegap:v<VERSION>` on the machine the snapshot
-      # is built on.
-      #
-      # For a release build the `-amd64v8` suffix will always be included and the `docker_manifests` specification below
-      # will create the final multiplatform manifest to be pushed to the registry.
-    - 'ghcr.io/mesosphere/mindthegap:v{{trimprefix .Version "v"}}{{ if or (not .IsSnapshot) (not (eq .Runtime.Goarch "arm64")) }}-arm64v8{{ end }}'
-    use: buildx
-    goarch: arm64
-    dockerfile: Dockerfile
-    build_flag_templates:
-      - "--platform=linux/arm64"
-      - "--pull"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title=mindthegap"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-docker_manifests:
-  - name_template: ghcr.io/mesosphere/mindthegap:v{{trimprefix .Version "v"}}
-    image_templates:
-    - ghcr.io/mesosphere/mindthegap:v{{trimprefix .Version "v"}}-amd64
-    - ghcr.io/mesosphere/mindthegap:v{{trimprefix .Version "v"}}-arm64v8
+
+kos:
+  - id: mindthegap
+    build: mindthegap
+    labels:
+      org.opencontainers.image.created: "{{ .CommitDate }}"
+      org.opencontainers.image.title: mindthegap
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.version: v{{trimprefix .Version "v"}}
+      org.opencontainers.image.source: "{{ .GitURL }}"
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    repository: ghcr.io/mesosphere/mindthegap
+    bare: true
+    tags:
+      - v{{trimprefix .Version "v"}}
+
 checksum:
   name_template: 'checksums.txt'
 snapshot:
