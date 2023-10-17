@@ -13,8 +13,10 @@ linters:
     - errcheck
     - errchkjson
     - errname
+    - gocheckcompilerdirectives
     - gochecknoinits
     - gci
+    - ginkgolinter
     - goconst
     - gocritic
     - gocyclo
@@ -25,18 +27,23 @@ linters:
     - govet
     - ineffassign
     - lll
+    - loggercheck
+    - mirror
     - misspell
     - nolintlint
     - prealloc
+    - reassign
     - staticcheck
     - stylecheck
     - tenv
+    - testableexamples
     - thelper
     - tparallel
     - typecheck
     - unconvert
     - unparam
     - unused
+    - usestdlibvars
     - whitespace
 
 linters-settings:
@@ -66,7 +73,6 @@ linters-settings:
       - performance
       - style
   gofumpt:
-    lang-version: "1.17"
     extra-rules: true
   lll:
     line-length: 120

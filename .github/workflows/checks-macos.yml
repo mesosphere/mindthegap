@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install devbox
         uses: jetpack-io/devbox-install-action@v0.7.0
@@ -33,7 +35,9 @@ jobs:
           NIX_USER_COUNT: 4
 
       - name: Build
-        run: devbox run -- make SKIP_UPX=false build-snapshot
+        run: |
+          devbox run -- \
+            make GORELEASER_FLAGS=$'--config=<(gojq --yaml-input --yaml-output \'del(.builds[0].goarch) | del(.builds[0].goos) | .builds[0].targets|=(["darwin_amd64_v1"])\' .goreleaser.yml) --skip=validate,publish' release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
