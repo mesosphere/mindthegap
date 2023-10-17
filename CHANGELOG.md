@@ -274,6 +274,21 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.12.0 (2023-10-17)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Other Changes
+* build: Add vscode settings for testing by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/531
+* build: Use ko for image building by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/533
+* build: go v1.21.1 by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/530
+* build: Update pre-commit hooks by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/534
+* build: Remove unused docker make stuff by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/537
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.11.1...v1.12.0
+
 ## 1.11.1 (2023-09-15)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
