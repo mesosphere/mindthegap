@@ -13,23 +13,23 @@
     ,
     }:
     let
-      releaseVersion = "1.11.0";
+      releaseVersion = "1.12.0";
       releaseBinaries = {
         "x86_64-linux" = {
           fileName = "mindthegap_v${releaseVersion}_linux_amd64.tar.gz";
-          sha256 = "0687f239413c3a69be44a2056e83a5520e71de41a4633eea73ab485ed062cbe0";
+          sha256 = "d8de421a43a16baca9f7c235c23855bc252b0d045a9dac850b3b4d7ea4822b34";
         };
         "aarch64-linux" = {
           fileName = "mindthegap_v${releaseVersion}_linux_arm64.tar.gz";
-          sha256 = "7936510e2234612fb1acd0c428b37806e411680e3bccacad0cd001da83592af0";
+          sha256 = "9dc16c1aaaedb8034f35ab53501122f64e42e49bddbdeb9c53eea9a2701e766f";
         };
         "x86_64-darwin" = {
           fileName = "mindthegap_v${releaseVersion}_darwin_amd64.tar.gz";
-          sha256 = "d6eccda3abf113c4e019aeab3ee8887bbdc6045f630ffaf3a881915d9212a2b2";
+          sha256 = "68fc3b57144e1804b95c5654f624a5e63b14014f61d04a8b5de39c513f5fed9a";
         };
         "aarch64-darwin" = {
           fileName = "mindthegap_v${releaseVersion}_darwin_arm64.tar.gz";
-          sha256 = "b9e794e8ca292bb95d18dfdb6f935263c23a960a7b2a70b6d10c0b5a6a5fd4bd";
+          sha256 = "0a2bd11437ee76ec4cce3b0d903363ce082e1a69ebac3301313a2cd4739e1a70";
         };
       };
       supportedSystems = builtins.attrNames releaseBinaries;
