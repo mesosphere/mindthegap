@@ -19,6 +19,7 @@ import (
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
 	"github.com/mesosphere/mindthegap/cleanup"
+	"github.com/mesosphere/mindthegap/cmd/mindthegap/flags"
 	"github.com/mesosphere/mindthegap/cmd/mindthegap/utils"
 	"github.com/mesosphere/mindthegap/containerd"
 	"github.com/mesosphere/mindthegap/docker/registry"
@@ -34,6 +35,17 @@ func NewCommand(out output.Output) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "image-bundle",
 		Short: "Import images from image bundles into Containerd",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmd.ValidateRequiredFlags(); err != nil {
+				return err
+			}
+
+			if err := flags.ValidateRequiredFlagValues(cmd, "image-bundle"); err != nil {
+				return err
+			}
+
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cleaner := cleanup.NewCleaner()
 			defer cleaner.Cleanup()
