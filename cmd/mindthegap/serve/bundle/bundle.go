@@ -14,6 +14,7 @@ import (
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
 	"github.com/mesosphere/mindthegap/cleanup"
+	"github.com/mesosphere/mindthegap/cmd/mindthegap/flags"
 	"github.com/mesosphere/mindthegap/cmd/mindthegap/utils"
 	"github.com/mesosphere/mindthegap/config"
 	"github.com/mesosphere/mindthegap/docker/registry"
@@ -36,6 +37,17 @@ func NewCommand(
 	cmd = &cobra.Command{
 		Use:   bundleCmdName,
 		Short: "Serve an OCI registry from previously created bundles",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmd.ValidateRequiredFlags(); err != nil {
+				return err
+			}
+
+			if err := flags.ValidateFlagsThatRequireValues(cmd, bundleCmdName); err != nil {
+				return err
+			}
+
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cleaner := cleanup.NewCleaner()
 			defer cleaner.Cleanup()

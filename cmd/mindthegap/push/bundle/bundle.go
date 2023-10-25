@@ -64,6 +64,17 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   bundleCmdName,
 		Short: "Push from bundles into an existing OCI registry",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmd.ValidateRequiredFlags(); err != nil {
+				return err
+			}
+
+			if err := flags.ValidateFlagsThatRequireValues(cmd, bundleCmdName, "to-registry"); err != nil {
+				return err
+			}
+
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cleaner := cleanup.NewCleaner()
 			defer cleaner.Cleanup()

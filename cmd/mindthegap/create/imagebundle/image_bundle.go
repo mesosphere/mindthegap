@@ -23,6 +23,7 @@ import (
 
 	"github.com/mesosphere/mindthegap/archive"
 	"github.com/mesosphere/mindthegap/cleanup"
+	"github.com/mesosphere/mindthegap/cmd/mindthegap/flags"
 	"github.com/mesosphere/mindthegap/cmd/mindthegap/utils"
 	"github.com/mesosphere/mindthegap/config"
 	"github.com/mesosphere/mindthegap/docker/registry"
@@ -43,6 +44,17 @@ func NewCommand(out output.Output) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "image-bundle",
 		Short: "Create an image bundle",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmd.ValidateRequiredFlags(); err != nil {
+				return err
+			}
+
+			if err := flags.ValidateFlagsThatRequireValues(cmd, "images-file"); err != nil {
+				return err
+			}
+
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !overwrite {
 				out.StartOperation("Checking if output file already exists")
