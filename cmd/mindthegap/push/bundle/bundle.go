@@ -69,7 +69,7 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 				return err
 			}
 
-			if err := flags.ValidateRequiredFlagValues(cmd, bundleCmdName, "to-registry"); err != nil {
+			if err := flags.ValidateFlagsThatRequireValues(cmd, bundleCmdName, "to-registry"); err != nil {
 				return err
 			}
 

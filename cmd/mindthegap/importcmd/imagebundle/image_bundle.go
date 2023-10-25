@@ -40,7 +40,7 @@ func NewCommand(out output.Output) *cobra.Command {
 				return err
 			}
 
-			if err := flags.ValidateRequiredFlagValues(cmd, "image-bundle"); err != nil {
+			if err := flags.ValidateFlagsThatRequireValues(cmd, "image-bundle"); err != nil {
 				return err
 			}
 

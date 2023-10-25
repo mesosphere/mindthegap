@@ -42,7 +42,7 @@ func NewCommand(
 				return err
 			}
 
-			if err := flags.ValidateRequiredFlagValues(cmd, bundleCmdName); err != nil {
+			if err := flags.ValidateFlagsThatRequireValues(cmd, bundleCmdName); err != nil {
 				return err
 			}
 

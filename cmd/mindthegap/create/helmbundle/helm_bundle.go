@@ -40,7 +40,7 @@ func NewCommand(out output.Output) *cobra.Command {
 				return err
 			}
 
-			if err := flags.ValidateRequiredFlagValues(cmd, "helm-charts-file"); err != nil {
+			if err := flags.ValidateFlagsThatRequireValues(cmd, "helm-charts-file"); err != nil {
 				return err
 			}
 

@@ -8,9 +8,11 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"k8s.io/utils/strings/slices"
 )
 
-func ValidateRequiredFlagValues(cmd *cobra.Command, requiredFlagsWithValues ...string) error {
+func ValidateFlagsThatRequireValues(cmd *cobra.Command, requiredFlagsWithValues ...string) error {
 	fs := cmd.Flags()
 
 	missingFlagValues := []string{}
@@ -20,13 +22,22 @@ func ValidateRequiredFlagValues(cmd *cobra.Command, requiredFlagsWithValues ...s
 			continue
 		}
 
-		if foundFlag.Value.String() == "" || foundFlag.Value.String() == "[]" {
-			missingFlagValues = append(missingFlagValues, flagName)
+		if sv, ok := foundFlag.Value.(pflag.SliceValue); ok {
+			if len(slices.Filter(nil, sv.GetSlice(), func(s string) bool { return s != "" })) == 0 {
+				missingFlagValues = append(missingFlagValues, flagName)
+			}
+		} else {
+			if foundFlag.Value.String() == "" {
+				missingFlagValues = append(missingFlagValues, flagName)
+			}
 		}
 	}
 
 	if len(missingFlagValues) > 0 {
-		return fmt.Errorf(`required flag value(s) "%s" not set`, strings.Join(missingFlagValues, `", "`))
+		return fmt.Errorf(
+			`the following flags require value(s) to be specified: "%s"`,
+			strings.Join(missingFlagValues, `", "`),
+		)
 	}
 	return nil
 }
