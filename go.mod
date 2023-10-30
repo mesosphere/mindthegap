@@ -7,7 +7,7 @@ go 1.21
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.21.2
-	github.com/aws/aws-sdk-go-v2/config v1.19.0
+	github.com/aws/aws-sdk-go-v2/config v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.20.2
 	github.com/containers/image/v5 v5.28.0
 	github.com/distribution/distribution/v3 v3.0.0-20230722181636-7b502560cad4
