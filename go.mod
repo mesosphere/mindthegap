@@ -8,7 +8,7 @@ go 1.21
 require (
 	github.com/aws/aws-sdk-go-v2 v1.23.5
 	github.com/aws/aws-sdk-go-v2/config v1.25.11
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.23.1
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.2
 	github.com/containers/image/v5 v5.29.0
 	github.com/distribution/distribution/v3 v3.0.0-20230722181636-7b502560cad4
 	github.com/docker/cli v24.0.7+incompatible
