@@ -176,7 +176,7 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 				}
 			}
 
-			keychain := authn.DefaultKeychain
+			var keychain authn.Keychain = authn.DefaultKeychain
 			if destRegistryUsername != "" && destRegistryPassword != "" {
 				keychain = authn.NewMultiKeychain(
 					authn.NewKeychainFromHelper(
