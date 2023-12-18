@@ -6,19 +6,19 @@
     "findutils@latest",
     "ginkgo@latest",
     "git@latest",
-    "path:./hack/flakes/go-mod-upgrade",
     "gnused@latest",
     "gnugrep@latest",
     "gnumake@latest",
     "go@latest",
     "gojq@latest",
-    "path:./hack/flakes/golangci-lint",
     "golines@latest",
     "goreleaser@latest",
     "gotestsum@latest",
     "kubernetes-helm@latest",
     "pre-commit@latest",
     "shfmt@latest",
-    "upx@latest"
+    "upx@latest",
+    "path:./hack/flakes#go-mod-upgrade",
+    "path:./hack/flakes#golangci-lint"
   ]
 }
