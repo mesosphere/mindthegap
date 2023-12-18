@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/containers/image/v5/types"
-	"github.com/distribution/distribution/v3/reference"
+	"github.com/distribution/reference"
 	"gopkg.in/yaml.v3"
 	"k8s.io/utils/ptr"
 )
