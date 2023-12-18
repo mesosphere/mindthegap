@@ -274,6 +274,25 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.13.0 (2023-12-18)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: Validate empty values for required flags by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/541
+### Fixes 🔧
+* fix: Do not panic on invalid air-gapped bundle by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/586
+### Other Changes
+* build: Update tools by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/579
+* build: Remove unused and deprecated goreleaser flags by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/581
+* ci: Update release please configuration for v4 action by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/583
+* build: Use new github.com/distribution/reference module by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/582
+* build: Add ko necessary for building release images by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/585
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.12.0...v1.13.0
+
 ## 1.12.0 (2023-10-17)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
