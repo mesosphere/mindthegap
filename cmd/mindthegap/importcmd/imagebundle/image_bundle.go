@@ -5,6 +5,7 @@ package imagebundle
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -66,6 +67,11 @@ func NewCommand(out output.Output) *cobra.Command {
 			cfg, _, err := utils.ExtractBundles(tempDir, out, imageBundleFiles...)
 			if err != nil {
 				return err
+			}
+			if cfg == nil {
+				return errors.New(
+					"no bundle configuration(s) found: please check that you have specified valid air-gapped bundle(s)",
+				)
 			}
 
 			out.StartOperation("Starting temporary Docker registry")
