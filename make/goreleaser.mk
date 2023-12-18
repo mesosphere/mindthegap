@@ -16,8 +16,7 @@ build-snapshot: ; $(info $(M) building snapshot $*)
 		--snapshot \
 		--clean \
 		--parallelism=$(GORELEASER_PARALLELISM) \
-		$(if $(BUILD_ALL),,--single-target) \
-		--skip-post-hooks
+		$(if $(BUILD_ALL),,--single-target)
 
 .PHONY: release
 release: ## Builds a release with goreleaser
@@ -35,7 +34,6 @@ release-snapshot: ; $(info $(M) building snapshot release $*)
 	goreleaser --debug=$(GORELEASER_DEBUG) \
 		release \
 		--snapshot \
-		--skip=publish \
 		--clean \
 		--parallelism=$(GORELEASER_PARALLELISM) \
 		--timeout=60m
