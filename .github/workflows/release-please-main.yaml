@@ -19,11 +19,6 @@ jobs:
     steps:
       - uses: google-github-actions/release-please-action@v4.0
         id: release-please
-        with:
-          release-type: go
-          package-name: mindthegap
-          pull-request-title-pattern: "build${scope}: release${component} ${version}"
-          changelog-notes-type: github
 
       - if: ${{ steps.release-please.outputs.release_created }}
         name: Run release workflow
