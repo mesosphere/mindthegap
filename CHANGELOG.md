@@ -274,6 +274,13 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## [1.13.0](https://github.com/mesosphere/mindthegap/compare/v1.12.0...v1.13.0) (2023-12-18)
+
+
+### Features
+
+* Validate empty values for required flags ([#541](https://github.com/mesosphere/mindthegap/issues/541)) ([d1d8eee](https://github.com/mesosphere/mindthegap/commit/d1d8eee987890c862fbab5349a2de3749f59b809))
+
 ## 1.12.0 (2023-10-17)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
