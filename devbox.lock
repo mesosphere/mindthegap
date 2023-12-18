@@ -281,6 +281,26 @@
         }
       }
     },
+    "ko@latest": {
+      "last_modified": "2023-11-17T14:14:56Z",
+      "resolved": "github:NixOS/nixpkgs/a71323f68d4377d12c04a5410e214495ec598d4c#ko",
+      "source": "devbox-search",
+      "version": "0.15.1",
+      "systems": {
+        "aarch64-darwin": {
+          "store_path": "/nix/store/pr9sz4nm2zg2ad7hzsqzvfrxyq7v5ja3-ko-0.15.1"
+        },
+        "aarch64-linux": {
+          "store_path": "/nix/store/9ayvpa41fhbp9wg3yhhcn8g1s4y88j1c-ko-0.15.1"
+        },
+        "x86_64-darwin": {
+          "store_path": "/nix/store/493pm2v8vpnc0yfzkxwd31if2dhlrww8-ko-0.15.1"
+        },
+        "x86_64-linux": {
+          "store_path": "/nix/store/v1wxaqfdgigc43578p43c7nnnbafaac9-ko-0.15.1"
+        }
+      }
+    },
     "kubernetes-helm@latest": {
       "last_modified": "2023-11-19T17:46:56Z",
       "resolved": "github:NixOS/nixpkgs/0bf3f5cf6a98b5d077cdcdb00a6d4b3d92bc78b5#kubernetes-helm",
