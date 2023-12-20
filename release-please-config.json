@@ -2,7 +2,7 @@
   "packages": {
     ".": {
       "release-type": "go",
-      "pull-request-title-pattern": "build${scope}: release${component} ${version}",
+      "pull-request-title-pattern": "release${scope}: release${component} ${version}",
       "changelog-type": "github"
     }
   }
