@@ -2,8 +2,10 @@
   "packages": {
     ".": {
       "release-type": "go",
-      "pull-request-title-pattern": "release${scope}: v${version}",
-      "changelog-type": "github"
+      "pull-request-title-pattern": "release${scope}: ${component} v${version}",
+      "changelog-type": "github",
+      "component-name": "mindthegap",
+      "include-component-in-tag": false
     }
   }
 }
