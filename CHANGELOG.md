@@ -274,6 +274,17 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.13.1 (2023-12-20)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Other Changes
+* build: Add release conventional commit type for release PRs by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/589
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.13.0...v1.13.1
+
 ## 1.13.0 (2023-12-18)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
