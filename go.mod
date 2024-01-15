@@ -21,7 +21,7 @@ require (
 	github.com/hashicorp/go-getter v1.7.3
 	github.com/mesosphere/dkp-cli-runtime/core v0.7.3
 	github.com/mholt/archiver/v3 v3.5.1
-	github.com/onsi/ginkgo/v2 v2.13.2
+	github.com/onsi/ginkgo/v2 v2.14.0
 	github.com/onsi/gomega v1.30.0
 	github.com/opencontainers/image-spec v1.1.0-rc5
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
@@ -202,7 +202,7 @@ require (
 	golang.org/x/term v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.16.0 // indirect
+	golang.org/x/tools v0.16.1 // indirect
 	google.golang.org/api v0.149.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20231212172506-995d672761c0 // indirect
