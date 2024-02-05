@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.7
-	github.com/containers/image/v5 v5.29.1
+	github.com/containers/image/v5 v5.29.2
 	github.com/distribution/distribution/v3 v3.0.0-20231215182052-79ef555f8a43
 	github.com/distribution/reference v0.5.0
 	github.com/docker/cli v25.0.1+incompatible
