@@ -12,7 +12,7 @@ require (
 	github.com/containers/image/v5 v5.29.1
 	github.com/distribution/distribution/v3 v3.0.0-20231215182052-79ef555f8a43
 	github.com/distribution/reference v0.5.0
-	github.com/docker/cli v25.0.1+incompatible
+	github.com/docker/cli v25.0.2+incompatible
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/docker/docker-credential-helpers v0.8.1
 	github.com/docker/go-connections v0.5.0
