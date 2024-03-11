@@ -82,22 +82,22 @@
       }
     },
     "ginkgo@latest": {
-      "last_modified": "2024-02-24T23:06:34Z",
-      "resolved": "github:NixOS/nixpkgs/9a9dae8f6319600fa9aebde37f340975cab4b8c0#ginkgo",
+      "last_modified": "2024-03-06T17:57:40Z",
+      "resolved": "github:NixOS/nixpkgs/58ae79ea707579c40102ddf62d84b902a987c58b#ginkgo",
       "source": "devbox-search",
-      "version": "2.15.0",
+      "version": "2.16.0",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/4prb1gpn2nkl7wk0x8xds0b7wkprmbgx-ginkgo-2.15.0"
+          "store_path": "/nix/store/npsxni8ai1l4dxscn8iyhaa1gr1xyvza-ginkgo-2.16.0"
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/dgjsh18pggq2br853y0r9ay6csmg5np2-ginkgo-2.15.0"
+          "store_path": "/nix/store/l6acq41i0w5hvsk8w2i051csqxv60fh0-ginkgo-2.16.0"
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/wq8r1hjrqzmcf40san5wwyq7pclm04yh-ginkgo-2.15.0"
+          "store_path": "/nix/store/fw7ql8phchqxyx6kzcm8h9vpqbf9zrip-ginkgo-2.16.0"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/v882ihw9y8iaw61v5qm4cyk5252f807b-ginkgo-2.15.0"
+          "store_path": "/nix/store/nzdrgndhgm4rq5459w94q4r8dr8d0fjb-ginkgo-2.16.0"
         }
       }
     },
@@ -182,22 +182,22 @@
       }
     },
     "go@latest": {
-      "last_modified": "2024-02-24T23:06:34Z",
-      "resolved": "github:NixOS/nixpkgs/9a9dae8f6319600fa9aebde37f340975cab4b8c0#go_1_22",
+      "last_modified": "2024-03-06T17:57:40Z",
+      "resolved": "github:NixOS/nixpkgs/58ae79ea707579c40102ddf62d84b902a987c58b#go_1_22",
       "source": "devbox-search",
-      "version": "1.22.0",
+      "version": "1.22.1",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/sbg2nmns0b8invf6ws8yid0gdak18w4d-go-1.22.0"
+          "store_path": "/nix/store/q955gd41jh08l5pgbmx7y5jlqwwk4rqk-go-1.22.1"
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/48bhxp3lncnmss2i3f44k3r7wgcm0ijk-go-1.22.0"
+          "store_path": "/nix/store/ca92iff1jpd9a3l3i8222rzbkq949mlh-go-1.22.1"
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/3xay4cky9vhc2ir4prv53n5gbgal0nlj-go-1.22.0"
+          "store_path": "/nix/store/f64hpgi6lnn8vrf22cff2y8307c7zns3-go-1.22.1"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/8yw3g52r95h7cv09lcrran92n212997b-go-1.22.0"
+          "store_path": "/nix/store/jw9qrkqlkm699ncbrbs1d4czfg4wg8da-go-1.22.1"
         }
       }
     },
@@ -322,22 +322,22 @@
       }
     },
     "pre-commit@latest": {
-      "last_modified": "2024-02-24T23:06:34Z",
-      "resolved": "github:NixOS/nixpkgs/9a9dae8f6319600fa9aebde37f340975cab4b8c0#pre-commit",
+      "last_modified": "2024-03-06T17:57:40Z",
+      "resolved": "github:NixOS/nixpkgs/58ae79ea707579c40102ddf62d84b902a987c58b#pre-commit",
       "source": "devbox-search",
-      "version": "3.6.1",
+      "version": "3.6.2",
       "systems": {
         "aarch64-darwin": {
-          "store_path": "/nix/store/z02qsxbka1x8s1gm05fpnbwvxmq2akrn-pre-commit-3.6.1"
+          "store_path": "/nix/store/6054c32wnrc2jwd3vg83mrdxji34gj78-pre-commit-3.6.2"
         },
         "aarch64-linux": {
-          "store_path": "/nix/store/ynb360fgbwgn7knmv493ygifr1rykhga-pre-commit-3.6.1"
+          "store_path": "/nix/store/8b8c8niyvq23hbrkc26wm91pq3m1vwsj-pre-commit-3.6.2"
         },
         "x86_64-darwin": {
-          "store_path": "/nix/store/wy0a2dsw6322pyljd1vc8yzd9cffzi3j-pre-commit-3.6.1"
+          "store_path": "/nix/store/2jd5c3ir3zsk4y612zyaq2hssn5fvy8x-pre-commit-3.6.2"
         },
         "x86_64-linux": {
-          "store_path": "/nix/store/g7vqxkmfy6s5j4642cgmfvkdfa0dgjqk-pre-commit-3.6.1"
+          "store_path": "/nix/store/f87ha48qbkhfz6h2yg2dxp6s1kcbqdmp-pre-commit-3.6.2"
         }
       }
     },
