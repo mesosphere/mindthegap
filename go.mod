@@ -10,7 +10,7 @@ replace github.com/docker/docker => github.com/docker/docker v24.0.7+incompatibl
 require (
 	github.com/aws/aws-sdk-go-v2 v1.25.3
 	github.com/aws/aws-sdk-go-v2/config v1.27.7
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.1
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.2
 	github.com/containers/image/v5 v5.30.0
 	github.com/distribution/distribution/v3 v3.0.0-alpha.1
 	github.com/distribution/reference v0.5.0
