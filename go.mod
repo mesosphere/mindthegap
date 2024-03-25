@@ -8,7 +8,7 @@ go 1.21
 replace github.com/docker/docker => github.com/docker/docker v24.0.7+incompatible
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.25.3
+	github.com/aws/aws-sdk-go-v2 v1.26.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.2
 	github.com/containers/image/v5 v5.30.0
