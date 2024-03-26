@@ -274,6 +274,28 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.13.1 (2024-03-26)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Other Changes
+* build: Add release conventional commit type for release PRs by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/589
+* build(main): Latest devbox update (2024-02-05) by @mesosphere-actions-pr-bot in https://github.com/mesosphere/mindthegap/pull/622
+* build(main): Latest devbox update (2024-02-12) by @mesosphere-actions-pr-bot in https://github.com/mesosphere/mindthegap/pull/623
+* build(main): Latest devbox update (2024-02-26) by @mesosphere-actions-pr-bot in https://github.com/mesosphere/mindthegap/pull/635
+* build(main): Latest devbox update (2024-03-04) by @mesosphere-actions-pr-bot in https://github.com/mesosphere/mindthegap/pull/640
+* build(main): Latest devbox update (2024-03-11) by @mesosphere-actions-pr-bot in https://github.com/mesosphere/mindthegap/pull/642
+* build(main): Latest devbox update (2024-03-18) by @mesosphere-actions-pr-bot in https://github.com/mesosphere/mindthegap/pull/648
+* build(main): Latest devbox update (2024-03-25) by @mesosphere-actions-pr-bot in https://github.com/mesosphere/mindthegap/pull/656
+* ci: Remove auto-approve PRs now it is disabled at org level by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/664
+* ci: Fix up release workflow by specifying workflow-dispatch version by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/665
+
+## New Contributors
+* @mesosphere-actions-pr-bot made their first contribution in https://github.com/mesosphere/mindthegap/pull/622
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.13.0...v1.13.1
+
 ## 1.13.0 (2023-12-18)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
