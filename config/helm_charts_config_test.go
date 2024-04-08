@@ -116,8 +116,7 @@ func TestParseHelmChartsFile(t *testing.T) {
 			},
 		},
 	}}
-	for ti := range tests {
-		tt := tests[ti]
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ext := "yaml"
@@ -324,8 +323,7 @@ func TestMergeHelmConfig(t *testing.T) {
 		},
 	}
 
-	for ti := range tests {
-		tt := tests[ti]
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got := tt.src.Merge(tt.with)

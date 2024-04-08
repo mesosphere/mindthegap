@@ -14,8 +14,6 @@ type staticHelper struct {
 	authConfig *types.DockerAuthConfig
 }
 
-var _ authn.Helper = staticHelper{}
-
 func (h staticHelper) Get(serverURL string) (username, password string, err error) {
 	if h.authConfig != nil && serverURL == h.registry {
 		password := h.authConfig.Password

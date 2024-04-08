@@ -305,7 +305,7 @@ func pushImages(
 ) error {
 	puller, err := remote.NewPuller(destRemoteOpts...)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	// Sort registries for deterministic ordering.

@@ -51,8 +51,7 @@ func TestFilesWithGlobs(t *testing.T) {
 			expectedOutput: combinedCreatedFiles,
 		},
 	}
-	for ti := range tests {
-		tt := tests[ti]
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			out, err := FilesWithGlobs(tt.in)
