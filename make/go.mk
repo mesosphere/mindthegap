@@ -139,7 +139,7 @@ endif
 .PHONY: mod-tidy.%
 mod-tidy.%: ## Runs go mod tidy for a specific module
 mod-tidy.%: ; $(info $(M) running go mod tidy for $* module)
-	$(if $(filter-out root,$*),cd $* && )go mod tidy -v -compat=1.17
+	$(if $(filter-out root,$*),cd $* && )go mod tidy -v
 	$(if $(filter-out root,$*),cd $* && )go mod verify
 
 .PHONY: go-clean
