@@ -170,7 +170,7 @@ func NewCommand(out output.Output) *cobra.Command {
 						)
 						if err != nil {
 							out.EndOperationWithStatus(output.Failure())
-							return fmt.Errorf("failed to create Helm chart bundle: %v", err)
+							return fmt.Errorf("failed to create Helm chart bundle: %w", err)
 						}
 
 						if err := helmClient.PushHelmChartToOCIRegistry(
@@ -199,7 +199,7 @@ func NewCommand(out output.Output) *cobra.Command {
 				)
 				if err != nil {
 					out.EndOperationWithStatus(output.Failure())
-					return fmt.Errorf("failed to create Helm chart bundle: %v", err)
+					return fmt.Errorf("failed to create Helm chart bundle: %w", err)
 				}
 
 				chrt, err := helm.LoadChart(downloaded)

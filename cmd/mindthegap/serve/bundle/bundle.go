@@ -4,6 +4,7 @@
 package bundle
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -102,7 +103,8 @@ func NewCommand(
 			out.Infof("Listening on %s\n", reg.Address())
 
 			go func() {
-				if err := reg.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				if err := reg.ListenAndServe(); err != nil &&
+					!errors.Is(err, http.ErrServerClosed) {
 					out.Error(err, "error serving Docker registry")
 					os.Exit(2)
 				}

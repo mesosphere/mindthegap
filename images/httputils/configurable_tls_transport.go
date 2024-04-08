@@ -32,7 +32,7 @@ func TLSConfiguredRoundTripper(
 	if tr.TLSClientConfig.RootCAs == nil {
 		systemPool, err := tlsconfig.SystemCertPool()
 		if err != nil {
-			return nil, fmt.Errorf("unable to get system cert pool: %v", err)
+			return nil, fmt.Errorf("unable to get system cert pool: %w", err)
 		}
 		tr.TLSClientConfig.RootCAs = systemPool
 	}

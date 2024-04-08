@@ -7,36 +7,54 @@ run:
 linters:
   disable-all: true
   enable:
+    - asciicheck
+    - bidichk
+    - bodyclose
     - containedctx
     - contextcheck
+    - copyloopvar
+    - decorder
     - depguard
+    - dogsled
+    - durationcheck
     - errcheck
     - errchkjson
     - errname
-    - gocheckcompilerdirectives
-    - gochecknoinits
+    - errorlint
+    - exhaustive
     - gci
     - ginkgolinter
+    - gocheckcompilerdirectives
+    - gochecknoinits
+    - gochecksumtype
     - goconst
     - gocritic
     - gocyclo
     - godot
     - gofumpt
+    - gomoddirectives
     - gosec
     - gosimple
     - govet
     - ineffassign
+    - interfacebloat
+    - intrange
     - lll
     - loggercheck
     - mirror
     - misspell
+    - musttag
+    - nestif
+    - nilerr
     - nolintlint
+    - nosprintfhostport
     - prealloc
     - reassign
     - staticcheck
     - stylecheck
     - tenv
     - testableexamples
+    - testifylint
     - thelper
     - tparallel
     - typecheck

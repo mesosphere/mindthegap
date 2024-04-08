@@ -64,8 +64,7 @@ func Test_parsePossibleURI(t *testing.T) {
 			expectedPath:    "/dkp",
 		},
 	}
-	for ti := range tests {
-		tt := tests[ti]
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			scheme, address, host, path, _ := parsePossibleURI(tt.in)

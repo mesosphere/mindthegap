@@ -7,6 +7,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -40,7 +41,7 @@ func TestArchiveDirectorySuccess(t *testing.T) {
 	tr := tar.NewReader(gzr)
 	for {
 		hdr, err := tr.Next()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break // End of archive
 		}
 		require.NoError(t, err, "error reading listing from tarball")
@@ -51,7 +52,7 @@ func TestArchiveDirectorySuccess(t *testing.T) {
 		_, err = io.CopyN(&buf, tr, 1024)
 		require.Condition(
 			t,
-			func() (success bool) { return err == nil || err == io.EOF },
+			func() (success bool) { return err == nil || errors.Is(err, io.EOF) },
 			"error reading content from tarball",
 		)
 		archivedContents[hdr.Name] = buf.String()
@@ -81,7 +82,7 @@ func TestArchiveDirectoryToTarSuccess(t *testing.T) {
 	tr := tar.NewReader(f)
 	for {
 		hdr, err := tr.Next()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break // End of archive
 		}
 		require.NoError(t, err, "error reading listing from tarball")
@@ -92,7 +93,7 @@ func TestArchiveDirectoryToTarSuccess(t *testing.T) {
 		_, err = io.CopyN(&buf, tr, 1024)
 		require.Condition(
 			t,
-			func() (success bool) { return err == nil || err == io.EOF },
+			func() (success bool) { return err == nil || errors.Is(err, io.EOF) },
 			"error reading content from tarball",
 		)
 		archivedContents[hdr.Name] = buf.String()

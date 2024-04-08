@@ -46,7 +46,6 @@ func TestIsECRRegistry(t *testing.T) {
 		want:            true,
 	}}
 	for _, tt := range tests {
-		tt := tt // Capture range variable.
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			if got := IsECRRegistry(tt.registryAddress); got != tt.want {
@@ -102,7 +101,6 @@ func TestParseECRRegistry(t *testing.T) {
 		wantRegion:      "",
 	}}
 	for _, tt := range tests {
-		tt := tt // Capture range variable.
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			gotID, gotFips, gotRegion, gotErr := ParseECRRegistry(tt.registryAddress)
