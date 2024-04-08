@@ -82,14 +82,3 @@ jobs:
             --body "This PR was automatically created by the scheduled devbox update workflow.")"
           gh pr merge --auto --squash "${pr_url}"
           echo "pr_url=${pr_url}" >>"${GITHUB_OUTPUT}"
-
-      - name: Approve PR using workflow token
-        if: steps.devbox-versions-changed.outputs.number_changed > 0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [ "$(gh pr status --json reviewDecision -q .currentBranch.reviewDecision)" != "APPROVED" ]; then
-            gh pr review --approve "${{ steps.create-pr.outputs.pr_url }}"
-          else
-            echo "PR already approved, skipping additional approvals to minimize emails/notification noise."
-          fi
