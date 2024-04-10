@@ -1,0 +1,64 @@
+# Copyright 2024 D2iQ, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+version: '3'
+
+vars:
+  GORELEASER_PARALLELISM: '$nproc --ignore=1'
+  GORELEASER_DEBUG: false
+  GORELEASER_BUILD_ALL: false
+
+env:
+  GIT_TREE_STATE: '$git status --porcelain &>/dev/null || echo dirty'
+
+tasks:
+  snapshot:
+    desc: Builds a snapshot with goreleaser
+    cmds:
+      - |
+        goreleaser --debug={{ .GORELEASER_DEBUG }} \
+          build \
+          --snapshot \
+          --clean \
+          --parallelism={{ .GORELEASER_PARALLELISM }} \
+          {{ if not .GORELEASER_BUILD_ALL }}--single-target{{ end }}
+
+  release:
+    desc: Builds a release with goreleaser
+    cmds:
+      - |
+        {{if not .SKIP_BUILD}}
+        goreleaser --debug={{ .GORELEASER_DEBUG }} \
+          release \
+          --clean \
+          --parallelism={{ .GORELEASER_PARALLELISM }} \
+          {{ .GORELEASER_FLAGS }}
+        {{end}}
+
+  release-unpublished:
+    desc: Builds a release locally with goreleaser for specific platforms without publishing
+    vars:
+      TEMP_CONFIG: '$mktemp'
+      TEMP_RELEASE_NOTES: '$mktemp'
+    requires:
+      vars:
+        - GORELEASER_PLATFORMS
+    cmds:
+      - defer: rm -f '{{.TEMP_CONFIG}}' '{{.TEMP_RELEASE_NOTES}}'
+      - cmd: |
+          gojq --yaml-input --yaml-output 'del(.builds[0].goarch) | del(.builds[0].goos) | .builds[0].targets|=([{{.GORELEASER_PLATFORMS}}] | unique | map(. | sub("_amd64$";"_amd64_v1")))' .goreleaser.yml > '{{.TEMP_CONFIG}}'
+        silent: true
+      - task: release
+        vars:
+          GORELEASER_FLAGS: '--config={{.TEMP_CONFIG}} --release-notes={{.TEMP_RELEASE_NOTES}} --skip=announce,publish,validate'
+
+  release-snapshot:
+    desc: Builds a snapshot release with goreleaser
+    cmds:
+      - |
+        goreleaser --debug={{ .GORELEASER_DEBUG }} \
+          release \
+          --snapshot \
+          --clean \
+          --parallelism={{ .GORELEASER_PARALLELISM }} \
+          {{ .GORELEASER_FLAGS }}

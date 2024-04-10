@@ -35,11 +35,17 @@ repos:
     stages: [commit]
   - id: end-of-file-fixer
     stages: [commit]
+- repo: https://github.com/rhysd/actionlint
+  rev: v1.6.25
+  hooks:
+  - id: actionlint-system
+    stages: [commit]
 - repo: https://github.com/jorisroovers/gitlint
   rev: v0.19.1
   hooks:
   - id: gitlint
-    stages: [commit-msg]
+  - id: gitlint-ci
+    args: ["--commits", "origin/main..HEAD"]
 - repo: https://github.com/jumanjihouse/pre-commit-hooks
   rev: 3.0.0
   hooks:
@@ -74,9 +80,9 @@ repos:
       - //
       - --allow-past-years
   - id: insert-license
-    name: License headers - YAML and Makefiles
+    name: License headers - YAML
     stages: [commit]
-    files: (^Makefile|\.(ya?ml|mk))$
+    files: \.ya?ml$
     args:
       - --license-filepath
       - header.txt

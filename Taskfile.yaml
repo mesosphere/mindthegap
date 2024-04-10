@@ -1,0 +1,16 @@
+# Copyright 2024 D2iQ, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+version: '3'
+
+set:
+  - errexit
+  - nounset
+  - pipefail
+
+includes:
+  build: ./tasks/build.yaml
+  git: ./tasks/git.yaml
+  pre-commit: ./tasks/pre-commit.yaml
+  go: ./tasks/go.yaml
+  test: ./tasks/test.yaml

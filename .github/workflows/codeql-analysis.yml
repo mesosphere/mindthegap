@@ -7,6 +7,9 @@ on:
   schedule:
     - cron: '32 21 * * 2'
 
+env:
+  TASK_X_ANY_VARIABLES: 1
+
 jobs:
   analyze:
     name: Analyze
@@ -39,7 +42,7 @@ jobs:
           enable-cache: true
 
       - name: Build
-        run: devbox run -- make build-snapshot
+        run: devbox run -- task build:snapshot
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3

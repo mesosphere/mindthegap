@@ -1,0 +1,13 @@
+# Copyright 2024 D2iQ, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+version: '3'
+
+tasks:
+  run:
+    desc: Runs pre-commit on all files
+    cmds:
+      - env VIRTUALENV_PIP=24.0 pre-commit install-hooks
+      - pre-commit run -a --show-diff-on-failure
+      - git fetch origin main
+      - pre-commit run --hook-stage manual gitlint-ci

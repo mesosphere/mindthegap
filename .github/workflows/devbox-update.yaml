@@ -73,12 +73,11 @@ jobs:
 
       - name: Create PR using app token
         if: steps.devbox-versions-changed.outputs.number_changed > 0
-        id: create-pr
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          pr_url="$(gh pr create --base "${{ github.ref_name }}" --head "${DESTINATION_BRANCH}" \
-            --title "${{ steps.commit-changes.outputs.message }}" \
-            --body "This PR was automatically created by the scheduled devbox update workflow.")"
+          pr_url="$(gh pr create --base '${{ github.ref_name }}' --head "${DESTINATION_BRANCH}" \
+            --title '${{ steps.commit-changes.outputs.message }}' \
+            --body 'This PR was automatically created by the scheduled devbox update workflow.' \
+            --label ignore-for-release)"
           gh pr merge --auto --squash "${pr_url}"
-          echo "pr_url=${pr_url}" >>"${GITHUB_OUTPUT}"

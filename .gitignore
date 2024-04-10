@@ -26,3 +26,6 @@ dist/
 
 *.tar.gz
 *.tar
+
+.task
+.devbox

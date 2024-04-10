@@ -13,12 +13,16 @@ permissions:
   contents: write
   packages: write
 
+defaults:
+  run:
+    shell: bash
+
+env:
+  TASK_X_ANY_VARIABLES: 1
+
 jobs:
   release-tag:
     runs-on: ubuntu-22.04
-    defaults:
-      run:
-        shell: bash
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,6 +35,6 @@ jobs:
           enable-cache: true
 
       - name: Release
-        run: devbox run -- make release
+        run: devbox run -- task build:release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

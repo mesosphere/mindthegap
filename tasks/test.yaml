@@ -1,0 +1,86 @@
+# Copyright 2024 D2iQ, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+version: '3'
+
+tasks:
+  gotestsum-macro:
+    internal: true
+    dir: '{{.MODULE_DIR}}'
+    requires:
+      vars:
+        - MODULE_DIR
+    cmds:
+      - cmd: |
+          gotestsum \
+          --jsonfile test.json \
+          --junitfile junit-report.xml \
+          --junitfile-testsuite-name=relative \
+          --junitfile-testcase-classname=short \
+          -- \
+          -covermode=atomic \
+          -coverprofile=coverage.out \
+          -race \
+          -short \
+          -v \
+          -run "{{.GOTEST_RUN}}" \
+          ./...
+        silent: true
+
+  unit:
+    desc: Runs tests
+    vars:
+      GO_SUBMODULES: '$fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/'
+    cmds:
+      - task: gotestsum-macro
+        vars:
+          MODULE_DIR: .
+          GOTEST_RUN: '{{.GOTEST_RUN}}'
+      - for: {var: GO_SUBMODULES, as: GO_SUBMODULE_PATH}
+        task: gotestsum-macro
+        vars:
+          MODULE_DIR: '{{.GO_SUBMODULE_PATH}}'
+          GOTEST_RUN: '{{.GOTEST_RUN}}'
+
+  integration:
+    desc: Runs integration tests
+    cmds:
+      - task: test
+        vars:
+          GOTEST_RUN: Integration
+
+  e2e:
+    desc: Runs end-to-end tests
+    deps:
+      - task: :build:release-unpublished
+        vars:
+          GORELEASER_PLATFORMS: '"linux_amd64","linux_arm64","{{.E2E_GOOS}}_{{.E2E_GOARCH}}"'
+    vars:
+      E2E_GOOS: '$go env GOOS'
+      E2E_GOARCH: '$go env GOARCH'
+    cmds:
+      - cmd: |
+          ginkgo run \
+            --r \
+            --race \
+            --show-node-events \
+            --trace \
+            --randomize-all \
+            --randomize-suites \
+            --fail-on-pending \
+            --keep-going \
+            {{if .CI}}--vv{{end}} \
+            --covermode=atomic \
+            --coverprofile coverage-e2e.out \
+            {{if .E2E_PARALLEL_NODES}}--procs={{.E2E_PARALLEL_NODES}}{{end}} \
+            {{if .E2E_PARALLEL_NODES}}--compilers={{.E2E_PARALLEL_NODES}}{{end}} \
+            {{if .E2E_FLAKE_ATTEMPTS}}--flake-attempts={{.E2E_FLAKE_ATTEMPTS}}{{end}} \
+            {{if .E2E_FOCUS}}--focus="{{.E2E_FOCUS}}"{{end}} \
+            {{if .E2E_SKIP}}--skip="{{.E2E_SKIP}}"{{end}} \
+            {{if .E2E_LABEL}}--label-filter="{{.E2E_LABEL}}"{{end}} \
+            {{if .E2E_LE2E_GINKGO_FLAGSABEL}}{{.E2E_GINKGO_FLAGS}}{{end}} \
+            --junit-report=junit-e2e.xml \
+            --json-report=report-e2e.json \
+            --tags e2e \
+            test/e2e/...
+        silent: true

@@ -1,0 +1,97 @@
+# Copyright 2024 D2iQ, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+version: '3'
+
+tasks:
+  lint-macro:
+    internal: true
+    dir: '{{.MODULE_DIR}}'
+    requires:
+      vars:
+        - MODULE_DIR
+    cmds:
+      - golines -w $(go list ./... | sed "s|^$(go list -m)|.|")
+      - golangci-lint run --fix --config='{{.ROOT_DIR}}/.golangci.yml'
+      - golines -w $(go list ./... | sed "s|^$(go list -m)|.|")
+      - go fix ./...
+
+  lint:
+    desc: Runs golangci-lint for all modules in repository
+    vars:
+      GO_SUBMODULES: '$fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/'
+    cmds:
+      - task: lint-macro
+        vars:
+          MODULE_DIR: .
+      - for: {var: GO_SUBMODULES, as: GO_SUBMODULE_PATH}
+        task: lint-macro
+        vars:
+          MODULE_DIR: '{{.GO_SUBMODULE_PATH}}'
+
+  mod-tidy-macro:
+    internal: true
+    dir: '{{.MODULE_DIR}}'
+    requires:
+      vars:
+        - MODULE_DIR
+    cmds:
+      - go mod tidy -v
+      - go mod verify
+
+  mod-tidy:
+    desc: Run go mod tidy for all modules in the repository
+    vars:
+      GO_SUBMODULES: '$fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/'
+    cmds:
+      - task: mod-tidy-macro
+        vars:
+          MODULE_DIR: .
+      - for: {var: GO_SUBMODULES, as: GO_SUBMODULE_PATH}
+        task: mod-tidy-macro
+        vars:
+          MODULE_DIR: '{{.GO_SUBMODULE_PATH}}'
+
+  clean-macro:
+    internal: true
+    dir: '{{.MODULE_DIR}}'
+    requires:
+      vars:
+        - MODULE_DIR
+    cmds:
+      - go clean -r -i -cache -testcache -modcache
+
+  clean:
+    desc: Cleans go build, test and modules caches for all modules in the repository
+    vars:
+      GO_SUBMODULES: '$fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/'
+    cmds:
+      - task: clean-macro
+        vars:
+          MODULE_DIR: .
+      - for: {var: GO_SUBMODULES, as: GO_SUBMODULE_PATH}
+        task: clean-macro
+        vars:
+          MODULE_DIR: '{{.GO_SUBMODULE_PATH}}'
+
+  vulncheck-macro:
+    internal: true
+    dir: '{{.MODULE_DIR}}'
+    requires:
+      vars:
+        - MODULE_DIR
+    cmds:
+      - govulncheck ./...
+
+  vulncheck:
+    desc: Runs govulncheck for all modules in repository
+    vars:
+      GO_SUBMODULES: '$fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/'
+    cmds:
+      - task: vulncheck-macro
+        vars:
+          MODULE_DIR: .
+      - for: {var: GO_SUBMODULES, as: GO_SUBMODULE_PATH}
+        task: vulncheck-macro
+        vars:
+          MODULE_DIR: '{{.GO_SUBMODULE_PATH}}'
