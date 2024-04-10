@@ -158,7 +158,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pre-commit
-          key: pre-commit-3|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
+          key: pre-commit-3|${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Run pre-commit
         run: devbox run -- task pre-commit:run
@@ -171,8 +171,10 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
-      - id: govulncheck
-        uses: golang/govulncheck-action@v1
+      - name: Install devbox
+        uses: jetpack-io/devbox-install-action@v0.8.0
         with:
-          go-version-file: go.mod
-          check-latest: true
+          enable-cache: true
+
+      - id: govulncheck
+        run: devbox run -- task go:vulncheck

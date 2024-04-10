@@ -789,6 +789,54 @@
         }
       }
     },
+    "govulncheck@latest": {
+      "last_modified": "2024-03-22T11:26:23Z",
+      "resolved": "github:NixOS/nixpkgs/a3ed7406349a9335cb4c2a71369b697cecd9d351#govulncheck",
+      "source": "devbox-search",
+      "version": "1.0.4",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/w6n78s03arv75ymqhzb4lgbi3kx5kx5x-govulncheck-1.0.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/w6n78s03arv75ymqhzb4lgbi3kx5kx5x-govulncheck-1.0.4"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/vzmbb40a0xy6hr9zw6r4jqhy786qpiaz-govulncheck-1.0.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/vzmbb40a0xy6hr9zw6r4jqhy786qpiaz-govulncheck-1.0.4"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/zgcyah07vgd222pw8lksr7d4mys2gx1d-govulncheck-1.0.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/zgcyah07vgd222pw8lksr7d4mys2gx1d-govulncheck-1.0.4"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/6lxqgj80bhikfq3a9azk6mfrlskb4rv2-govulncheck-1.0.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/6lxqgj80bhikfq3a9azk6mfrlskb4rv2-govulncheck-1.0.4"
+        }
+      }
+    },
     "ko@latest": {
       "last_modified": "2024-03-22T11:26:23Z",
       "resolved": "github:NixOS/nixpkgs/a3ed7406349a9335cb4c2a71369b697cecd9d351#ko",

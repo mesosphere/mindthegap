@@ -73,3 +73,25 @@ tasks:
         task: clean-macro
         vars:
           MODULE_DIR: '{{.GO_SUBMODULE_PATH}}'
+
+  vulncheck-macro:
+    internal: true
+    dir: '{{.MODULE_DIR}}'
+    requires:
+      vars:
+        - MODULE_DIR
+    cmds:
+      - govulncheck ./...
+
+  vulncheck:
+    desc: Runs govulncheck for all modules in repository
+    vars:
+      GO_SUBMODULES: '$fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/'
+    cmds:
+      - task: vulncheck-macro
+        vars:
+          MODULE_DIR: .
+      - for: {var: GO_SUBMODULES, as: GO_SUBMODULE_PATH}
+        task: vulncheck-macro
+        vars:
+          MODULE_DIR: '{{.GO_SUBMODULE_PATH}}'
