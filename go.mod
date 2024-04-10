@@ -13,7 +13,7 @@ require (
 	github.com/distribution/distribution/v3 v3.0.0-alpha.1
 	github.com/distribution/reference v0.6.0
 	github.com/docker/cli v26.0.0+incompatible
-	github.com/docker/docker v25.0.3+incompatible
+	github.com/docker/docker v26.0.0+incompatible
 	github.com/docker/docker-credential-helpers v0.8.1
 	github.com/docker/go-connections v0.5.0
 	github.com/elazarl/goproxy v0.0.0-20230731152917-f99041a5c027
@@ -152,6 +152,7 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
+	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
 	github.com/moby/term v0.5.0 // indirect

@@ -78,7 +78,7 @@ func (d *Docker) StartContainerWithPlatform(
 		return nil, err
 	}
 
-	container, err := d.cl.ContainerCreate(
+	ctr, err := d.cl.ContainerCreate(
 		ctx,
 		&cfg,
 		&container.HostConfig{},
@@ -90,18 +90,18 @@ func (d *Docker) StartContainerWithPlatform(
 		return nil, err
 	}
 
-	if err := d.cl.ContainerStart(ctx, container.ID, types.ContainerStartOptions{}); err != nil {
+	if err := d.cl.ContainerStart(ctx, ctr.ID, container.StartOptions{}); err != nil {
 		_ = d.cl.ContainerRemove(
 			ctx,
-			container.ID,
-			types.ContainerRemoveOptions{Force: true, RemoveVolumes: true},
+			ctr.ID,
+			container.RemoveOptions{Force: true, RemoveVolumes: true},
 		)
 
 		return nil, err
 	}
 
 	return &Container{
-		id: container.ID,
+		id: ctr.ID,
 		d:  d,
 	}, nil
 }
@@ -119,7 +119,7 @@ func (c *Container) Stop(ctx context.Context) error {
 	return c.d.cl.ContainerRemove(
 		ctx,
 		c.id,
-		types.ContainerRemoveOptions{Force: true, RemoveVolumes: true},
+		container.RemoveOptions{Force: true, RemoveVolumes: true},
 	)
 }
 
