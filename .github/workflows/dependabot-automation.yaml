@@ -12,6 +12,10 @@ permissions:
   pull-requests: write
   contents: write
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   enable-automerge:
     runs-on: ubuntu-22.04

@@ -1,4 +1,14 @@
 {
   "go.buildTags": "e2e",
-  "ginkgotestexplorer.buildTags": "e2e"
+  "ginkgotestexplorer.buildTags": "e2e",
+  "yaml.schemas": {
+    "https://taskfile.dev/schema.json": [
+      "tasks/build.yaml",
+      "tasks/repo.yaml",
+      "tasks/git.yaml",
+      "tasks/pre-commit.yaml",
+      "tasks/go.yaml",
+      "tasks/test.yaml"
+    ]
+  }
 }

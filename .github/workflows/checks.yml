@@ -12,15 +12,20 @@ on:
       - opened
       - synchronize
       - reopened
-    branches:
-      - main
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  TASK_X_ANY_VARIABLES: 1
 
 jobs:
   unit-test:
     runs-on: ubuntu-22.04
-    defaults:
-      run:
-        shell: bash
     permissions:
       checks: write
       pull-requests: write
@@ -33,8 +38,18 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Go cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
       - name: Run unit tests
-        run: devbox run -- make test
+        run: devbox run -- task test:unit
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -46,9 +61,6 @@ jobs:
 
   e2e-test:
     runs-on: ubuntu-22.04
-    defaults:
-      run:
-        shell: bash
     permissions:
       checks: write
       pull-requests: write
@@ -69,7 +81,7 @@ jobs:
           platforms: arm64
 
       - name: Run e2e tests
-        run: devbox run -- make e2e-test
+        run: devbox run -- task test:e2e
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TMPDIR: ${{ runner.temp }}
@@ -84,9 +96,6 @@ jobs:
 
   lint:
     runs-on: ubuntu-22.04
-    defaults:
-      run:
-        shell: bash
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -97,31 +106,53 @@ jobs:
           enable-cache: true
 
       - name: Export golang and golangci-lint versions
+        id: versions
         run: |
-          echo "GOLANGCI_LINT_VERSION=v$(devbox run -- golangci-lint version --format short)" >>$GITHUB_ENV
-          echo "GO_VERSION=$(devbox run -- go version | grep -o "[[:digit:]]\+.[[:digit:]]\+\(.[[:digit:]]\+\)\?")" >>$GITHUB_ENV
+          echo "golangci-lint=$(devbox run -- golangci-lint version --format short)" >>"${GITHUB_OUTPUT}"
+          echo "golang=$(devbox run -- go version | grep -o "[[:digit:]]\+.[[:digit:]]\+\(.[[:digit:]]\+\)\?")" >>"${GITHUB_OUTPUT}"
 
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v2
         with:
           fail_on_error: true
           reporter: github-pr-review
-          golangci_lint_version: ${{ env.GOLANGCI_LINT_VERSION }}
-          go_version: ${{ env.GO_VERSION }}
+          golangci_lint_version: v${{ steps.versions.outputs.golangci-lint }}
+          go_version: v${{ steps.versions.outputs.golang }}
 
-  pre-commit:
+  lint-gha:
     runs-on: ubuntu-22.04
-    defaults:
-      run:
-        shell: bash
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+
+      - name: actionlint
+        uses: reviewdog/action-actionlint@v1
+        with:
+          fail_on_error: true
+          reporter: github-pr-review
+
+  pre-commit:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Install devbox
         uses: jetpack-io/devbox-install-action@v0.8.0
         with:
           enable-cache: true
+
+      - name: Go cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
       - name: Set up pre-commit cache
         uses: actions/cache@v4
@@ -130,6 +161,18 @@ jobs:
           key: pre-commit-3|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Run pre-commit
-        run: devbox run -- make pre-commit
+        run: devbox run -- task pre-commit:run
         env:
-          SKIP: no-commit-to-branch,golangci-lint
+          SKIP: no-commit-to-branch,golangci-lint,actionlint-system
+
+  govulncheck:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - id: govulncheck
+        uses: golang/govulncheck-action@v1
+        with:
+          go-version-file: go.mod
+          check-latest: true

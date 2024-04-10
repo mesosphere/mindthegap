@@ -15,12 +15,16 @@ on:
     branches:
       - main
 
+defaults:
+  run:
+    shell: bash
+
+env:
+  TASK_X_ANY_VARIABLES: 1
+
 jobs:
   build-and-run:
     runs-on: macos-13
-    defaults:
-      run:
-        shell: bash
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -36,10 +40,7 @@ jobs:
 
       - name: Build
         run: |
-          devbox run -- \
-            make GORELEASER_FLAGS=$'--config=<(gojq --yaml-input --yaml-output \'del(.builds[0].goarch) | del(.builds[0].goos) | .builds[0].targets|=(["darwin_amd64_v1"])\' .goreleaser.yml) --skip=validate,publish' release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_PLATFORMS="\"darwin_amd64\"" devbox run -- task build:release-unpublished
 
       - name: Run binary
         run: |

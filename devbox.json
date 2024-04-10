@@ -1,15 +1,16 @@
 {
   "packages": [
+    "actionlint@latest",
     "bash@latest",
     "coreutils@latest",
     "crane@latest",
-    "findutils@latest",
+    "fd@latest",
     "ginkgo@latest",
     "git@latest",
     "gnused@latest",
     "gnugrep@latest",
-    "gnumake@latest",
     "go@latest",
+    "go-task@latest",
     "gojq@latest",
     "golines@latest",
     "goreleaser@latest",
