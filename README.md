@@ -175,17 +175,10 @@ Install direnv: <https://direnv.net/docs/installation.html#from-system-packages>
 
 Hook direnv into your shell if you haven't already: <https://direnv.net/docs/hook.html>.
 
-### Configure global go mod cache
-
-By default `devenv` will use an isolated go mod cache for each project which is great from an isolation point of view,
-but terrible for disk space (duplication!). To configure a global go mod cache, add the following after the `direnv`
-integration above to your shell config file, adapting the path as appropriate:
-
-```bash
-export GOMODCACHE=~/go/pkg/mod
-```
-
 ## Building the CLI
 
-Build the CLI using `make build-snapshot` that will output binary into
-`dist/mindthegap_$(GOOS)_$(GOARCH)/mindthegap` and put it in `$PATH`.
+`mindthegap` uses [`task`](https://taskfile.dev/) for running build tasks. `task` will be automatically available when
+the devbox environment is correctly set up.
+
+Build the CLI using `task build:snapshot` that will output binary into
+`./dist/mindthegap_$(GOOS)_$(GOARCH)/mindthegap`.
