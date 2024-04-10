@@ -1,7 +1,6 @@
 {
   "packages": [
     "actionlint@latest",
-    "bash@latest",
     "coreutils@latest",
     "crane@latest",
     "fd@latest",
