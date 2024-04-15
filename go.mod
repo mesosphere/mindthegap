@@ -13,7 +13,7 @@ require (
 	github.com/distribution/distribution/v3 v3.0.0-alpha.1
 	github.com/distribution/reference v0.6.0
 	github.com/docker/cli v26.0.1+incompatible
-	github.com/docker/docker v26.0.0+incompatible
+	github.com/docker/docker v26.0.1+incompatible
 	github.com/docker/docker-credential-helpers v0.8.1
 	github.com/docker/go-connections v0.5.0
 	github.com/elazarl/goproxy v0.0.0-20230731152917-f99041a5c027
