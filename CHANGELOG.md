@@ -274,6 +274,24 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.13.2 (2024-04-15)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Other Changes
+* build(main): Latest devbox update (2024-04-08) by @mesosphere-actions-pr-bot in https://github.com/mesosphere/mindthegap/pull/671
+* ci: Remove auto-approve PRs now it is disabled at org level by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/674
+* ci: Use app token for release-please workflow to create PR by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/675
+* ci: Add release as valid PR type by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/677
+* build: Bump golangci-lint and enable more linters by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/678
+* build: Switch to task from make by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/679
+* ci: Switch to jetify-com/devbox-install-action by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/680
+* ci: Do not validate single commit titles by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/685
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.13.1...v1.13.2
+
 ## 1.13.1 (2024-03-26)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
