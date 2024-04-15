@@ -25,7 +25,5 @@ jobs:
             revert
             style
             test
-          validateSingleCommit: true
-          validateSingleCommitMatchesPrTitle: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
