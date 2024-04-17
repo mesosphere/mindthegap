@@ -274,6 +274,18 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.13.3 (2024-04-17)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Other Changes
+* ci: New org for devbox-install-action - missed in previous PR by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/686
+* build: Specify go1.22.2 as toolchain to fix govulncheck issues by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/688
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.13.2...v1.13.3
+
 ## 1.13.2 (2024-04-15)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
