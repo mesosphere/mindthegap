@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 
@@ -118,19 +119,6 @@ func NewCommand(out output.Output) *cobra.Command {
 			}()
 			out.EndOperationWithStatus(output.Success())
 
-			out.StartOperation("Creating temporary chart storage directory")
-
-			tempHelmChartStorageDir, err := os.MkdirTemp("", ".helm-bundle-temp-storage-*")
-			if err != nil {
-				out.EndOperationWithStatus(output.Failure())
-				return fmt.Errorf(
-					"failed to create temporary directory for Helm chart storage: %w",
-					err,
-				)
-			}
-			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempHelmChartStorageDir) })
-			out.EndOperationWithStatus(output.Success())
-
 			helmClient, helmCleanup := helm.NewClient(out)
 			cleaner.AddCleanupFn(func() { _ = helmCleanup() })
 
@@ -139,6 +127,18 @@ func NewCommand(out output.Output) *cobra.Command {
 			for repoName, repoConfig := range cfg.Repositories {
 				for chartName, chartVersions := range repoConfig.Charts {
 					sort.Strings(chartVersions)
+					out.StartOperation("Creating temporary chart storage directory")
+
+					tempHelmChartStorageDir, err := os.MkdirTemp("", fmt.Sprintf(".helm-bundle-temp-storage-%s-*", chartName))
+					if err != nil {
+						out.EndOperationWithStatus(output.Failure())
+						return fmt.Errorf(
+							"failed to create temporary directory for Helm chart storage: %w",
+							err,
+						)
+					}
+					cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempHelmChartStorageDir) })
+					out.EndOperationWithStatus(output.Success())
 
 					out.StartOperation(
 						fmt.Sprintf(
@@ -160,7 +160,7 @@ func NewCommand(out output.Output) *cobra.Command {
 						opts = append(opts, helm.InsecureSkipTLSverifyOpt())
 					}
 					for _, chartVersion := range chartVersions {
-						downloaded, err := helmClient.GetChartFromRepo(
+						_, err := helmClient.GetChartFromRepo(
 							tempHelmChartStorageDir,
 							repoConfig.RepoURL,
 							chartName,
@@ -172,7 +172,17 @@ func NewCommand(out output.Output) *cobra.Command {
 							out.EndOperationWithStatus(output.Failure())
 							return fmt.Errorf("failed to create Helm chart bundle: %w", err)
 						}
-
+					}
+					charts, err := os.ReadDir(tempHelmChartStorageDir)
+					if err != nil {
+						out.EndOperationWithStatus(output.Failure())
+						return fmt.Errorf(
+							"failed to open temporary directory for Helm chart storage: %w",
+							err,
+						)
+					}
+					for _, downloadedChart := range charts {
+						downloaded := path.Join(tempHelmChartStorageDir, downloadedChart.Name())
 						if err := helmClient.PushHelmChartToOCIRegistry(
 							downloaded, ociAddress,
 						); err != nil {
