@@ -75,6 +75,15 @@ var _ = Describe("Serve Bundle", func() {
 			helm.InsecureSkipTLSverifyOpt(),
 		)
 
+		helpers.ValidateChartIsAvailable(
+			GinkgoT(),
+			"127.0.0.1",
+			port,
+			"node-feature-discovery",
+			"0.15.2",
+			helm.InsecureSkipTLSverifyOpt(),
+		)
+
 		close(stopCh)
 
 		Eventually(done).Should(BeClosed())

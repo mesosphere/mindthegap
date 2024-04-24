@@ -83,6 +83,15 @@ var _ = Describe("Push Bundle", func() {
 			helm.InsecureSkipTLSverifyOpt(),
 		)
 
+		helpers.ValidateChartIsAvailable(
+			GinkgoT(),
+			"127.0.0.1",
+			port,
+			"node-feature-discovery",
+			"0.15.2",
+			helm.InsecureSkipTLSverifyOpt(),
+		)
+
 		Expect(reg.Shutdown(context.Background())).To((Succeed()))
 
 		Eventually(done).Should(BeClosed())
