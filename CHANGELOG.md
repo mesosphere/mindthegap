@@ -274,6 +274,19 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.13.4 (2024-04-24)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix: Support published Helm charts with different name format by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/695
+### Other Changes
+* build: Upgrade tooling, notably go to v1.22.2 by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/696
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.13.3...v1.13.4
+
 ## 1.13.3 (2024-04-17)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
