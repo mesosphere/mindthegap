@@ -8,12 +8,14 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/hashicorp/go-getter"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
+	helmgetter "helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/registry"
 	"helm.sh/helm/v3/pkg/repo"
 	"k8s.io/klog/v2"
@@ -141,25 +143,56 @@ func (c *Client) GetChartFromRepo(
 		)...,
 	)
 
-	helmOutput, err := pull.Run(chartName)
+	// Charts pulled from OCI registries will have the scheme "oci://" for the chart name.
+	// We can use the built-in downloader to fetch these charts.
+	if strings.HasPrefix(chartName, OCIScheme) {
+		helmOutput, err := pull.Run(chartName)
+		if err != nil {
+			return "", fmt.Errorf(
+				"failed to fetch chart %s:%s from %s: %w, output:\n\n%s",
+				chartName,
+				chartVersion,
+				repoURL,
+				err,
+				helmOutput,
+			)
+		}
+		if helmOutput != "" {
+			c.out.V(4).Info(helmOutput)
+		}
+
+		return filepath.Join(
+			outputDir,
+			fmt.Sprintf("%s-%s.tgz", filepath.Base(chartName), chartVersion),
+		), nil
+	}
+
+	// For non-OCI charts, we need to discover the chart URL first to be able to handle
+	// different chart names to the expected `<chartName>-<chartVersion>.tgz` format.
+	chartURL, err := repo.FindChartInAuthAndTLSAndPassRepoURL(
+		pull.RepoURL,
+		pull.Username,
+		pull.Password,
+		chartName,
+		chartVersion,
+		pull.CertFile,
+		pull.KeyFile,
+		pull.CaFile,
+		pull.InsecureSkipTLSverify,
+		pull.PassCredentialsAll,
+		helmgetter.All(pull.Settings),
+	)
 	if err != nil {
 		return "", fmt.Errorf(
-			"failed to fetch chart %s:%s from %s: %w, output:\n\n%s",
+			"failed to discover chart URL for %s:%s from %s: %w",
 			chartName,
 			chartVersion,
 			repoURL,
 			err,
-			helmOutput,
 		)
 	}
-	if helmOutput != "" {
-		c.out.V(4).Info(helmOutput)
-	}
 
-	return filepath.Join(
-		outputDir,
-		fmt.Sprintf("%s-%s.tgz", filepath.Base(chartName), chartVersion),
-	), nil
+	return c.GetChartFromURL(outputDir, chartURL, c.tempDir)
 }
 
 func (c *Client) GetChartFromURL(outputDir, chartURL, workingDir string) (string, error) {
@@ -180,11 +213,11 @@ func (c *Client) GetChartFromURL(outputDir, chartURL, workingDir string) (string
 	u.RawQuery = q.Encode()
 
 	dst := filepath.Join(outputDir, filepath.Base(chartURL))
-	err = getter.GetFile(dst, u.String(), func(c *getter.Client) error {
-		c.Pwd = workingDir
+	err = getter.GetFile(dst, u.String(), func(getterClient *getter.Client) error {
+		getterClient.Pwd = workingDir
 		return nil
-	}, func(c *getter.Client) error {
-		c.Getters = getters
+	}, func(getterClient *getter.Client) error {
+		getterClient.Getters = getters
 		return nil
 	})
 	if err != nil {

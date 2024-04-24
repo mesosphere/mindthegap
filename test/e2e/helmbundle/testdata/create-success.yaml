@@ -2,9 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 repositories:
-  jetstack:
+  stefanprodan:
     repoURL: https://stefanprodan.github.io/podinfo
     charts:
       podinfo:
       - "6.2.0"
       - "6.1.0"
+  nfd:
+    repoURL: https://kubernetes-sigs.github.io/node-feature-discovery/charts/
+    charts:
+      node-feature-discovery:
+      - "0.15.2"
