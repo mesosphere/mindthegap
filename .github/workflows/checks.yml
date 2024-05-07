@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 name: checks
-
 on:
   push:
     branches:
@@ -12,17 +11,13 @@ on:
       - opened
       - synchronize
       - reopened
-
 permissions:
   contents: read
-
 defaults:
   run:
     shell: bash
-
 env:
   TASK_X_ANY_VARIABLES: 1
-
 jobs:
   unit-test:
     runs-on: ubuntu-22.04
@@ -31,15 +26,13 @@ jobs:
       pull-requests: write
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
       - name: Install devbox
-        uses: jetify-com/devbox-install-action@v0.10.0
+        uses: jetify-com/devbox-install-action@e55980d19e8a14213735f6ebcbced49a1e507856 # v0.10.0
         with:
           enable-cache: true
-
       - name: Go cache
-        uses: actions/cache@v4
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4
         with:
           path: |
             ~/.cache/go-build
@@ -47,18 +40,15 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-
       - name: Run unit tests
         run: devbox run -- task test:unit
-
       - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
+        uses: EnricoMi/publish-unit-test-result-action@ad4accd991d403df04fbe818c95a3c57501b784f # v2
         if: always()
         with:
           check_name: "Unit test results"
           files: |
             junit-report.xml
-
   e2e-test:
     runs-on: ubuntu-22.04
     permissions:
@@ -66,86 +56,73 @@ jobs:
       pull-requests: write
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
         with:
           fetch-depth: 0
-
       - name: Install devbox
-        uses: jetify-com/devbox-install-action@v0.10.0
+        uses: jetify-com/devbox-install-action@e55980d19e8a14213735f6ebcbced49a1e507856 # v0.10.0
         with:
           enable-cache: true
-
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3
         with:
           platforms: arm64
-
       - name: Run e2e tests
         run: devbox run -- task test:e2e
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TMPDIR: ${{ runner.temp }}
-
       - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
+        uses: EnricoMi/publish-unit-test-result-action@ad4accd991d403df04fbe818c95a3c57501b784f # v2
         if: always()
         with:
           check_name: "e2e test results"
           files: |
             junit-e2e.xml
-
   lint:
     runs-on: ubuntu-22.04
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
       - name: Install devbox
-        uses: jetify-com/devbox-install-action@v0.10.0
+        uses: jetify-com/devbox-install-action@e55980d19e8a14213735f6ebcbced49a1e507856 # v0.10.0
         with:
           enable-cache: true
-
       - name: Export golang and golangci-lint versions
         id: versions
         run: |
           echo "golangci-lint=$(devbox run -- golangci-lint version --format short)" >>"${GITHUB_OUTPUT}"
           echo "golang=$(devbox run -- go version | grep -o "[[:digit:]]\+.[[:digit:]]\+\(.[[:digit:]]\+\)\?")" >>"${GITHUB_OUTPUT}"
-
       - name: golangci-lint
-        uses: reviewdog/action-golangci-lint@v2
+        uses: reviewdog/action-golangci-lint@0c44ad132827d4ba66cb5975502c7cf903519828 # v2
         with:
           fail_on_error: true
           reporter: github-pr-review
           golangci_lint_version: v${{ steps.versions.outputs.golangci-lint }}
           go_version: v${{ steps.versions.outputs.golang }}
-
   lint-gha:
     runs-on: ubuntu-22.04
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
       - name: actionlint
-        uses: reviewdog/action-actionlint@v1
+        uses: reviewdog/action-actionlint@6bd00ab832c9b5d4873f40a8b0c9501ac2df1b29 # v1
         with:
           fail_on_error: true
           reporter: github-pr-review
-
   pre-commit:
     runs-on: ubuntu-22.04
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-
       - name: Install devbox
-        uses: jetify-com/devbox-install-action@v0.10.0
+        uses: jetify-com/devbox-install-action@e55980d19e8a14213735f6ebcbced49a1e507856 # v0.10.0
         with:
           enable-cache: true
-
       - name: Go cache
-        uses: actions/cache@v4
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4
         with:
           path: |
             ~/.cache/go-build
@@ -153,28 +130,23 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-
       - name: Set up pre-commit cache
-        uses: actions/cache@v4
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-3|${{ hashFiles('.pre-commit-config.yaml') }}
-
       - name: Run pre-commit
         run: devbox run -- task pre-commit:run
         env:
           SKIP: no-commit-to-branch,golangci-lint,actionlint-system
-
   govulncheck:
     runs-on: ubuntu-22.04
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
       - name: Install devbox
-        uses: jetify-com/devbox-install-action@v0.10.0
+        uses: jetify-com/devbox-install-action@e55980d19e8a14213735f6ebcbced49a1e507856 # v0.10.0
         with:
           enable-cache: true
-
       - id: govulncheck
         run: devbox run -- task go:vulncheck

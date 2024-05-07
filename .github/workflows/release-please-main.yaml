@@ -2,37 +2,32 @@
 # SPDX-License-Identifier: Apache-2.0
 
 name: release-please-main
-
 on:
   push:
     branches:
       - main
-
 permissions:
   contents: write
   pull-requests: write
   actions: write
-
 jobs:
   release-please:
     runs-on: ubuntu-22.04
     steps:
       - name: Get app token to create PR with
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@a0de6af83968303c8c955486bf9739a57d23c7f1 # v1
         id: app-token
         with:
           app-id: ${{ secrets.GHA_PR_APP_ID }}
           private-key: ${{ secrets.GHA_PR_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
-
-      - uses: google-github-actions/release-please-action@v4.1
+      - uses: google-github-actions/release-please-action@af07583d1c57eb872d7df7a2e6a2384e2ce88e30 # v4.1
         id: release-please
         with:
           token: ${{ steps.app-token.outputs.token }}
-
       - if: ${{ steps.release-please.outputs.release_created }}
         name: Run release workflow
-        uses: benc-uk/workflow-dispatch@v1
+        uses: benc-uk/workflow-dispatch@25b02cc069be46d637e8fe2f1e8484008e9e9609 # v1
         with:
           workflow: release-tag.yaml
           ref: ${{ steps.release-please.outputs.tag_name }}

@@ -2,30 +2,26 @@
 # SPDX-License-Identifier: Apache-2.0
 
 name: stacked-prs
-
 permissions:
   actions: write
   checks: write
   issues: write
   pull-requests: write
   statuses: write
-
 on:
   pull_request_target:
     types: [opened, edited, reopened, synchronize]
-
 jobs:
   check:
     runs-on: ubuntu-22.04
     steps:
-      - uses: z0al/dependent-issues@v1
+      - uses: z0al/dependent-issues@950226e7ca8fc43dc209a7febf67c655af3bdb43 # v1
         env:
           # (Required) The token to use to make API calls to GitHub.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           # (Optional) The label to use to mark dependent issues
           label: stacked
-
           # (Optional) A comma-separated list of keywords. Default
           # "depends on, blocked by"
           keywords: depends on, blocked by
