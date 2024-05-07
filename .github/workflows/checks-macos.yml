@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 name: build-on-macos
-
 on:
   push:
     branches:
@@ -14,34 +13,28 @@ on:
       - reopened
     branches:
       - main
-
 defaults:
   run:
     shell: bash
-
 env:
   TASK_X_ANY_VARIABLES: 1
-
 jobs:
   build-and-run:
     runs-on: macos-13
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
         with:
           fetch-depth: 0
-
       - name: Install devbox
-        uses: jetify-com/devbox-install-action@v0.10.0
+        uses: jetify-com/devbox-install-action@e55980d19e8a14213735f6ebcbced49a1e507856 # v0.10.0
         with:
           enable-cache: true
         env:
           NIX_USER_COUNT: 4
-
       - name: Build
         run: |
           GORELEASER_PLATFORMS="\"darwin_amd64\"" devbox run -- task build:release-unpublished
-
       - name: Run binary
         run: |
           ./dist/mindthegap_darwin_amd64_v1/mindthegap

@@ -2,20 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 name: dependabot
-
 on:
   pull_request_target:
     types:
       - opened
-
 permissions:
   pull-requests: write
   contents: write
-
 defaults:
   run:
     shell: bash
-
 jobs:
   enable-automerge:
     runs-on: ubuntu-22.04
@@ -23,7 +19,7 @@ jobs:
     steps:
       - name: Dependabot metadata
         id: dependabot-metadata
-        uses: dependabot/fetch-metadata@v2
+        uses: dependabot/fetch-metadata@5e5f99653a5b510e8555840e80cbf1514ad4af38 # v2
       - name: Enable auto-merge for Dependabot PRs
         run: gh pr merge --auto --squash "$PR_URL"
         env:
