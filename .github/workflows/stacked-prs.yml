@@ -11,6 +11,9 @@ permissions:
 on:
   pull_request_target:
     types: [opened, edited, reopened, synchronize]
+defaults:
+  run:
+    shell: bash
 jobs:
   check:
     runs-on: ubuntu-22.04
