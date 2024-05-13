@@ -10,7 +10,8 @@ tasks:
       vars:
         - NEW_GIT_TAG
     vars:
-      GO_SUBMODULES: '$fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/'
+      GO_SUBMODULES:
+        sh: fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/
     cmds:
       - git tag -s "{{.NEW_GIT_TAG}}" -a -m "{{.NEW_GIT_TAG}}"
       - for: {var: GO_SUBMODULES, as: GO_SUBMODULE_PATH}

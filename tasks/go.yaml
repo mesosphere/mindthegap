@@ -19,7 +19,8 @@ tasks:
   lint:
     desc: Runs golangci-lint for all modules in repository
     vars:
-      GO_SUBMODULES: '$fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/'
+      GO_SUBMODULES:
+        sh: fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/
     cmds:
       - task: lint-macro
         vars:
@@ -42,7 +43,8 @@ tasks:
   mod-tidy:
     desc: Run go mod tidy for all modules in the repository
     vars:
-      GO_SUBMODULES: '$fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/'
+      GO_SUBMODULES:
+        sh: fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/
     cmds:
       - task: mod-tidy-macro
         vars:
@@ -64,7 +66,8 @@ tasks:
   clean:
     desc: Cleans go build, test and modules caches for all modules in the repository
     vars:
-      GO_SUBMODULES: '$fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/'
+      GO_SUBMODULES:
+        sh: fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/
     cmds:
       - task: clean-macro
         vars:
@@ -86,7 +89,8 @@ tasks:
   vulncheck:
     desc: Runs govulncheck for all modules in repository
     vars:
-      GO_SUBMODULES: '$fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/'
+      GO_SUBMODULES:
+        sh: fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/
     cmds:
       - task: vulncheck-macro
         vars:

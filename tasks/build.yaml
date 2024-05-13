@@ -4,12 +4,14 @@
 version: '3'
 
 vars:
-  GORELEASER_PARALLELISM: '$nproc --ignore=1'
+  GORELEASER_PARALLELISM:
+    sh: nproc --ignore=1
   GORELEASER_DEBUG: false
   GORELEASER_BUILD_ALL: false
 
 env:
-  GIT_TREE_STATE: '$git status --porcelain &>/dev/null || echo dirty'
+  GIT_TREE_STATE:
+    sh: git status --porcelain &>/dev/null || echo dirty
 
 tasks:
   snapshot:
@@ -38,8 +40,10 @@ tasks:
   release-unpublished:
     desc: Builds a release locally with goreleaser for specific platforms without publishing
     vars:
-      TEMP_CONFIG: '$mktemp'
-      TEMP_RELEASE_NOTES: '$mktemp'
+      TEMP_CONFIG:
+        sh: mktemp
+      TEMP_RELEASE_NOTES:
+        sh: mktemp
     requires:
       vars:
         - GORELEASER_PLATFORMS

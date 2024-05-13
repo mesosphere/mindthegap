@@ -30,7 +30,8 @@ tasks:
   unit:
     desc: Runs tests
     vars:
-      GO_SUBMODULES: '$fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/'
+      GO_SUBMODULES:
+        sh: fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/
     cmds:
       - task: gotestsum-macro
         vars:
@@ -56,8 +57,10 @@ tasks:
         vars:
           GORELEASER_PLATFORMS: '"linux_amd64","linux_arm64","{{.E2E_GOOS}}_{{.E2E_GOARCH}}"'
     vars:
-      E2E_GOOS: '$go env GOOS'
-      E2E_GOARCH: '$go env GOARCH'
+      E2E_GOOS:
+        sh: go env GOOS
+      E2E_GOARCH:
+        sh: go env GOARCH
     cmds:
       - cmd: |
           ginkgo run \
