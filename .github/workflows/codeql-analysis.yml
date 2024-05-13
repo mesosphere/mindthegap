@@ -31,7 +31,7 @@ jobs:
         with:
           languages: ${{ matrix.language }}
       - name: Install devbox
-        uses: jetify-com/devbox-install-action@e55980d19e8a14213735f6ebcbced49a1e507856 # v0.10.0
+        uses: jetify-com/devbox-install-action@a03caf5813591bc882139eba6ae947930a83a427 # v0.11.0
         with:
           enable-cache: true
       - name: Build
