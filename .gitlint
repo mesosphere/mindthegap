@@ -16,7 +16,7 @@ line-length=120
 
 [ignore-body-lines]
 # Ignore dependabot long lines.
-regex=^Bumps .+ from .+ to .+\.$
+regex=^(Bumps .+ from .+ to .+\.$|- \[Commits\])
 
 [contrib-title-conventional-commits]
 # Specify allowed commit types. For details see: https://www.conventionalcommits.org/
