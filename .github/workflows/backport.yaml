@@ -6,6 +6,9 @@ on:
     types:
       - labeled
       - closed
+defaults:
+  run:
+    shell: bash
 jobs:
   backport:
     name: Backport PR
@@ -19,7 +22,7 @@ jobs:
       )
     steps:
       - name: Backport Action
-        uses: sqren/backport-github-action@db3bc05f94a7298d25bb14d52441a36e5b5f0327 # v9.3.1
+        uses: sorenlouv/backport-github-action@ad888e978060bc1b2798690dd9d03c4036560947 # v9.5.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           auto_backport_label_prefix: backport-to-

@@ -7,6 +7,9 @@ on:
     types:
       - opened
       - edited
+defaults:
+  run:
+    shell: bash
 jobs:
   label:
     runs-on: ubuntu-22.04

@@ -13,8 +13,6 @@ permissions:
 defaults:
   run:
     shell: bash
-env:
-  TASK_X_ANY_VARIABLES: 1
 jobs:
   release-tag:
     runs-on: ubuntu-22.04

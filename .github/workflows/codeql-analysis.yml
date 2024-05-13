@@ -5,8 +5,9 @@ name: codeql
 on:
   schedule:
     - cron: '32 21 * * 2'
-env:
-  TASK_X_ANY_VARIABLES: 1
+defaults:
+  run:
+    shell: bash
 jobs:
   analyze:
     name: Analyze

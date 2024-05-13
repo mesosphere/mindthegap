@@ -10,6 +10,9 @@ permissions:
   contents: write
   pull-requests: write
   actions: write
+defaults:
+  run:
+    shell: bash
 jobs:
   release-please:
     runs-on: ubuntu-22.04
