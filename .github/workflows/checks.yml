@@ -94,7 +94,7 @@ jobs:
           echo "golangci-lint=$(devbox run -- golangci-lint version --format short)" >>"${GITHUB_OUTPUT}"
           echo "golang=$(devbox run -- go version | grep -o "[[:digit:]]\+.[[:digit:]]\+\(.[[:digit:]]\+\)\?")" >>"${GITHUB_OUTPUT}"
       - name: golangci-lint
-        uses: reviewdog/action-golangci-lint@0c44ad132827d4ba66cb5975502c7cf903519828 # v2
+        uses: reviewdog/action-golangci-lint@00311c26a97213f93f2fd3a3524d66762e956ae0 # v2
         with:
           fail_on_error: true
           reporter: github-pr-review
