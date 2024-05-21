@@ -155,6 +155,7 @@ var _ = Describe("Push Bundle", func() {
 					GinkgoT(),
 					bundleFile,
 					filepath.Join("testdata", "create-success.yaml"),
+					"linux/"+runtime.GOARCH,
 				)
 
 				runTest(registryHost, registryScheme, registryPath, registryInsecure)
@@ -203,6 +204,7 @@ var _ = Describe("Push Bundle", func() {
 					GinkgoT(),
 					bundleFile,
 					filepath.Join("testdata", "create-success.yaml"),
+					"linux/"+runtime.GOARCH,
 				)
 			})
 
@@ -285,6 +287,7 @@ var _ = Describe("Push Bundle", func() {
 					GinkgoT(),
 					bundleFile,
 					filepath.Join("testdata", "create-success.yaml"),
+					"linux/"+runtime.GOARCH,
 				)
 
 				DeferCleanup(GinkgoWriter.ClearTeeWriters)
