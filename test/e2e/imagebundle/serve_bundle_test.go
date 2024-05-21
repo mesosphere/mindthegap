@@ -50,6 +50,7 @@ var _ = Describe("Serve Bundle", func() {
 			GinkgoT(),
 			bundleFile,
 			filepath.Join("testdata", "create-success.yaml"),
+			"linux/"+runtime.GOARCH,
 		)
 
 		port, err := freeport.GetFreePort()
@@ -102,6 +103,7 @@ var _ = Describe("Serve Bundle", func() {
 			GinkgoT(),
 			bundleFile,
 			filepath.Join("testdata", "create-success.yaml"),
+			"linux/"+runtime.GOARCH,
 		)
 
 		port, err := freeport.GetFreePort()
