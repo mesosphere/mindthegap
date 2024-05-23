@@ -16,8 +16,6 @@ on:
 defaults:
   run:
     shell: bash
-env:
-  TASK_X_ANY_VARIABLES: 1
 jobs:
   build-and-run:
     runs-on: macos-13
