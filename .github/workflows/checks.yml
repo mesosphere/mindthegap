@@ -16,8 +16,6 @@ permissions:
 defaults:
   run:
     shell: bash
-env:
-  TASK_X_ANY_VARIABLES: 1
 jobs:
   unit-test:
     runs-on: ubuntu-22.04
