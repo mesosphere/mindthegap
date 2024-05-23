@@ -274,6 +274,27 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.14.0 (2024-05-23)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: Add single create bundle command by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/728
+### Other Changes
+* Replace unpinned actions with pinned action by @minder-by-stacklok in https://github.com/mesosphere/mindthegap/pull/705
+* build: Ignore long lines for commit shas by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/717
+* build: Update all tools by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/718
+* ci: New org for backport action by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/719
+* test(e2e): Specify architecture for test images in e2e by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/727
+* ci: Fix up permissions for release conventional labels job by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/729
+* ci: Remove redundant env var by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/730
+
+## New Contributors
+* @minder-by-stacklok made their first contribution in https://github.com/mesosphere/mindthegap/pull/705
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.13.4...v1.14.0
+
 ## 1.13.4 (2024-04-24)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
