@@ -32,7 +32,7 @@ import (
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
-	createimagebundle "github.com/mesosphere/mindthegap/cmd/mindthegap/create/imagebundle"
+	createbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/create/bundle"
 )
 
 func CreateBundle(t ginkgo.GinkgoTInterface, bundleFile, cfgFile string, platforms ...string) {
@@ -41,7 +41,7 @@ func CreateBundle(t ginkgo.GinkgoTInterface, bundleFile, cfgFile string, platfor
 		platformFlags = append(platformFlags, "--platform", p)
 	}
 
-	createBundleCmd := NewCommand(t, createimagebundle.NewCommand)
+	createBundleCmd := NewCommand(t, createbundle.NewCommand)
 	createBundleCmd.SetArgs(append([]string{
 		"--output-file", bundleFile,
 		"--images-file", cfgFile,
