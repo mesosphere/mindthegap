@@ -27,12 +27,12 @@ import (
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
-	createhelmbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/create/helmbundle"
+	createbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/create/bundle"
 	"github.com/mesosphere/mindthegap/helm"
 )
 
 func CreateBundle(t ginkgo.GinkgoTInterface, bundleFile, cfgFile string) {
-	createBundleCmd := NewCommand(t, createhelmbundle.NewCommand)
+	createBundleCmd := NewCommand(t, createbundle.NewCommand)
 	createBundleCmd.SetArgs([]string{
 		"--output-file", bundleFile,
 		"--helm-charts-file", cfgFile,

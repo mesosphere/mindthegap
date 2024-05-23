@@ -1,7 +1,7 @@
 // Copyright 2021 D2iQ, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-package imagebundle
+package flags
 
 import (
 	"fmt"
@@ -13,29 +13,23 @@ import (
 
 const argfmt = "--ps=%s"
 
-func setUpPSFlagSet(psp *[]platform) *pflag.FlagSet {
+func setUpPSFlagSet() *pflag.FlagSet {
 	f := pflag.NewFlagSet("test", pflag.ContinueOnError)
-	f.Var(newPlatformSlicesValue(
-		[]platform{}, psp),
-		"ps", "Command separated list!")
+	pv := NewPlatformsValue()
+	f.Var(&pv, "ps", "Command separated list!")
 	return f
 }
 
-func setUpPSFlagSetWithDefault(psp *[]platform) *pflag.FlagSet {
+func setUpPSFlagSetWithDefault() *pflag.FlagSet {
 	f := pflag.NewFlagSet("test", pflag.ContinueOnError)
-	f.Var(newPlatformSlicesValue(
-		[]platform{
-			{os: "defaultos1", arch: "defaultarch1"},
-			{os: "defaultos2", arch: "defaultarch2", variant: "defaultvariant2"},
-		}, psp),
-		"ps", "Command separated list!")
+	pv := NewPlatformsValue("defaultos1/defaultarch1", "defaultos2/defaultarch2/defaultvariant2")
+	f.Var(&pv, "ps", "Command separated list!")
 	return f
 }
 
 func TestEmptyPS(t *testing.T) {
 	t.Parallel()
-	var ps []platform
-	f := setUpPSFlagSet(&ps)
+	f := setUpPSFlagSet()
 	err := f.Parse([]string{})
 	if err != nil {
 		t.Fatal("expected no error; got", err)
@@ -50,8 +44,7 @@ func TestEmptyPS(t *testing.T) {
 
 func TestEmptyPSValue(t *testing.T) {
 	t.Parallel()
-	var ps []platform
-	f := setUpPSFlagSet(&ps)
+	f := setUpPSFlagSet()
 	err := f.Parse([]string{"--ps="})
 	if err != nil {
 		t.Fatal("expected no error; got", err)
@@ -65,8 +58,7 @@ func TestEmptyPSValue(t *testing.T) {
 
 func TestPS(t *testing.T) {
 	t.Parallel()
-	var ps []platform
-	f := setUpPSFlagSet(&ps)
+	f := setUpPSFlagSet()
 
 	vals := []platform{
 		{os: "linux", arch: "amd64"},
@@ -83,24 +75,17 @@ func TestPS(t *testing.T) {
 	if err != nil {
 		t.Fatal("expected no error; got", err)
 	}
-	for i, v := range ps {
-		if vals[i] != v {
+	getPS := f.Lookup("ps").Value
+	for i, v := range getPS.(pflag.SliceValue).GetSlice() {
+		if vals[i].String() != v {
 			t.Fatalf("expected ps[%d] to be %s but got: %s", i, vals[i], v)
-		}
-	}
-
-	getPS := f.Lookup("ps").Value.(*platformSliceValue)
-	for i, v := range *getPS.value {
-		if vals[i] != v {
-			t.Fatalf("expected ps[%d] to be %s from Lookup but got: %s", i, vals[i], v)
 		}
 	}
 }
 
 func TestPSDefault(t *testing.T) {
 	t.Parallel()
-	var ps []platform
-	f := setUpPSFlagSetWithDefault(&ps)
+	f := setUpPSFlagSetWithDefault()
 
 	vals := []platform{
 		{os: "defaultos1", arch: "defaultarch1"},
@@ -111,24 +96,17 @@ func TestPSDefault(t *testing.T) {
 	if err != nil {
 		t.Fatal("expected no error; got", err)
 	}
-	for i, v := range ps {
-		if vals[i] != v {
+	getPS := f.Lookup("ps").Value
+	for i, v := range getPS.(pflag.SliceValue).GetSlice() {
+		if vals[i].String() != v {
 			t.Fatalf("expected ps[%d] to be %s but got: %s", i, vals[i], v)
-		}
-	}
-
-	getPS := f.Lookup("ps").Value.(*platformSliceValue)
-	for i, v := range *getPS.value {
-		if vals[i] != v {
-			t.Fatalf("expected ps[%d] to be %s from Lookup but got: %s", i, vals[i], v)
 		}
 	}
 }
 
 func TestSSWithDefault(t *testing.T) {
 	t.Parallel()
-	var ps []platform
-	f := setUpPSFlagSetWithDefault(&ps)
+	f := setUpPSFlagSetWithDefault()
 
 	vals := []platform{
 		{os: "linux", arch: "amd64"},
@@ -145,24 +123,17 @@ func TestSSWithDefault(t *testing.T) {
 	if err != nil {
 		t.Fatal("expected no error; got", err)
 	}
-	for i, v := range ps {
-		if vals[i] != v {
+	getPS := f.Lookup("ps").Value
+	for i, v := range getPS.(pflag.SliceValue).GetSlice() {
+		if vals[i].String() != v {
 			t.Fatalf("expected ss[%d] to be %s but got: %s", i, vals[i], v)
-		}
-	}
-
-	getPS := f.Lookup("ps").Value.(*platformSliceValue)
-	for i, v := range *getPS.value {
-		if vals[i] != v {
-			t.Fatalf("expected ps[%d] to be %s from Lookup but got: %s", i, vals[i], v)
 		}
 	}
 }
 
 func TestSSCalledTwice(t *testing.T) {
 	t.Parallel()
-	var ps []platform
-	f := setUpPSFlagSet(&ps)
+	f := setUpPSFlagSet()
 
 	in := []string{"linux/amd64", "darwin/arm64/v8,linux/arm/v7"}
 	expected := []platform{
@@ -178,31 +149,21 @@ func TestSSCalledTwice(t *testing.T) {
 		t.Fatal("expected no error; got", err)
 	}
 
+	getPS := f.Lookup("ps").Value
+	ps := getPS.(pflag.SliceValue).GetSlice()
 	if len(expected) != len(ps) {
 		t.Fatalf("expected number of ss to be %d but got: %d", len(expected), len(ps))
 	}
 	for i, v := range ps {
-		if expected[i] != v {
+		if expected[i].String() != v {
 			t.Fatalf("expected ss[%d] to be %s but got: %s", i, expected[i], v)
-		}
-	}
-
-	values := f.Lookup("ps").Value.(*platformSliceValue)
-
-	if len(expected) != len(*values.value) {
-		t.Fatalf("expected number of values to be %d but got: %d", len(expected), len(ps))
-	}
-	for i, v := range *values.value {
-		if expected[i] != v {
-			t.Fatalf("expected got ss[%d] to be %s but got: %s", i, expected[i], v)
 		}
 	}
 }
 
 func TestSSWithComma(t *testing.T) {
 	t.Parallel()
-	var ps []platform
-	f := setUpPSFlagSet(&ps)
+	f := setUpPSFlagSet()
 
 	in := []string{`"linux/amd64"`, `"windows/amd64"`, `"darwin/arm64/v8",linux/arm/v7`}
 	expected := []platform{
@@ -219,35 +180,21 @@ func TestSSWithComma(t *testing.T) {
 		t.Fatal("expected no error; got", err)
 	}
 
+	getPS := f.Lookup("ps").Value
+	ps := getPS.(pflag.SliceValue).GetSlice()
 	if len(expected) != len(ps) {
 		t.Fatalf("expected number of ps to be %d but got: %d", len(expected), len(ps))
 	}
 	for i, v := range ps {
-		if expected[i] != v {
+		if expected[i].String() != v {
 			t.Fatalf("expected ss[%d] to be %s but got: %s", i, expected[i], v)
-		}
-	}
-
-	values := f.Lookup("ps").Value.(*platformSliceValue)
-
-	if len(expected) != len(*values.value) {
-		t.Fatalf(
-			"expected number of values to be %d but got: %d",
-			len(expected),
-			len(*values.value),
-		)
-	}
-	for i, v := range *values.value {
-		if expected[i] != v {
-			t.Fatalf("expected got ps[%d] to be %s but got: %s", i, expected[i], v)
 		}
 	}
 }
 
 func TestPSAsSliceValue(t *testing.T) {
 	t.Parallel()
-	var ps []platform
-	f := setUpPSFlagSet(&ps)
+	f := setUpPSFlagSet()
 
 	in := []string{"linux/amd64", "darwin/arm64/v8"}
 	arg1 := fmt.Sprintf(argfmt, in[0])
@@ -259,10 +206,12 @@ func TestPSAsSliceValue(t *testing.T) {
 			_ = val.Replace([]string{"windows/arm/v7"})
 		}
 	})
+	getPS := f.Lookup("ps").Value
+	ps := getPS.(pflag.SliceValue).GetSlice()
 	expectedPlatform := platform{os: "windows", arch: "arm", variant: "v7"}
 	require.ElementsMatch(
 		t,
-		[]platform{expectedPlatform},
+		[]string{expectedPlatform.String()},
 		ps,
 		"Expected ps to be overwritten with 'windows/arm/v7'",
 	)
@@ -270,8 +219,7 @@ func TestPSAsSliceValue(t *testing.T) {
 
 func TestPSGetSlice(t *testing.T) {
 	t.Parallel()
-	var ps []platform
-	f := setUpPSFlagSet(&ps)
+	f := setUpPSFlagSet()
 
 	in := []string{"linux/amd64", "darwin/arm64/v8"}
 	arg1 := fmt.Sprintf(argfmt, in[0])
@@ -287,8 +235,7 @@ func TestPSGetSlice(t *testing.T) {
 
 func TestPSAppend(t *testing.T) {
 	t.Parallel()
-	var ps []platform
-	f := setUpPSFlagSet(&ps)
+	f := setUpPSFlagSet()
 
 	in := []string{"linux/amd64", "darwin/arm64/v8"}
 	arg1 := fmt.Sprintf(argfmt, in[0])
@@ -309,8 +256,7 @@ func TestPSAppend(t *testing.T) {
 
 func TestPSInvalidPlatform(t *testing.T) {
 	t.Parallel()
-	var ps []platform
-	f := setUpPSFlagSet(&ps)
+	f := setUpPSFlagSet()
 
 	in := []string{"wibble"}
 	arg1 := fmt.Sprintf(argfmt, in[0])

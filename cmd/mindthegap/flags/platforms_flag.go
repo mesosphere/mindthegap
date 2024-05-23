@@ -1,7 +1,7 @@
 // Copyright 2021 D2iQ, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-package imagebundle
+package flags
 
 import (
 	"bytes"
@@ -38,17 +38,22 @@ func (p platform) String() string {
 	return s
 }
 
-// -- platformSlice Value.
-type platformSliceValue struct {
+// Platforms Value.
+type Platforms struct {
 	value   *[]platform
 	changed bool
 }
 
-func newPlatformSlicesValue(val []platform, p *[]platform) *platformSliceValue {
-	psv := new(platformSliceValue)
-	psv.value = p
-	*psv.value = val
-	return psv
+func NewPlatformsValue(platforms ...string) Platforms {
+	ps := make([]platform, 0, len(platforms))
+	for _, p := range platforms {
+		parsed, err := parsePlatformString(p)
+		if err != nil {
+			panic(fmt.Sprintf("invalid platform string: %s", p))
+		}
+		ps = append(ps, parsed)
+	}
+	return Platforms{value: &ps}
 }
 
 func readPlatformsAsCSV(val string) ([]platform, error) {
@@ -103,11 +108,11 @@ func parsePlatformString(s string) (platform, error) {
 }
 
 var (
-	_ pflag.Value      = &platformSliceValue{}
-	_ pflag.SliceValue = &platformSliceValue{}
+	_ pflag.Value      = &Platforms{}
+	_ pflag.SliceValue = &Platforms{}
 )
 
-func (s *platformSliceValue) Set(val string) error {
+func (s *Platforms) Set(val string) error {
 	v, err := readPlatformsAsCSV(val)
 	if err != nil {
 		return err
@@ -121,16 +126,16 @@ func (s *platformSliceValue) Set(val string) error {
 	return nil
 }
 
-func (s *platformSliceValue) Type() string {
+func (s *Platforms) Type() string {
 	return "platformSlice"
 }
 
-func (s *platformSliceValue) String() string {
+func (s *Platforms) String() string {
 	str, _ := writePlatformsAsCSV(*s.value)
 	return "[" + str + "]"
 }
 
-func (s *platformSliceValue) Append(val string) error {
+func (s *Platforms) Append(val string) error {
 	p, err := parsePlatformString(val)
 	if err != nil {
 		return err
@@ -139,7 +144,7 @@ func (s *platformSliceValue) Append(val string) error {
 	return nil
 }
 
-func (s *platformSliceValue) Replace(val []string) error {
+func (s *Platforms) Replace(val []string) error {
 	ps := make([]platform, 0, len(val))
 	for _, v := range val {
 		p, err := parsePlatformString(v)
@@ -152,7 +157,7 @@ func (s *platformSliceValue) Replace(val []string) error {
 	return nil
 }
 
-func (s *platformSliceValue) GetSlice() []string {
+func (s *Platforms) GetSlice() []string {
 	strs := make([]string, 0, len(*s.value))
 	for _, p := range *s.value {
 		strs = append(strs, p.String())
