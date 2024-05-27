@@ -10,7 +10,7 @@ toolchain go1.22.3
 require (
 	github.com/aws/aws-sdk-go-v2 v1.27.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.13
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.28.2
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.28.3
 	github.com/containers/image/v5 v5.30.1
 	github.com/distribution/distribution/v3 v3.0.0-alpha.1
 	github.com/distribution/reference v0.6.0
