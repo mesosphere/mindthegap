@@ -5,7 +5,10 @@ module github.com/mesosphere/mindthegap
 
 go 1.22.0
 
-toolchain go1.22.3
+toolchain go1.22.4
+
+// TODO: This could be removed after https://github.com/mholt/archiver/pull/396 merged
+replace github.com/mholt/archiver/v3 => github.com/anchore/archiver/v3 v3.5.2
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.27.0
