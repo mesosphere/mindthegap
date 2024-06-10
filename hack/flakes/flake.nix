@@ -14,16 +14,16 @@
 
           go-mod-upgrade = buildGo121Module rec {
             name = "go-mod-upgrade";
-            version = "0.9.1";
+            version = "0.10.0";
             src = fetchFromGitHub {
               owner = "oligot";
               repo = "go-mod-upgrade";
               rev = "v${version}";
-              hash = "sha256-+C0IMb7MU1fq/P0/tTUNmzznZ1q5M69491pO5yBZlVs=";
+              hash = "sha256-BuHyqv0rK1giNiPO+eCx13rJ9L6y2oCDdKW1sJXyFg4=";
             };
             doCheck = false;
             subPackages = [ "." ];
-            vendorHash = "sha256-8rbRxtOiKmnf68kjsUCXaZf+MHI1n5aXa91Aneq9SKo=";
+            vendorHash = "sha256-Qx+8DfeZyNSTf5k4juX7+0IXT4zY2LJMuMw3e1HrxBs=";
             ldflags = [ "-s" "-w" "-X" "main.version=v${version}" ];
           };
         };
