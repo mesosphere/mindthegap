@@ -6,7 +6,7 @@ version: '3'
 vars:
   GORELEASER_PARALLELISM:
     sh: nproc --ignore=1
-  GORELEASER_DEBUG: false
+  GORELEASER_VERBOSE: false
   GORELEASER_BUILD_ALL: false
 
 env:
@@ -18,7 +18,7 @@ tasks:
     desc: Builds a snapshot with goreleaser
     cmds:
       - |
-        goreleaser --debug={{ .GORELEASER_DEBUG }} \
+        goreleaser --verbose={{ .GORELEASER_VERBOSE }} \
           build \
           --snapshot \
           --clean \
@@ -30,7 +30,7 @@ tasks:
     cmds:
       - |
         {{if not .SKIP_BUILD}}
-        goreleaser --debug={{ .GORELEASER_DEBUG }} \
+        goreleaser --verbose={{ .GORELEASER_VERBOSE }} \
           release \
           --clean \
           --parallelism={{ .GORELEASER_PARALLELISM }} \
@@ -60,7 +60,7 @@ tasks:
     desc: Builds a snapshot release with goreleaser
     cmds:
       - |
-        goreleaser --debug={{ .GORELEASER_DEBUG }} \
+        goreleaser --verbose={{ .GORELEASER_VERBOSE }} \
           release \
           --snapshot \
           --clean \
