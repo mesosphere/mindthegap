@@ -274,6 +274,20 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.14.1 (2024-06-10)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix: Fix CVEs by replacing archiver module and bumping go version by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/742
+### Other Changes
+* ci: Group all minor and patch dependabot updates into one PR by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/737
+* build: Update all tools by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/743
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.14.0...v1.14.1
+
 ## 1.14.0 (2024-05-23)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
