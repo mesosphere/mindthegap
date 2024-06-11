@@ -28,9 +28,3 @@ jobs:
         id: release-please
         with:
           token: ${{ steps.app-token.outputs.token }}
-      - if: ${{ steps.release-please.outputs.release_created }}
-        name: Run release workflow
-        uses: benc-uk/workflow-dispatch@25b02cc069be46d637e8fe2f1e8484008e9e9609 # v1
-        with:
-          workflow: release-tag.yaml
-          ref: ${{ steps.release-please.outputs.tag_name }}
