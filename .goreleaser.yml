@@ -26,8 +26,7 @@ release:
     **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/{{ .PreviousTag }}...{{ .Tag }}
 
 builds:
-  - id: mindthegap
-    dir: ./cmd/mindthegap
+  - dir: ./cmd/mindthegap
     env:
       - CGO_ENABLED=0
     flags:
@@ -65,17 +64,12 @@ upx:
     lzma: true
 
 archives:
-  - name_template: '{{ .ProjectName }}_v{{trimprefix .Version "v"}}_{{ .Os }}_{{ .Arch }}'
-    format_overrides:
+  - format_overrides:
       - goos: windows
         format: zip
-    builds:
-      - mindthegap
 
 kos:
-  - id: mindthegap
-    build: mindthegap
-    labels:
+  - labels:
       org.opencontainers.image.created: "{{ .CommitDate }}"
       org.opencontainers.image.title: mindthegap
       org.opencontainers.image.revision: "{{ .FullCommit }}"
@@ -93,3 +87,4 @@ checksum:
   name_template: 'checksums.txt'
 snapshot:
   name_template: "{{ incminor .Tag }}-dev"
+report_sizes: true
