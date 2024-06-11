@@ -274,6 +274,17 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.14.3 (2024-06-11)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Other Changes
+* ci: Remove workflow-dispatch from release-please workflow by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/747
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.14.2...v1.14.3
+
 ## 1.14.2 (2024-06-11)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
