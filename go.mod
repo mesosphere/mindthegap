@@ -22,7 +22,7 @@ require (
 	github.com/docker/docker-credential-helpers v0.8.2
 	github.com/docker/go-connections v0.5.0
 	github.com/elazarl/goproxy v0.0.0-20230731152917-f99041a5c027
-	github.com/google/go-containerregistry v0.19.1
+	github.com/google/go-containerregistry v0.19.2
 	github.com/hashicorp/go-getter v1.7.4
 	github.com/mesosphere/dkp-cli-runtime/core v0.7.3
 	github.com/mholt/archiver/v3 v3.5.1
@@ -31,15 +31,15 @@ require (
 	github.com/opencontainers/image-spec v1.1.0
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
 	github.com/thediveo/enumflag/v2 v2.0.5
 	golang.org/x/sync v0.7.0
 	gopkg.in/yaml.v3 v3.0.1
-	helm.sh/helm/v3 v3.15.1
-	k8s.io/apimachinery v0.30.1
-	k8s.io/klog/v2 v2.120.1
+	helm.sh/helm/v3 v3.15.2
+	k8s.io/apimachinery v0.30.2
+	k8s.io/klog/v2 v2.130.0
 	k8s.io/utils v0.0.0-20231127182322-b307cd553661
 )
 
@@ -80,7 +80,7 @@ require (
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.15.1 // indirect
 	github.com/containers/storage v1.54.0 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.5 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
