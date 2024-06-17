@@ -13,6 +13,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	imageapi "github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
@@ -48,7 +49,7 @@ func (d *Docker) PullImageWithPlatform(
 	image string,
 	platform *specs.Platform,
 ) error {
-	opts := types.ImagePullOptions{}
+	opts := imageapi.PullOptions{}
 	if platform != nil && platform.OS != "" {
 		opts.Platform = fmt.Sprintf("%s/%s", platform.OS, platform.Architecture)
 	}
