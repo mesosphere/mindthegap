@@ -17,7 +17,7 @@ require (
 	github.com/containers/image/v5 v5.31.1
 	github.com/distribution/distribution/v3 v3.0.0-alpha.1
 	github.com/distribution/reference v0.6.0
-	github.com/docker/cli v26.1.4+incompatible
+	github.com/docker/cli v27.0.2+incompatible
 	github.com/docker/docker v26.1.4+incompatible
 	github.com/docker/docker-credential-helpers v0.8.2
 	github.com/docker/go-connections v0.5.0
