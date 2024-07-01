@@ -11,8 +11,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
@@ -45,17 +45,17 @@ func (d *Docker) PullImage(ctx context.Context, image string) error {
 
 func (d *Docker) PullImageWithPlatform(
 	ctx context.Context,
-	image string,
+	img string,
 	platform *specs.Platform,
 ) error {
-	opts := types.ImagePullOptions{}
+	opts := image.PullOptions{}
 	if platform != nil && platform.OS != "" {
 		opts.Platform = fmt.Sprintf("%s/%s", platform.OS, platform.Architecture)
 	}
-	r, err := d.cl.ImagePull(ctx, image, opts)
+	r, err := d.cl.ImagePull(ctx, img, opts)
 	defer r.Close()
 	if err != nil {
-		return fmt.Errorf("failed to pull image %q: %w", image, err)
+		return fmt.Errorf("failed to pull image %q: %w", img, err)
 	}
 	_, err = io.Copy(io.Discard, r)
 	if err != nil {
@@ -124,7 +124,7 @@ func (c *Container) Stop(ctx context.Context) error {
 }
 
 func (c *Container) CopyTo(ctx context.Context, dest string, src io.Reader) error {
-	return c.d.cl.CopyToContainer(ctx, c.id, dest, src, types.CopyToContainerOptions{})
+	return c.d.cl.CopyToContainer(ctx, c.id, dest, src, container.CopyToContainerOptions{})
 }
 
 func (c *Container) Exec(
@@ -135,7 +135,7 @@ func (c *Container) Exec(
 	exec, err := c.d.cl.ContainerExecCreate(
 		ctx,
 		c.id,
-		types.ExecConfig{
+		container.ExecOptions{
 			Cmd:          cmd,
 			AttachStdout: true,
 			AttachStderr: true,
@@ -144,7 +144,7 @@ func (c *Container) Exec(
 	if err != nil {
 		return -1, fmt.Errorf("failed to create exec in container: %w", err)
 	}
-	resp, err := c.d.cl.ContainerExecAttach(ctx, exec.ID, types.ExecStartCheck{})
+	resp, err := c.d.cl.ContainerExecAttach(ctx, exec.ID, container.ExecStartOptions{})
 	if err != nil {
 		return -1, fmt.Errorf("failed to attach exec in container: %w", err)
 	}
@@ -157,7 +157,7 @@ func (c *Container) Exec(
 		}
 		close(errCh)
 	}()
-	if err := c.d.cl.ContainerExecStart(ctx, exec.ID, types.ExecStartCheck{}); err != nil {
+	if err := c.d.cl.ContainerExecStart(ctx, exec.ID, container.ExecStartOptions{}); err != nil {
 		return -1, fmt.Errorf("failed to start exec in container: %w", err)
 	}
 	if err := <-errCh; err != nil {

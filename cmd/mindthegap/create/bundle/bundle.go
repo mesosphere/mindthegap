@@ -189,7 +189,8 @@ func NewCommand(out output.Output) *cobra.Command {
 	cmd.Flags().StringVar(&helmChartsConfigFile, "helm-charts-file", "",
 		"YAML file containing configuration of Helm charts to create bundle from")
 	cmd.MarkFlagsOneRequired("images-file", "helm-charts-file")
-	cmd.Flags().Var(&platforms, "platform", "platforms to download images for (required format: <os>/<arch>[/<variant>])")
+	cmd.Flags().
+		Var(&platforms, "platform", "platforms to download images for (required format: <os>/<arch>[/<variant>])")
 	cmd.Flags().
 		StringVar(&outputFile, "output-file", "bundle.tar", "Output file to write bundle to")
 	cmd.Flags().

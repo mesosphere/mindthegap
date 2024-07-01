@@ -14,7 +14,7 @@ tasks:
       - golines -w $(go list ./... | sed "s|^$(go list -m)|.|")
       - golangci-lint run --fix --config='{{.ROOT_DIR}}/.golangci.yml'
       - golines -w $(go list ./... | sed "s|^$(go list -m)|.|")
-      - go fix ./...
+      # - go fix ./...
 
   lint:
     desc: Runs golangci-lint for all modules in repository
