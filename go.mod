@@ -3,7 +3,8 @@
 
 module github.com/mesosphere/mindthegap
 
-go 1.22.0
+go 1.22.4
+
 toolchain go1.22.5
 
 // TODO: This could be removed after https://github.com/mholt/archiver/pull/396 merged
