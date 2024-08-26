@@ -14,13 +14,13 @@
     "golines@latest",
     "goreleaser@latest",
     "gotestsum@latest",
-    "govulncheck@latest",
     "ko@latest",
     "kubernetes-helm@latest",
     "pre-commit@latest",
     "shfmt@latest",
     "upx@latest",
     "path:./hack/flakes#go-mod-upgrade",
-    "path:./hack/flakes#golangci-lint"
+    "path:./hack/flakes#golangci-lint",
+    "path:./hack/flakes#govulncheck"
   ]
 }
