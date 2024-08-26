@@ -274,6 +274,17 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.15.0 (2024-08-26)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: Build with go 1.23 by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/776
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.14.4...v1.15.0
+
 ## 1.14.4 (2024-07-22)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
