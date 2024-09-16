@@ -81,7 +81,7 @@ log:
 		if freePort <= 0 || freePort > math.MaxUint16 {
 			return "", fmt.Errorf("invalid free port - must be between 1 and %d inclusive: %d", freePort, math.MaxUint16)
 		}
-		port = uint16(freePort) //nolint:gosec // freePort is now bounds checked so can safely be cast to uint16.
+		port = uint16(freePort)
 	}
 
 	host := "127.0.0.1"
