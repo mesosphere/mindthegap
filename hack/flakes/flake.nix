@@ -10,8 +10,6 @@
     flake-utils.lib.eachDefaultSystem (system:
       with nixpkgs.legacyPackages.${system}; rec {
         packages = rec {
-          golangci-lint = pkgs.golangci-lint.override { buildGoModule = buildGo123Module; };
-
           govulncheck  = pkgs.govulncheck.override { buildGoModule = buildGo123Module; };
 
           go-mod-upgrade = buildGo123Module rec {
