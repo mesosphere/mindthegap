@@ -25,6 +25,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/google/go-containerregistry/pkg/v1/types"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 	"github.com/onsi/gomega/gstruct"
@@ -189,6 +190,7 @@ func ValidateImageIsAvailable(
 	port int,
 	registryPath, image, tag string,
 	platforms []*v1.Platform,
+	forceOCIMediaTypes bool,
 	opts ...remote.Option,
 ) {
 	t.Helper()
@@ -205,6 +207,9 @@ func ValidateImageIsAvailable(
 
 	manifest, err := idx.IndexManifest()
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
+	if forceOCIMediaTypes {
+		gomega.ExpectWithOffset(1, manifest.MediaType).To(gomega.Equal(types.OCIImageIndex))
+	}
 
 	gomega.ExpectWithOffset(1, manifest.Manifests).To(gomega.HaveLen(len(platforms)))
 

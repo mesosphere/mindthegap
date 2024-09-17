@@ -5,6 +5,7 @@ package images
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -145,7 +146,17 @@ func indexForSinglePlatformImage(
 			},
 		},
 	)
-	index = mutate.IndexMediaType(index, types.DockerManifestList)
+
+	imgMediaType, err := img.MediaType()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get image media type for image %q: %w", ref, err)
+	}
+	idxMediaType := types.OCIImageIndex
+	if strings.Contains(string(imgMediaType), types.DockerVendorPrefix) {
+		idxMediaType = types.DockerManifestList
+	}
+
+	index = mutate.IndexMediaType(index, idxMediaType)
 
 	if len(platforms) == 0 {
 		return index, nil
