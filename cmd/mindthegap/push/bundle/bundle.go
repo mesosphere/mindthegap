@@ -16,8 +16,12 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/logs"
 	"github.com/google/go-containerregistry/pkg/name"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/empty"
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
+	mediatypes "github.com/google/go-containerregistry/pkg/v1/types"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag/v2"
 	"golang.org/x/sync/errgroup"
@@ -59,6 +63,7 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 		ecrLifecyclePolicy            string
 		onExistingTag                 = Overwrite
 		imagePushConcurrency          int
+		forceOCIMediaTypes            bool
 	)
 
 	cmd := &cobra.Command{
@@ -219,6 +224,7 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 					onExistingTag,
 					imagePushConcurrency,
 					out,
+					forceOCIMediaTypes,
 					prePushFuncs...,
 				)
 				if err != nil {
@@ -289,6 +295,8 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 	cmd.Flags().
 		IntVar(&imagePushConcurrency, "image-push-concurrency", 1, "Image push concurrency")
 
+	cmd.Flags().BoolVar(&forceOCIMediaTypes, "force-oci-media-types", false, "force OCI media types")
+
 	return cmd
 }
 
@@ -301,6 +309,7 @@ func pushImages(
 	onExistingTag onExistingTagMode,
 	imagePushConcurrency int,
 	out output.Output,
+	forceOCIMediaTypes bool,
 	prePushFuncs ...prePushFunc,
 ) error {
 	puller, err := remote.NewPuller(destRemoteOpts...)
@@ -379,7 +388,9 @@ func pushImages(
 					case Skip:
 						// If tag exists already then do nothing.
 						if _, exists := existingImageTags[imageTag]; exists {
-							pushFn = func(_ name.Reference, _ []remote.Option, _ name.Reference, _ []remote.Option) error {
+							pushFn = func(
+								_ name.Reference, _ []remote.Option, _ name.Reference, _ []remote.Option, _ bool,
+							) error {
 								return nil
 							}
 						}
@@ -391,7 +402,7 @@ func pushImages(
 						}
 					}
 
-					if err := pushFn(srcImage, sourceRemoteOpts, destImage, destRemoteOpts); err != nil {
+					if err := pushFn(srcImage, sourceRemoteOpts, destImage, destRemoteOpts, forceOCIMediaTypes); err != nil {
 						return err
 					}
 
@@ -418,10 +429,18 @@ func pushTag(
 	sourceRemoteOpts []remote.Option,
 	destImage name.Reference,
 	destRemoteOpts []remote.Option,
+	forceOCIMediaTypes bool,
 ) error {
 	idx, err := remote.Index(srcImage, sourceRemoteOpts...)
 	if err != nil {
 		return err
+	}
+
+	if forceOCIMediaTypes {
+		idx, err = convertToOCIIndex(idx, srcImage, sourceRemoteOpts)
+		if err != nil {
+			return fmt.Errorf("failed to convert index to OCI format: %w", err)
+		}
 	}
 
 	return remote.WriteIndex(destImage, idx, destRemoteOpts...)
@@ -517,4 +536,79 @@ func getExistingImages(
 	}
 
 	return existingTags, nil
+}
+
+func convertToOCIIndex(
+	originalIndex v1.ImageIndex,
+	srcImage name.Reference,
+	sourceRemoteOpts []remote.Option,
+) (v1.ImageIndex, error) {
+	originalMediaType, err := originalIndex.MediaType()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get media type of image index: %w", err)
+	}
+
+	if originalMediaType == mediatypes.OCIImageIndex {
+		return originalIndex, nil
+	}
+
+	var ociIdx v1.ImageIndex = empty.Index
+	ociIdx = mutate.IndexMediaType(ociIdx, mediatypes.OCIImageIndex)
+
+	originalIdx, err := originalIndex.IndexManifest()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read original image index manifest: %w", err)
+	}
+
+	for i := range originalIdx.Manifests {
+		manifest := originalIdx.Manifests[i]
+		manifest.MediaType = mediatypes.OCIManifestSchema1
+
+		digestRef, err := name.NewDigest(fmt.Sprintf("%s@%s", srcImage.Context().Name(), manifest.Digest.String()))
+		if err != nil {
+			return nil, fmt.Errorf("failed to create digest reference: %w", err)
+		}
+
+		imgDesc, err := remote.Get(digestRef, sourceRemoteOpts...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get image %q: %w", digestRef, err)
+		}
+
+		img, err := imgDesc.Image()
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert image descriptor for %q to image: %w", digestRef, err)
+		}
+
+		ociImg := empty.Image
+		ociImg = mutate.MediaType(ociImg, mediatypes.OCIManifestSchema1)
+		ociImg = mutate.ConfigMediaType(ociImg, mediatypes.OCIConfigJSON)
+		layers, err := img.Layers()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get layers for image %q: %w", digestRef, err)
+		}
+
+		for _, layer := range layers {
+			ociImg, err = mutate.Append(ociImg, mutate.Addendum{
+				Layer:     layer,
+				MediaType: mediatypes.OCILayer,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to append layer to image %q: %w", digestRef, err)
+			}
+		}
+
+		ociImgDigest, err := ociImg.Digest()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get digest for image %q: %w", digestRef, err)
+		}
+
+		manifest.Digest = ociImgDigest
+
+		ociIdx = mutate.AppendManifests(ociIdx, mutate.IndexAddendum{
+			Add:        ociImg,
+			Descriptor: manifest,
+		})
+	}
+
+	return ociIdx, nil
 }

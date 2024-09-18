@@ -57,6 +57,7 @@ var _ = Describe("Push Bundle", func() {
 			registryScheme string,
 			registryPath string,
 			registryInsecure bool,
+			forceOCIMediaTypes bool,
 		) {
 			registryCACertFile := ""
 			registryCertFile := ""
@@ -113,6 +114,10 @@ var _ = Describe("Push Bundle", func() {
 				args = append(args, "--to-registry-ca-cert-file", registryCACertFile)
 			}
 
+			if forceOCIMediaTypes {
+				args = append(args, "--force-oci-media-types")
+			}
+
 			cmd.SetArgs(args)
 
 			Expect(cmd.Execute()).To(Succeed())
@@ -136,6 +141,7 @@ var _ = Describe("Push Bundle", func() {
 					OS:           "linux",
 					Architecture: runtime.GOARCH,
 				}},
+				forceOCIMediaTypes,
 				remote.WithTransport(testRoundTripper),
 			)
 
@@ -150,6 +156,7 @@ var _ = Describe("Push Bundle", func() {
 				registryScheme string,
 				registryPath string,
 				registryInsecure bool,
+				forceOCIMediaTypes bool,
 			) {
 				helpers.CreateBundle(
 					GinkgoT(),
@@ -158,14 +165,14 @@ var _ = Describe("Push Bundle", func() {
 					"linux/"+runtime.GOARCH,
 				)
 
-				runTest(registryHost, registryScheme, registryPath, registryInsecure)
+				runTest(registryHost, registryScheme, registryPath, registryInsecure, forceOCIMediaTypes)
 			},
 
-			Entry("Without TLS", "127.0.0.1", "", "", true),
+			Entry("Without TLS", "127.0.0.1", "", "", true, false),
 
-			Entry("With TLS", helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "", false),
+			Entry("With TLS", helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "", false, false),
 
-			Entry("With Insecure TLS", helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "", true),
+			Entry("With Insecure TLS", helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "", true, false),
 
 			Entry(
 				"With http registry",
@@ -173,6 +180,7 @@ var _ = Describe("Push Bundle", func() {
 				"http",
 				"",
 				true,
+				false,
 			),
 
 			Entry(
@@ -181,9 +189,19 @@ var _ = Describe("Push Bundle", func() {
 				"http",
 				"",
 				false,
+				false,
 			),
 
-			Entry("With Subpath", helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "/nested/path/for/registry", false),
+			Entry(
+				"With Subpath",
+				helpers.GetFirstNonLoopbackIP(GinkgoT()).String(),
+				"",
+				"/nested/path/for/registry",
+				false,
+				false,
+			),
+
+			Entry("With force OCI media types", helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "", false, true),
 		)
 
 		It("Bundle does not exist", func() {
@@ -221,7 +239,7 @@ var _ = Describe("Push Bundle", func() {
 			})
 
 			It("Success", func() {
-				runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "", false)
+				runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "", false, false)
 			})
 
 			Context("With headers from Docker config", func() {
@@ -242,7 +260,7 @@ var _ = Describe("Push Bundle", func() {
 				})
 
 				It("Success", func() {
-					runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "", false)
+					runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "", false, false)
 				})
 			})
 		})

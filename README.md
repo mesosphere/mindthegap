@@ -62,6 +62,11 @@ mindthegap push image-bundle --image-bundle <path/to/images.tar> \
 
 All images in the image bundle tar file will be pushed to the target OCI registry.
 
+Some registries (e.g. [zot](https://zotregistry.dev/) are strict about what media types they support. If you are pushing
+to a registry that only accepts OCI media types, then specify the `--force-oci-media-types` flag. This will internally
+convert any images that currently use Docker media types (`application/vnd.docker.*`) to OCI compatible media types
+(`application/vnd.oci.*`). Using the images via any container runtime does not change.
+
 #### Serving an image bundle
 
 **_This command is deprecated - see [Serving a bundle](#serving-a-bundle-supports-both-image-or-helm-chart)_**

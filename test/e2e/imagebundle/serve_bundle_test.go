@@ -82,6 +82,7 @@ var _ = Describe("Serve Bundle", func() {
 				OS:           "linux",
 				Architecture: runtime.GOARCH,
 			}},
+			false,
 		)
 
 		close(stopCh)
@@ -146,6 +147,7 @@ var _ = Describe("Serve Bundle", func() {
 				OS:           "linux",
 				Architecture: runtime.GOARCH,
 			}},
+			false,
 			remote.WithTransport(testRoundTripper),
 		)
 

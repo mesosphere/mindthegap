@@ -5,6 +5,7 @@ package images
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -111,7 +112,7 @@ func platformsIgnoringVariantIfNotSpecified(platforms ...v1.Platform) match.Matc
 
 func indexForSinglePlatformImage(
 	ref name.Reference,
-	img v1.Image,
+	image v1.Image,
 	platforms ...string,
 ) (v1.ImageIndex, error) {
 	if len(platforms) > 1 {
@@ -123,29 +124,40 @@ func indexForSinglePlatformImage(
 			)
 	}
 
-	imgConfig, err := img.ConfigFile()
+	imageConfig, err := image.ConfigFile()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get image config for image %q: %w", ref, err)
 	}
 
-	imgPlatform := v1.Platform{
-		OS:           imgConfig.OS,
-		OSVersion:    imgConfig.OSVersion,
-		Architecture: imgConfig.Architecture,
-		Variant:      imgConfig.Variant,
+	imagePlatform := v1.Platform{
+		OS:           imageConfig.OS,
+		OSVersion:    imageConfig.OSVersion,
+		Architecture: imageConfig.Architecture,
+		Variant:      imageConfig.Variant,
 	}
 
 	var index v1.ImageIndex = empty.Index
 	index = mutate.AppendManifests(
 		index,
 		mutate.IndexAddendum{
-			Add: img,
+			Add: image,
 			Descriptor: v1.Descriptor{
-				Platform: &imgPlatform,
+				Platform: &imagePlatform,
 			},
 		},
 	)
-	index = mutate.IndexMediaType(index, types.DockerManifestList)
+
+	imageMediaType, err := image.MediaType()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get image media type for image %q: %w", ref, err)
+	}
+
+	indexMediaType := types.OCIImageIndex
+	if strings.Contains(string(imageMediaType), types.DockerVendorPrefix) {
+		indexMediaType = types.DockerManifestList
+	}
+
+	index = mutate.IndexMediaType(index, indexMediaType)
 
 	if len(platforms) == 0 {
 		return index, nil
@@ -156,17 +168,17 @@ func indexForSinglePlatformImage(
 		return nil, fmt.Errorf("invalid platform %q: %w", platforms[0], err)
 	}
 
-	imgPlatformForComparison := imgPlatform
+	imagePlatformForComparison := imagePlatform
 	if v1Platform.Variant == "" {
-		imgPlatformForComparison.Variant = ""
+		imagePlatformForComparison.Variant = ""
 	}
 
-	if !imgPlatformForComparison.Equals(*v1Platform) {
+	if !imagePlatformForComparison.Equals(*v1Platform) {
 		return nil, fmt.Errorf(
 			"requested image %q does not match requested platform %q (image is for %q)",
 			ref,
 			v1Platform,
-			imgPlatform,
+			imagePlatform,
 		)
 	}
 
