@@ -274,6 +274,18 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.16.0 (2024-09-18)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: Build with go 1.23.1 by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/785
+* feat: Optionally force convert to OCI media types on push by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/786
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.15.0...v1.16.0
+
 ## 1.15.0 (2024-08-26)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
