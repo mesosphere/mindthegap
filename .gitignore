@@ -31,3 +31,4 @@ dist/
 .devbox
 
 .envrc.local
+kubeconfig

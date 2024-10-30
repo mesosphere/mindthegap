@@ -1,0 +1,5 @@
+quay.io/cilium/certgen:v0.2.0
+quay.io/cilium/cilium-envoy:v1.29.9-1726784081-a90146d13b4cd7d168d573396ccf2b3db5a3b047
+quay.io/cilium/cilium:v1.16.2
+quay.io/cilium/operator-generic:v1.16.2
+registry.k8s.io/coredns/coredns:v1.11.1
