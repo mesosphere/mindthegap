@@ -69,7 +69,11 @@ func main() {
 		// inotify.
 		dirPath, err := filepath.EvalSymlinks(filepath.Dir(fileToWaitFor))
 		if err != nil {
-			exit("failed to evaluate any symlinks to read real directory for %q: %v", fileToWaitFor, err)
+			exit(
+				"failed to evaluate any symlinks to read real directory for %q: %v",
+				fileToWaitFor,
+				err,
+			)
 		}
 
 		if dirPath != filepath.Dir(fileToWaitFor) {

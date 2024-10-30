@@ -71,7 +71,10 @@ func main() {
 		rootKubectlArgs = append(rootKubectlArgs, "--kubeconfig", *kubeconfig)
 	}
 
-	cpCmd := cp.NewCmdCp(f, genericiooptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr})
+	cpCmd := cp.NewCmdCp(
+		f,
+		genericiooptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr},
+	)
 	kubeConfigFlags.AddFlags(cpCmd.Flags())
 	matchVersionKubeConfigFlags.AddFlags(cpCmd.Flags())
 
@@ -86,7 +89,10 @@ func main() {
 		exit("failed to copy file to pod: %v", err)
 	}
 
-	execCmd := exec.NewCmdExec(f, genericiooptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr})
+	execCmd := exec.NewCmdExec(
+		f,
+		genericiooptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr},
+	)
 	kubeConfigFlags.AddFlags(execCmd.Flags())
 	matchVersionKubeConfigFlags.AddFlags(execCmd.Flags())
 
