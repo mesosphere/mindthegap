@@ -44,13 +44,12 @@ tasks:
         sh: mktemp
       TEMP_RELEASE_NOTES:
         sh: mktemp
-    requires:
-      vars:
-        - GORELEASER_PLATFORMS
+      GORELEASER_PLATFORMS:
+        sh: test -n '{{.GORELEASER_PLATFORMS}}' && echo '{{.GORELEASER_PLATFORMS}}' || echo "\"linux_$(go env GOARCH)\""
     cmds:
       - defer: rm -f '{{.TEMP_CONFIG}}' '{{.TEMP_RELEASE_NOTES}}'
       - cmd: |
-          gojq --yaml-input --yaml-output 'del(.builds[0].goarch) | del(.builds[0].goos) | .builds[0].targets|=([{{.GORELEASER_PLATFORMS}}] | unique | map(. | sub("_amd64$";"_amd64_v1")))' .goreleaser.yml > '{{.TEMP_CONFIG}}'
+          gojq --yaml-input --yaml-output '.builds |= map(del(.goarch) | del(.goos) | .targets|=([{{.GORELEASER_PLATFORMS}}] | unique | map(. | sub("_amd64$";"_amd64_v1"))))' .goreleaser.yml > '{{.TEMP_CONFIG}}'
         silent: true
       - task: release
         vars:
@@ -58,7 +57,21 @@ tasks:
 
   release-snapshot:
     desc: Builds a snapshot release with goreleaser
+    vars:
+      TEMP_CONFIG:
+        sh: mktemp
+      HOST_GOOS:
+        sh: go env GOOS
+      HOST_GOARCH:
+        sh: go env GOARCH
+      GORELEASER_FLAGS: '--snapshot --config={{.TEMP_CONFIG}}'
+      GORELEASER_PLATFORMS:
+        sh: test -n '{{.GORELEASER_PLATFORMS}}' && echo '{{.GORELEASER_PLATFORMS}}' || echo '"{{.HOST_GOOS}}_{{.HOST_GOARCH}}"'
     cmds:
+      - defer: rm -f '{{.TEMP_CONFIG}}' '{{.TEMP_RELEASE_NOTES}}'
+      - cmd: |
+          gojq --yaml-input --yaml-output '.builds |= map(del(.goarch) | del(.goos) | .targets|=([{{.GORELEASER_PLATFORMS}}] | unique | map(. | sub("_amd64$";"_amd64_v1"))))' .goreleaser.yml > '{{.TEMP_CONFIG}}'
+        silent: true
       - |
         goreleaser --verbose={{ .GORELEASER_VERBOSE }} \
           release \

@@ -32,7 +32,7 @@ jobs:
           NIX_USER_COUNT: 4
       - name: Build
         run: |
-          GORELEASER_PLATFORMS="\"darwin_amd64\"" devbox run -- task build:release-unpublished
+          GORELEASER_PLATFORMS='"darwin_amd64"' devbox run -- task build:release-unpublished
       - name: Run binary
         run: |
           ./dist/mindthegap_darwin_amd64_v1/mindthegap

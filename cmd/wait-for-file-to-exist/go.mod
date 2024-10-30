@@ -1,7 +1,7 @@
 // Copyright 2021 D2iQ, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-module github.com/nutanix-cloud-native/utility-images/wait-for-file-to-exist
+module github.com/nutanix-cloud-native/wait-for-file-to-exist
 
 go 1.23.2
 

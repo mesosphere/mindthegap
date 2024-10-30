@@ -95,6 +95,38 @@ builds:
                     -t v{{ trimprefix .Version "v" }}-{{ .Arch }} \
                     .
           fi'
+  - id: copy-file-to-pod
+    dir: ./cmd/copy-file-to-pod
+    binary: copy-file-to-pod
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s
+      - -w
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    hooks:
+      post:
+        - |
+          sh -ec 'if [ {{ .IsSnapshot }} == true ] && [ {{ .Runtime.Goarch }} == {{ .Arch }} ]; then
+            cd ./cmd/copy-file-to-pod && \
+              env SOURCE_DATE_EPOCH=$(date +%s) \
+                  KO_DATA_DATE_EPOCH=$(date +%s) \
+                  KO_DOCKER_REPO=ko.local/copy-file-to-pod \
+                  ko build \
+                    --bare \
+                    --platform linux/{{ .Arch }} \
+                    -t v{{ trimprefix .Version "v" }}-{{ .Arch }} \
+                    .
+          fi'
 
 upx:
   - enabled: "{{ not .IsSnapshot }}"
@@ -118,6 +150,7 @@ archives:
     builds:
       - mindthegap
       - wait-for-file-to-exist
+      - copy-file-to-pod
 
 kos:
   - id: mindthegap
@@ -148,6 +181,21 @@ kos:
       - linux/arm64
     repository: ghcr.io/mesosphere/wait-for-file-to-exist
     base_image: cgr.dev/chainguard/busybox
+    bare: true
+    tags:
+      - v{{trimprefix .Version "v"}}
+  - id: copy-file-to-pod
+    build: copy-file-to-pod
+    labels:
+      org.opencontainers.image.created: "{{ .CommitDate }}"
+      org.opencontainers.image.title: copy-file-to-pod
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.version: v{{trimprefix .Version "v"}}
+      org.opencontainers.image.source: "{{ .GitURL }}"
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    repository: ghcr.io/mesosphere/copy-file-to-pod
     bare: true
     tags:
       - v{{trimprefix .Version "v"}}
