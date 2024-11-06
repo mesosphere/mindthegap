@@ -295,7 +295,8 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 	cmd.Flags().
 		IntVar(&imagePushConcurrency, "image-push-concurrency", 1, "Image push concurrency")
 
-	cmd.Flags().BoolVar(&forceOCIMediaTypes, "force-oci-media-types", false, "force OCI media types")
+	cmd.Flags().
+		BoolVar(&forceOCIMediaTypes, "force-oci-media-types", false, "force OCI media types")
 
 	return cmd
 }
@@ -564,7 +565,9 @@ func convertToOCIIndex(
 		manifest := originalIdx.Manifests[i]
 		manifest.MediaType = mediatypes.OCIManifestSchema1
 
-		digestRef, err := name.NewDigest(fmt.Sprintf("%s@%s", srcImage.Context().Name(), manifest.Digest.String()))
+		digestRef, err := name.NewDigest(
+			fmt.Sprintf("%s@%s", srcImage.Context().Name(), manifest.Digest.String()),
+		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create digest reference: %w", err)
 		}
@@ -576,7 +579,11 @@ func convertToOCIIndex(
 
 		img, err := imgDesc.Image()
 		if err != nil {
-			return nil, fmt.Errorf("failed to convert image descriptor for %q to image: %w", digestRef, err)
+			return nil, fmt.Errorf(
+				"failed to convert image descriptor for %q to image: %w",
+				digestRef,
+				err,
+			)
 		}
 
 		ociImg := empty.Image

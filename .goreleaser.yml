@@ -27,7 +27,7 @@ release:
 
 builds:
   - id: mindthegap
-    dir: ./cmd/mindthegap
+    main: ./cmd/mindthegap
     env:
       - CGO_ENABLED=0
     flags:
@@ -49,6 +49,84 @@ builds:
       - amd64
       - arm64
     mod_timestamp: '{{ .CommitTimestamp }}'
+    hooks:
+      post:
+        - |
+          sh -ec 'if [ {{ .IsSnapshot }} == true ] && [ {{ .Runtime.Goarch }} == {{ .Arch }} ]; then
+            env SOURCE_DATE_EPOCH=$(date +%s) \
+                KO_DATA_DATE_EPOCH=$(date +%s) \
+                KO_DOCKER_REPO=ko.local/mindthegap \
+                ko build \
+                  --bare \
+                  --platform linux/{{ .Arch }} \
+                  -t v{{ trimprefix .Version "v" }}-{{ .Arch }} \
+                  ./cmd/mindthegap
+          fi'
+  - id: wait-for-file-to-exist
+    dir: ./cmd/wait-for-file-to-exist
+    binary: wait-for-file-to-exist
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s
+      - -w
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    hooks:
+      post:
+        - |
+          sh -ec 'if [ {{ .IsSnapshot }} == true ] && [ {{ .Runtime.Goarch }} == {{ .Arch }} ]; then
+            cd ./cmd/wait-for-file-to-exist && \
+              env SOURCE_DATE_EPOCH=$(date +%s) \
+                  KO_DATA_DATE_EPOCH=$(date +%s) \
+                  KO_DOCKER_REPO=ko.local/wait-for-file-to-exist \
+                  KO_DEFAULTBASEIMAGE=cgr.dev/chainguard/busybox \
+                  ko build \
+                    --bare \
+                    --platform linux/{{ .Arch }} \
+                    -t v{{ trimprefix .Version "v" }}-{{ .Arch }} \
+                    .
+          fi'
+  - id: copy-file-to-pod
+    dir: ./cmd/copy-file-to-pod
+    binary: copy-file-to-pod
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s
+      - -w
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    hooks:
+      post:
+        - |
+          sh -ec 'if [ {{ .IsSnapshot }} == true ] && [ {{ .Runtime.Goarch }} == {{ .Arch }} ]; then
+            cd ./cmd/copy-file-to-pod && \
+              env SOURCE_DATE_EPOCH=$(date +%s) \
+                  KO_DATA_DATE_EPOCH=$(date +%s) \
+                  KO_DOCKER_REPO=ko.local/copy-file-to-pod \
+                  ko build \
+                    --bare \
+                    --platform linux/{{ .Arch }} \
+                    -t v{{ trimprefix .Version "v" }}-{{ .Arch }} \
+                    .
+          fi'
 
 upx:
   - enabled: "{{ not .IsSnapshot }}"
@@ -71,6 +149,8 @@ archives:
         format: zip
     builds:
       - mindthegap
+      - wait-for-file-to-exist
+      - copy-file-to-pod
 
 kos:
   - id: mindthegap
@@ -88,9 +168,40 @@ kos:
     bare: true
     tags:
       - v{{trimprefix .Version "v"}}
+  - id: wait-for-file-to-exist
+    build: wait-for-file-to-exist
+    labels:
+      org.opencontainers.image.created: "{{ .CommitDate }}"
+      org.opencontainers.image.title: wait-for-file-to-exist
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.version: v{{trimprefix .Version "v"}}
+      org.opencontainers.image.source: "{{ .GitURL }}"
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    repository: ghcr.io/mesosphere/wait-for-file-to-exist
+    base_image: cgr.dev/chainguard/busybox
+    bare: true
+    tags:
+      - v{{trimprefix .Version "v"}}
+  - id: copy-file-to-pod
+    build: copy-file-to-pod
+    labels:
+      org.opencontainers.image.created: "{{ .CommitDate }}"
+      org.opencontainers.image.title: copy-file-to-pod
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.version: v{{trimprefix .Version "v"}}
+      org.opencontainers.image.source: "{{ .GitURL }}"
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    repository: ghcr.io/mesosphere/copy-file-to-pod
+    bare: true
+    tags:
+      - v{{trimprefix .Version "v"}}
 
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ incminor .Tag }}-dev"
+  version_template: "{{ incminor .Tag }}-dev"
 report_sizes: true

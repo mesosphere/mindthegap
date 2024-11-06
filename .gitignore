@@ -29,3 +29,6 @@ dist/
 
 .task
 .devbox
+
+.envrc.local
+kubeconfig

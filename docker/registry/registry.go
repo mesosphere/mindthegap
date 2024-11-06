@@ -79,7 +79,11 @@ log:
 		}
 
 		if freePort <= 0 || freePort > math.MaxUint16 {
-			return "", fmt.Errorf("invalid free port - must be between 1 and %d inclusive: %d", freePort, math.MaxUint16)
+			return "", fmt.Errorf(
+				"invalid free port - must be between 1 and %d inclusive: %d",
+				freePort,
+				math.MaxUint16,
+			)
 		}
 		port = uint16(freePort)
 	}
