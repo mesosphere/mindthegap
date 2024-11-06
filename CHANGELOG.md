@@ -274,6 +274,17 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.17.0 (2024-11-06)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: Add images and demo script for in-cluster registry by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/801
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.16.0...v1.17.0
+
 ## 1.16.0 (2024-09-18)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
