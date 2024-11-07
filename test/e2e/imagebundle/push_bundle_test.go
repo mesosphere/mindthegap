@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"log"
 	"net"
 	"net/http/httptest"
 	"os"
@@ -19,6 +20,7 @@ import (
 
 	"github.com/docker/cli/cli/config"
 	"github.com/elazarl/goproxy"
+	"github.com/go-logr/logr/funcr"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	. "github.com/onsi/ginkgo/v2"
@@ -88,7 +90,13 @@ var _ = Describe("Push Bundle", func() {
 			go func() {
 				defer GinkgoRecover()
 
-				Expect(reg.ListenAndServe()).To(Succeed())
+				Expect(
+					reg.ListenAndServe(
+						funcr.New(func(prefix, args string) {
+							log.Println(prefix, args)
+						}, funcr.Options{}),
+					),
+				).To(Succeed())
 
 				close(done)
 			}()
@@ -286,7 +294,13 @@ var _ = Describe("Push Bundle", func() {
 				go func() {
 					defer GinkgoRecover()
 
-					Expect(reg.ListenAndServe()).To(Succeed())
+					Expect(
+						reg.ListenAndServe(
+							funcr.New(func(prefix, args string) {
+								log.Println(prefix, args)
+							}, funcr.Options{}),
+						),
+					).To(Succeed())
 
 					close(done)
 				}()

@@ -103,7 +103,7 @@ func NewCommand(
 			out.Infof("Listening on %s\n", reg.Address())
 
 			go func() {
-				if err := reg.ListenAndServe(); err != nil &&
+				if err := reg.ListenAndServe(output.NewOutputLogr(out)); err != nil &&
 					!errors.Is(err, http.ErrServerClosed) {
 					out.Error(err, "error serving Docker registry")
 					os.Exit(2)

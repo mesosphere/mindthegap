@@ -24,6 +24,7 @@ import (
 	"github.com/onsi/gomega"
 	"github.com/spf13/cobra"
 	"helm.sh/helm/v3/pkg/action"
+	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
@@ -45,6 +46,7 @@ func NewCommand(
 	newFn func(out output.Output) *cobra.Command,
 ) *cobra.Command {
 	t.Helper()
+	ctrllog.SetLogger(ginkgo.GinkgoLogr)
 	cmd := newFn(output.NewNonInteractiveShell(ginkgo.GinkgoWriter, ginkgo.GinkgoWriter, 10))
 	cmd.SilenceUsage = true
 	return cmd
