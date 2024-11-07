@@ -83,7 +83,7 @@ func NewCommand(out output.Output) *cobra.Command {
 				return fmt.Errorf("failed to create local Docker registry: %w", err)
 			}
 			go func() {
-				if err := reg.ListenAndServe(); err != nil {
+				if err := reg.ListenAndServe(output.NewOutputLogr(out)); err != nil {
 					out.Error(err, "error serving Docker registry")
 					os.Exit(2)
 				}
