@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -68,6 +69,7 @@ var _ = Describe("Serve Helm Bundle", func() {
 
 		helpers.ValidateChartIsAvailable(
 			GinkgoT(),
+			Default,
 			"127.0.0.1",
 			port,
 			"podinfo",
@@ -77,6 +79,7 @@ var _ = Describe("Serve Helm Bundle", func() {
 
 		helpers.ValidateChartIsAvailable(
 			GinkgoT(),
+			Default,
 			"127.0.0.1",
 			port,
 			"node-feature-discovery",
@@ -126,9 +129,26 @@ var _ = Describe("Serve Helm Bundle", func() {
 
 		helpers.WaitForTCPPort(GinkgoT(), ipAddr.String(), port)
 
-		helpers.ValidateChartIsAvailable(GinkgoT(), ipAddr.String(), port, "podinfo", "6.2.0", helm.CAFileOpt(caCertFile))
+		// First check mindthegap is // First check that the helm chart is accessible with the old certificate.
+		helpers.ValidateChartIsAvailable(GinkgoT(), Default, ipAddr.String(), port, "podinfo", "6.2.0", helm.CAFileOpt(caCertFile))
 
-		helpers.ValidateChartIsAvailable(GinkgoT(), ipAddr.String(), port, "node-feature-discovery", "0.15.2", helm.CAFileOpt(caCertFile))
+		helpers.ValidateChartIsAvailable(GinkgoT(), Default, ipAddr.String(), port, "node-feature-discovery", "0.15.2", helm.CAFileOpt(caCertFile))
+
+		// Create a new certificate. This can happen at any time the server is running,
+		// and the server is expected to eventually use the new certificate.
+		// This also generates a new CA file which is even better because we can check
+		// that the server is using the certificate issued by the new CA.
+		caCertFile, _, _, _ = helpers.GenerateCertificateAndKeyWithIPSAN(
+			GinkgoT(),
+			tempCertDir,
+			ipAddr,
+		)
+
+		Eventually(func(g Gomega) {
+			helpers.ValidateChartIsAvailable(GinkgoT(), g, ipAddr.String(), port, "podinfo", "6.2.0", helm.CAFileOpt(caCertFile))
+
+			helpers.ValidateChartIsAvailable(GinkgoT(), g, ipAddr.String(), port, "node-feature-discovery", "0.15.2", helm.CAFileOpt(caCertFile))
+		}).WithTimeout(time.Second * 5).WithPolling(time.Second * 1).Should(Succeed())
 
 		close(stopCh)
 
