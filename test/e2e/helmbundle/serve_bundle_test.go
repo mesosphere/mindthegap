@@ -93,7 +93,7 @@ var _ = Describe("Serve Helm Bundle", func() {
 		ipAddr := helpers.GetFirstNonLoopbackIP(GinkgoT())
 
 		tempCertDir := GinkgoT().TempDir()
-		_, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(
+		caCertFile, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(
 			GinkgoT(),
 			tempCertDir,
 			ipAddr,
@@ -126,8 +126,9 @@ var _ = Describe("Serve Helm Bundle", func() {
 
 		helpers.WaitForTCPPort(GinkgoT(), ipAddr.String(), port)
 
-		// TODO Reenable once Helm supports custom CA certs and self-signed certs.
-		// helpers.ValidateChartIsAvailable(GinkgoT(), "127.0.0.1", port, "podinfo", "6.2.0", helm.CAFileOpt(caCertFile))
+		helpers.ValidateChartIsAvailable(GinkgoT(), ipAddr.String(), port, "podinfo", "6.2.0", helm.CAFileOpt(caCertFile), helm.CertFileOpt(certFile))
+
+		helpers.ValidateChartIsAvailable(GinkgoT(), ipAddr.String(), port, "node-feature-discovery", "0.15.2", helm.CAFileOpt(caCertFile), helm.CertFileOpt(certFile))
 
 		close(stopCh)
 
