@@ -22,7 +22,7 @@ import (
 	"github.com/mesosphere/mindthegap/test/e2e/helmbundle/helpers"
 )
 
-var _ = Describe("Serve Bundle", func() {
+var _ = Describe("Serve Helm Bundle", func() {
 	var (
 		bundleFile string
 		cmd        *cobra.Command
