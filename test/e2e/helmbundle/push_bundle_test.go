@@ -76,6 +76,7 @@ var _ = Describe("Push Bundle", func() {
 
 		helpers.ValidateChartIsAvailable(
 			GinkgoT(),
+			Default,
 			"127.0.0.1",
 			port,
 			"podinfo",
@@ -85,6 +86,7 @@ var _ = Describe("Push Bundle", func() {
 
 		helpers.ValidateChartIsAvailable(
 			GinkgoT(),
+			Default,
 			"127.0.0.1",
 			port,
 			"node-feature-discovery",
