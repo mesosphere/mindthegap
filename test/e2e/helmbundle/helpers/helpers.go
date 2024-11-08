@@ -24,6 +24,7 @@ import (
 	"github.com/onsi/gomega"
 	"github.com/spf13/cobra"
 	"helm.sh/helm/v3/pkg/action"
+	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
@@ -45,6 +46,7 @@ func NewCommand(
 	newFn func(out output.Output) *cobra.Command,
 ) *cobra.Command {
 	t.Helper()
+	ctrllog.SetLogger(ginkgo.GinkgoLogr)
 	cmd := newFn(output.NewNonInteractiveShell(ginkgo.GinkgoWriter, ginkgo.GinkgoWriter, 10))
 	cmd.SilenceUsage = true
 	return cmd
@@ -176,6 +178,7 @@ func GenerateCertificateAndKeyWithIPSAN(
 
 func ValidateChartIsAvailable(
 	t ginkgo.GinkgoTInterface,
+	g gomega.Gomega,
 	addr string,
 	port int,
 	chartName, chartVersion string,
@@ -194,12 +197,11 @@ func ValidateChartIsAvailable(
 		"",
 		fmt.Sprintf("%s://%s:%d/charts/%s", helm.OCIScheme, addr, port, chartName),
 		chartVersion,
-		[]helm.ConfigOpt{helm.RegistryClientConfigOpt()},
 		pullOpts...,
 	)
-	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
+	g.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 	chrt, err := helm.LoadChart(d)
-	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
-	gomega.ExpectWithOffset(1, chrt.Metadata.Name).To(gomega.Equal(chartName))
-	gomega.ExpectWithOffset(1, chrt.Metadata.Version).To(gomega.Equal(chartVersion))
+	g.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
+	g.ExpectWithOffset(1, chrt.Metadata.Name).To(gomega.Equal(chartName))
+	g.ExpectWithOffset(1, chrt.Metadata.Version).To(gomega.Equal(chartVersion))
 }

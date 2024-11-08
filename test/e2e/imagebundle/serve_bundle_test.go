@@ -26,7 +26,7 @@ import (
 	"github.com/mesosphere/mindthegap/test/e2e/imagebundle/helpers"
 )
 
-var _ = Describe("Serve Bundle", func() {
+var _ = Describe("Serve Image Bundle", func() {
 	var (
 		bundleFile string
 		cmd        *cobra.Command

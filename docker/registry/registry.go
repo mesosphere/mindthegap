@@ -6,6 +6,7 @@ package registry
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"math"
@@ -17,8 +18,10 @@ import (
 	"github.com/distribution/distribution/v3/configuration"
 	"github.com/distribution/distribution/v3/registry/handlers"
 	_ "github.com/distribution/distribution/v3/registry/storage/driver/filesystem"
+	"github.com/go-logr/logr"
 	"github.com/phayes/freeport"
 	"github.com/sirupsen/logrus"
+	"sigs.k8s.io/controller-runtime/pkg/certwatcher"
 )
 
 type Config struct {
@@ -125,16 +128,14 @@ func NewRegistry(cfg Config) (*Registry, error) {
 	logrus.SetLevel(logrus.FatalLevel)
 	regHandler := handlers.NewApp(context.Background(), registryConfig)
 
-	reg := &http.Server{
-		Addr:              registryConfig.HTTP.Addr,
-		Handler:           regHandler,
-		ReadHeaderTimeout: 1 * time.Second,
-	}
-
 	return &Registry{
-		config:   registryConfig,
-		delegate: reg,
-		address:  registryConfig.HTTP.Addr,
+		config: registryConfig,
+		delegate: &http.Server{
+			Addr:              registryConfig.HTTP.Addr,
+			Handler:           regHandler,
+			ReadHeaderTimeout: 1 * time.Second,
+		},
+		address: registryConfig.HTTP.Addr,
 	}, nil
 }
 
@@ -146,10 +147,28 @@ func (r Registry) Shutdown(ctx context.Context) error {
 	return r.delegate.Shutdown(ctx)
 }
 
-func (r Registry) ListenAndServe() error {
+func (r Registry) ListenAndServe(log logr.Logger) error {
+	log = log.WithName("registry")
+
 	var err error
 	if r.config.HTTP.TLS.Certificate != "" && r.config.HTTP.TLS.Key != "" {
-		err = r.delegate.ListenAndServeTLS(r.config.HTTP.TLS.Certificate, r.config.HTTP.TLS.Key)
+		watcher, cwErr := certwatcher.New(r.config.HTTP.TLS.Certificate, r.config.HTTP.TLS.Key)
+		if cwErr != nil {
+			return fmt.Errorf("failed to read TLS certificate or key: %w", cwErr)
+		}
+		r.delegate.TLSConfig = &tls.Config{
+			GetCertificate: watcher.GetCertificate,
+			MinVersion:     tls.VersionTLS12,
+		}
+		go func() {
+			if startErr := watcher.Start(context.TODO()); startErr != nil {
+				log.Error(startErr, "certwatcher Start failed")
+			}
+		}()
+
+		// Certificate and key are not passed to ListenAndServeTLS, because they
+		// are read from r.delegate.TLSConfig.GetCertificate().
+		err = r.delegate.ListenAndServeTLS("", "")
 	} else {
 		err = r.delegate.ListenAndServe()
 	}

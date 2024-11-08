@@ -8,8 +8,10 @@ package helmbundle_test
 import (
 	"context"
 	"fmt"
+	"log"
 	"path/filepath"
 
+	"github.com/go-logr/logr/funcr"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/phayes/freeport"
@@ -59,7 +61,13 @@ var _ = Describe("Push Bundle", func() {
 		go func() {
 			defer GinkgoRecover()
 
-			Expect(reg.ListenAndServe()).To(Succeed())
+			Expect(
+				reg.ListenAndServe(
+					funcr.New(func(prefix, args string) {
+						log.Println(prefix, args)
+					}, funcr.Options{}),
+				),
+			).To(Succeed())
 
 			close(done)
 		}()
@@ -76,6 +84,7 @@ var _ = Describe("Push Bundle", func() {
 
 		helpers.ValidateChartIsAvailable(
 			GinkgoT(),
+			Default,
 			"127.0.0.1",
 			port,
 			"podinfo",
@@ -85,6 +94,7 @@ var _ = Describe("Push Bundle", func() {
 
 		helpers.ValidateChartIsAvailable(
 			GinkgoT(),
+			Default,
 			"127.0.0.1",
 			port,
 			"node-feature-discovery",
@@ -130,7 +140,13 @@ var _ = Describe("Push Bundle", func() {
 		go func() {
 			defer GinkgoRecover()
 
-			Expect(reg.ListenAndServe()).To(Succeed())
+			Expect(
+				reg.ListenAndServe(
+					funcr.New(func(prefix, args string) {
+						log.Println(prefix, args)
+					}, funcr.Options{}),
+				),
+			).To(Succeed())
 
 			close(done)
 		}()
@@ -186,7 +202,13 @@ var _ = Describe("Push Bundle", func() {
 		go func() {
 			defer GinkgoRecover()
 
-			Expect(reg.ListenAndServe()).To(Succeed())
+			Expect(
+				reg.ListenAndServe(
+					funcr.New(func(prefix, args string) {
+						log.Println(prefix, args)
+					}, funcr.Options{}),
+				),
+			).To(Succeed())
 
 			close(done)
 		}()
