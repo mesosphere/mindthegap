@@ -400,7 +400,6 @@ func pullCharts(
 					repoConfig.RepoURL,
 					chartName,
 					chartVersion,
-					[]helm.ConfigOpt{helm.RegistryClientConfigOpt()},
 					opts...,
 				)
 				if err != nil {
