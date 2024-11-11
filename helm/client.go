@@ -99,12 +99,6 @@ func CAFileOpt(caFile string) action.PullOpt {
 	}
 }
 
-func CertFileOpt(certFile string) action.PullOpt {
-	return func(p *action.Pull) {
-		p.CertFile = certFile
-	}
-}
-
 func (c *Client) GetChartFromRepo(
 	outputDir, repoURL, chartName, chartVersion string,
 	extraPullOpts ...action.PullOpt,

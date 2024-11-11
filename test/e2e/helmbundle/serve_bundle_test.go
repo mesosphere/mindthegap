@@ -126,9 +126,9 @@ var _ = Describe("Serve Helm Bundle", func() {
 
 		helpers.WaitForTCPPort(GinkgoT(), ipAddr.String(), port)
 
-		helpers.ValidateChartIsAvailable(GinkgoT(), ipAddr.String(), port, "podinfo", "6.2.0", helm.CAFileOpt(caCertFile), helm.CertFileOpt(certFile))
+		helpers.ValidateChartIsAvailable(GinkgoT(), ipAddr.String(), port, "podinfo", "6.2.0", helm.CAFileOpt(caCertFile))
 
-		helpers.ValidateChartIsAvailable(GinkgoT(), ipAddr.String(), port, "node-feature-discovery", "0.15.2", helm.CAFileOpt(caCertFile), helm.CertFileOpt(certFile))
+		helpers.ValidateChartIsAvailable(GinkgoT(), ipAddr.String(), port, "node-feature-discovery", "0.15.2", helm.CAFileOpt(caCertFile))
 
 		close(stopCh)
 
