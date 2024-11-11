@@ -6,7 +6,10 @@
 package helmbundle_test
 
 import (
+	"crypto/x509"
+	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -96,7 +99,7 @@ var _ = Describe("Serve Helm Bundle", func() {
 		ipAddr := helpers.GetFirstNonLoopbackIP(GinkgoT())
 
 		tempCertDir := GinkgoT().TempDir()
-		caCertFile, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(
+		originalCACertFile, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(
 			GinkgoT(),
 			tempCertDir,
 			ipAddr,
@@ -129,26 +132,50 @@ var _ = Describe("Serve Helm Bundle", func() {
 
 		helpers.WaitForTCPPort(GinkgoT(), ipAddr.String(), port)
 
-		// First check mindthegap is // First check that the helm chart is accessible with the old certificate.
-		helpers.ValidateChartIsAvailable(GinkgoT(), Default, ipAddr.String(), port, "podinfo", "6.2.0", helm.CAFileOpt(caCertFile))
+		// First check that the helm chart is accessible with the old certificate.
+		helpers.ValidateChartIsAvailable(GinkgoT(), Default, ipAddr.String(), port, "podinfo", "6.2.0", helm.CAFileOpt(originalCACertFile))
 
-		helpers.ValidateChartIsAvailable(GinkgoT(), Default, ipAddr.String(), port, "node-feature-discovery", "0.15.2", helm.CAFileOpt(caCertFile))
+		helpers.ValidateChartIsAvailable(GinkgoT(), Default, ipAddr.String(), port, "node-feature-discovery", "0.15.2", helm.CAFileOpt(originalCACertFile))
+
+		// Backup the original CA file to be used after checking the new CA file works.
+		// This is to ensure that the server is definitely using the new certificate.
+		backupDir := GinkgoT().TempDir()
+		caCertFileName := filepath.Base(originalCACertFile)
+		Expect(os.Rename(originalCACertFile, filepath.Join(backupDir, caCertFileName))).To(Succeed())
+		originalCACertFile = filepath.Join(backupDir, caCertFileName)
 
 		// Create a new certificate. This can happen at any time the server is running,
 		// and the server is expected to eventually use the new certificate.
 		// This also generates a new CA file which is even better because we can check
 		// that the server is using the certificate issued by the new CA.
-		caCertFile, _, _, _ = helpers.GenerateCertificateAndKeyWithIPSAN(
+		newCACertFile, _, _, _ := helpers.GenerateCertificateAndKeyWithIPSAN(
 			GinkgoT(),
 			tempCertDir,
 			ipAddr,
 		)
 
 		Eventually(func(g Gomega) {
-			helpers.ValidateChartIsAvailable(GinkgoT(), g, ipAddr.String(), port, "podinfo", "6.2.0", helm.CAFileOpt(caCertFile))
+			helpers.ValidateChartIsAvailable(GinkgoT(), g, ipAddr.String(), port, "podinfo", "6.2.0", helm.CAFileOpt(newCACertFile))
 
-			helpers.ValidateChartIsAvailable(GinkgoT(), g, ipAddr.String(), port, "node-feature-discovery", "0.15.2", helm.CAFileOpt(caCertFile))
+			helpers.ValidateChartIsAvailable(GinkgoT(), g, ipAddr.String(), port, "node-feature-discovery", "0.15.2", helm.CAFileOpt(newCACertFile))
 		}).WithTimeout(time.Second * 5).WithPolling(time.Second * 1).Should(Succeed())
+
+		// Now check that the original CA file is now no longer valid, ensuring that the new
+		// certificate is being used by mindthegap serve.
+		h, cleanup := helm.NewClient(
+			output.NewNonInteractiveShell(GinkgoWriter, GinkgoWriter, 10),
+		)
+		DeferCleanup(cleanup)
+		helmTmpDir := GinkgoT().TempDir()
+
+		_, err = h.GetChartFromRepo(
+			helmTmpDir,
+			"",
+			fmt.Sprintf("%s://%s:%d/charts/%s", helm.OCIScheme, ipAddr.String(), port, "podinfo"),
+			"6.2.0",
+			helm.CAFileOpt(originalCACertFile),
+		)
+		Expect(errors.As(err, &x509.UnknownAuthorityError{})).To(BeTrue())
 
 		close(stopCh)
 

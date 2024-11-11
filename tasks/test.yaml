@@ -81,7 +81,7 @@ tasks:
             {{if .E2E_FOCUS}}--focus="{{.E2E_FOCUS}}"{{end}} \
             {{if .E2E_SKIP}}--skip="{{.E2E_SKIP}}"{{end}} \
             {{if .E2E_LABEL}}--label-filter="{{.E2E_LABEL}}"{{end}} \
-            {{if .E2E_LE2E_GINKGO_FLAGSABEL}}{{.E2E_GINKGO_FLAGS}}{{end}} \
+            {{if .E2E_GINKGO_FLAGS}}{{.E2E_GINKGO_FLAGS}}{{end}} \
             --junit-report=junit-e2e.xml \
             --json-report=report-e2e.json \
             --tags e2e \

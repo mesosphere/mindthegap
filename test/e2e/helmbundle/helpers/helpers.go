@@ -116,20 +116,26 @@ func GenerateCertificateAndKeyWithIPSAN(
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 
 	caCertFile = filepath.Join(destDir, "ca.crt")
-	caCertF, err := os.Create(caCertFile)
+	tmpCACertFile := caCertFile + ".tmp"
+	caCertF, err := os.Create(tmpCACertFile)
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 	defer caCertF.Close()
 	gomega.ExpectWithOffset(1, pem.Encode(caCertF, &pem.Block{Type: "CERTIFICATE", Bytes: caDerBytes})).
 		To(gomega.Succeed())
+	gomega.ExpectWithOffset(1, caCertF.Close()).To(gomega.Succeed())
+	gomega.ExpectWithOffset(1, os.Rename(tmpCACertFile, caCertFile)).To(gomega.Succeed())
 
 	b, err := x509.MarshalECPrivateKey(caPriv)
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 	pemBlock := pem.Block{Type: "EC PRIVATE KEY", Bytes: b}
 	caKeyFile = filepath.Join(destDir, "ca.key")
-	caKeyF, err := os.Create(caKeyFile)
+	tmpCAKeyFile := caKeyFile + ".tmp"
+	caKeyF, err := os.Create(tmpCAKeyFile)
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 	defer caKeyF.Close()
 	gomega.ExpectWithOffset(1, pem.Encode(caKeyF, &pemBlock)).To(gomega.Succeed())
+	gomega.ExpectWithOffset(1, caKeyF.Close()).To(gomega.Succeed())
+	gomega.ExpectWithOffset(1, os.Rename(tmpCAKeyFile, caKeyFile)).To(gomega.Succeed())
 
 	priv, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
@@ -158,20 +164,26 @@ func GenerateCertificateAndKeyWithIPSAN(
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 
 	certFile = filepath.Join(destDir, "tls.crt")
-	certF, err := os.Create(certFile)
+	tmpCertFile := certFile + ".tmp"
+	certF, err := os.Create(tmpCertFile)
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 	defer certF.Close()
 	gomega.ExpectWithOffset(1, pem.Encode(certF, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})).
 		To(gomega.Succeed())
+	gomega.ExpectWithOffset(1, certF.Close()).To(gomega.Succeed())
+	gomega.ExpectWithOffset(1, os.Rename(tmpCertFile, certFile)).To(gomega.Succeed())
 
 	b, err = x509.MarshalECPrivateKey(priv)
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 	pemBlock = pem.Block{Type: "EC PRIVATE KEY", Bytes: b}
 	keyFile = filepath.Join(destDir, "tls.key")
-	keyF, err := os.Create(keyFile)
+	tmpKeyFile := keyFile + ".tmp"
+	keyF, err := os.Create(tmpKeyFile)
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 	defer keyF.Close()
 	gomega.ExpectWithOffset(1, pem.Encode(keyF, &pemBlock)).To(gomega.Succeed())
+	gomega.ExpectWithOffset(1, keyF.Close()).To(gomega.Succeed())
+	gomega.ExpectWithOffset(1, os.Rename(tmpKeyFile, keyFile)).To(gomega.Succeed())
 
 	return caCertFile, caKeyFile, certFile, keyFile
 }

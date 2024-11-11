@@ -148,8 +148,6 @@ func (r Registry) Shutdown(ctx context.Context) error {
 }
 
 func (r Registry) ListenAndServe(log logr.Logger) error {
-	log = log.WithName("registry")
-
 	var err error
 	if r.config.HTTP.TLS.Certificate != "" && r.config.HTTP.TLS.Key != "" {
 		watcher, cwErr := certwatcher.New(r.config.HTTP.TLS.Certificate, r.config.HTTP.TLS.Key)
@@ -162,7 +160,7 @@ func (r Registry) ListenAndServe(log logr.Logger) error {
 		}
 		go func() {
 			if startErr := watcher.Start(context.TODO()); startErr != nil {
-				log.Error(startErr, "certwatcher Start failed")
+				panic(fmt.Sprintf("certwatcher Start failed: %v", startErr))
 			}
 		}()
 
