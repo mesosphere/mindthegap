@@ -99,37 +99,11 @@ func CAFileOpt(caFile string) action.PullOpt {
 	}
 }
 
-type ConfigOpt func(*action.Configuration) error
-
-func RegistryClientConfigOpt(opts ...registry.ClientOption) ConfigOpt {
-	return func(cfg *action.Configuration) error {
-		cl, err := registry.NewClient(opts...)
-		if err != nil {
-			return fmt.Errorf("failed to create registry client: %w", err)
-		}
-
-		cfg.RegistryClient = cl
-
-		return nil
-	}
-}
-
 func (c *Client) GetChartFromRepo(
 	outputDir, repoURL, chartName, chartVersion string,
-	configOpts []ConfigOpt,
 	extraPullOpts ...action.PullOpt,
 ) (string, error) {
 	cfg := &action.Configuration{Log: c.out.V(4).Infof}
-
-	if registry.IsOCI(chartName) {
-		configOpts = append([]ConfigOpt{RegistryClientConfigOpt()}, configOpts...)
-	}
-
-	for _, f := range configOpts {
-		if err := f(cfg); err != nil {
-			return "", fmt.Errorf("failed to configure helm client: %w", err)
-		}
-	}
 
 	pull := action.NewPullWithOpts(
 		append(

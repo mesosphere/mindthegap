@@ -194,7 +194,6 @@ func ValidateChartIsAvailable(
 		"",
 		fmt.Sprintf("%s://%s:%d/charts/%s", helm.OCIScheme, addr, port, chartName),
 		chartVersion,
-		[]helm.ConfigOpt{helm.RegistryClientConfigOpt()},
 		pullOpts...,
 	)
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
