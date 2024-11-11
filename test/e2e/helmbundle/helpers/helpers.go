@@ -24,6 +24,7 @@ import (
 	"github.com/onsi/gomega"
 	"github.com/spf13/cobra"
 	"helm.sh/helm/v3/pkg/action"
+	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
@@ -45,6 +46,7 @@ func NewCommand(
 	newFn func(out output.Output) *cobra.Command,
 ) *cobra.Command {
 	t.Helper()
+	ctrllog.SetLogger(ginkgo.GinkgoLogr)
 	cmd := newFn(output.NewNonInteractiveShell(ginkgo.GinkgoWriter, ginkgo.GinkgoWriter, 10))
 	cmd.SilenceUsage = true
 	return cmd
@@ -114,20 +116,26 @@ func GenerateCertificateAndKeyWithIPSAN(
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 
 	caCertFile = filepath.Join(destDir, "ca.crt")
-	caCertF, err := os.Create(caCertFile)
+	tmpCACertFile := caCertFile + ".tmp"
+	caCertF, err := os.Create(tmpCACertFile)
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 	defer caCertF.Close()
 	gomega.ExpectWithOffset(1, pem.Encode(caCertF, &pem.Block{Type: "CERTIFICATE", Bytes: caDerBytes})).
 		To(gomega.Succeed())
+	gomega.ExpectWithOffset(1, caCertF.Close()).To(gomega.Succeed())
+	gomega.ExpectWithOffset(1, os.Rename(tmpCACertFile, caCertFile)).To(gomega.Succeed())
 
 	b, err := x509.MarshalECPrivateKey(caPriv)
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 	pemBlock := pem.Block{Type: "EC PRIVATE KEY", Bytes: b}
 	caKeyFile = filepath.Join(destDir, "ca.key")
-	caKeyF, err := os.Create(caKeyFile)
+	tmpCAKeyFile := caKeyFile + ".tmp"
+	caKeyF, err := os.Create(tmpCAKeyFile)
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 	defer caKeyF.Close()
 	gomega.ExpectWithOffset(1, pem.Encode(caKeyF, &pemBlock)).To(gomega.Succeed())
+	gomega.ExpectWithOffset(1, caKeyF.Close()).To(gomega.Succeed())
+	gomega.ExpectWithOffset(1, os.Rename(tmpCAKeyFile, caKeyFile)).To(gomega.Succeed())
 
 	priv, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
@@ -156,26 +164,33 @@ func GenerateCertificateAndKeyWithIPSAN(
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 
 	certFile = filepath.Join(destDir, "tls.crt")
-	certF, err := os.Create(certFile)
+	tmpCertFile := certFile + ".tmp"
+	certF, err := os.Create(tmpCertFile)
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 	defer certF.Close()
 	gomega.ExpectWithOffset(1, pem.Encode(certF, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})).
 		To(gomega.Succeed())
+	gomega.ExpectWithOffset(1, certF.Close()).To(gomega.Succeed())
+	gomega.ExpectWithOffset(1, os.Rename(tmpCertFile, certFile)).To(gomega.Succeed())
 
 	b, err = x509.MarshalECPrivateKey(priv)
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 	pemBlock = pem.Block{Type: "EC PRIVATE KEY", Bytes: b}
 	keyFile = filepath.Join(destDir, "tls.key")
-	keyF, err := os.Create(keyFile)
+	tmpKeyFile := keyFile + ".tmp"
+	keyF, err := os.Create(tmpKeyFile)
 	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 	defer keyF.Close()
 	gomega.ExpectWithOffset(1, pem.Encode(keyF, &pemBlock)).To(gomega.Succeed())
+	gomega.ExpectWithOffset(1, keyF.Close()).To(gomega.Succeed())
+	gomega.ExpectWithOffset(1, os.Rename(tmpKeyFile, keyFile)).To(gomega.Succeed())
 
 	return caCertFile, caKeyFile, certFile, keyFile
 }
 
 func ValidateChartIsAvailable(
 	t ginkgo.GinkgoTInterface,
+	g gomega.Gomega,
 	addr string,
 	port int,
 	chartName, chartVersion string,
@@ -196,9 +211,9 @@ func ValidateChartIsAvailable(
 		chartVersion,
 		pullOpts...,
 	)
-	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
+	g.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 	chrt, err := helm.LoadChart(d)
-	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
-	gomega.ExpectWithOffset(1, chrt.Metadata.Name).To(gomega.Equal(chartName))
-	gomega.ExpectWithOffset(1, chrt.Metadata.Version).To(gomega.Equal(chartVersion))
+	g.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
+	g.ExpectWithOffset(1, chrt.Metadata.Name).To(gomega.Equal(chartName))
+	g.ExpectWithOffset(1, chrt.Metadata.Version).To(gomega.Equal(chartVersion))
 }

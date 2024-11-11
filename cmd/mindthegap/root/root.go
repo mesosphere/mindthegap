@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/cmd/root"
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
@@ -17,6 +18,12 @@ import (
 	"github.com/mesosphere/mindthegap/cmd/mindthegap/importcmd"
 	"github.com/mesosphere/mindthegap/cmd/mindthegap/push"
 	"github.com/mesosphere/mindthegap/cmd/mindthegap/serve"
+)
+
+const (
+	// MinimumVerbosityForControllerRuntimeMessages is the minimum verbosity at which controller-runtime
+	// log messages are included in the output. Set to >= 1 to exclude from default output.
+	MinimumVerbosityForControllerRuntimeMessages = 1
 )
 
 func NewCommand(in io.Reader, out, errOut io.Writer) (*cobra.Command, output.Output) {
@@ -52,6 +59,10 @@ func Execute() {
 	rootCmd, out := NewCommand(os.Stdin, os.Stdout, os.Stderr)
 	// disable cobra built-in error printing, we output the error with formatting.
 	rootCmd.SilenceErrors = true
+
+	// All packages in the controller-runtime module expect this logger to be
+	// defined within 30 seconds of initialization.
+	ctrllog.SetLogger(output.NewOutputLogr(out))
 
 	if err := rootCmd.Execute(); err != nil {
 		out.Error(err, "")
