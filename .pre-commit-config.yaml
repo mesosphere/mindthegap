@@ -6,40 +6,40 @@ repos:
   rev: v1.0.0-rc.1
   hooks:
   - id: go-mod-tidy
-    stages: [commit]
+    stages: [pre-commit]
   - id: golangci-lint-mod
-    stages: [commit]
+    stages: [pre-commit]
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.6.0
+  rev: v5.0.0
   hooks:
   - id: trailing-whitespace
-    stages: [commit]
+    stages: [pre-commit]
   - id: check-yaml
     args: ["-m", "--unsafe"]
-    stages: [commit]
+    stages: [pre-commit]
   - id: mixed-line-ending
     args: ["-f", "lf"]
     exclude: \.bat$
-    stages: [commit]
+    stages: [pre-commit]
   - id: no-commit-to-branch
-    stages: [commit]
+    stages: [pre-commit]
   - id: check-added-large-files
-    stages: [commit]
+    stages: [pre-commit]
   - id: check-case-conflict
-    stages: [commit]
+    stages: [pre-commit]
   - id: check-merge-conflict
-    stages: [commit]
+    stages: [pre-commit]
   - id: check-executables-have-shebangs
-    stages: [commit]
+    stages: [pre-commit]
   - id: check-symlinks
-    stages: [commit]
+    stages: [pre-commit]
   - id: end-of-file-fixer
-    stages: [commit]
+    stages: [pre-commit]
 - repo: https://github.com/rhysd/actionlint
-  rev: v1.7.1
+  rev: v1.7.4
   hooks:
   - id: actionlint-system
-    stages: [commit]
+    stages: [pre-commit]
 - repo: https://github.com/jorisroovers/gitlint
   rev: v0.19.1
   hooks:
@@ -50,28 +50,28 @@ repos:
   rev: 3.0.0
   hooks:
   - id: shfmt
-    stages: [commit]
+    stages: [pre-commit]
     args: ["-s", "-i", "2"]
   - id: script-must-have-extension
-    stages: [commit]
+    stages: [pre-commit]
 - repo: https://github.com/shellcheck-py/shellcheck-py
   rev: v0.10.0.1
   hooks:
   - id: shellcheck
-    stages: [commit]
+    stages: [pre-commit]
     args: ["-e", "SC2211"]
 - repo: https://github.com/igorshubovych/markdownlint-cli
-  rev: v0.41.0
+  rev: v0.42.0
   hooks:
   - id: markdownlint
-    stages: [commit]
+    stages: [pre-commit]
     exclude: ^CHANGELOG.md$
 - repo: https://github.com/Lucas-C/pre-commit-hooks
   rev: v1.5.5
   hooks:
   - id: insert-license
     name: License headers - Go
-    stages: [commit]
+    stages: [pre-commit]
     files: "(.*\\.go|go.mod)$"
     args:
       - --license-filepath
@@ -81,7 +81,7 @@ repos:
       - --allow-past-years
   - id: insert-license
     name: License headers - YAML
-    stages: [commit]
+    stages: [pre-commit]
     files: \.ya?ml$
     args:
       - --license-filepath
@@ -89,7 +89,7 @@ repos:
       - --allow-past-years
   - id: insert-license
     name: License headers - Markdown
-    stages: [commit]
+    stages: [pre-commit]
     files: \.md$
     exclude: ^CHANGELOG.md$
     args:
