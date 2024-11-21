@@ -205,6 +205,24 @@
         }
       }
     },
+    "darwin.Security@latest": {
+      "last_modified": "2024-11-16T04:25:12Z",
+      "resolved": "github:NixOS/nixpkgs/34a626458d686f1b58139620a8b2793e9e123bba#darwin.Security",
+      "source": "devbox-search",
+      "version": "11.0",
+      "systems": {
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/nvzqysba0ga8w7b93y2jsfmw6bicrk35-Security-11.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/nvzqysba0ga8w7b93y2jsfmw6bicrk35-Security-11.0"
+        }
+      }
+    },
     "fd@latest": {
       "last_modified": "2024-11-03T14:18:04Z",
       "resolved": "github:NixOS/nixpkgs/4ae2e647537bcdbb82265469442713d066675275#fd",

@@ -156,6 +156,73 @@ var _ = Describe("Serve Image Bundle", func() {
 		Eventually(done).Should(BeClosed())
 	})
 
+	It("With repositories prefix", func() {
+		ipAddr := helpers.GetFirstNonLoopbackIP(GinkgoT())
+
+		tempCertDir := GinkgoT().TempDir()
+		caCertFile, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(
+			GinkgoT(),
+			tempCertDir,
+			ipAddr,
+		)
+
+		helpers.CreateBundle(
+			GinkgoT(),
+			bundleFile,
+			filepath.Join("testdata", "create-success.yaml"),
+			"linux/"+runtime.GOARCH,
+		)
+
+		port, err := freeport.GetFreePort()
+		Expect(err).NotTo(HaveOccurred())
+		cmd.SetArgs([]string{
+			"--image-bundle", bundleFile,
+			"--listen-address", ipAddr.String(),
+			"--listen-port", strconv.Itoa(port),
+			"--tls-cert-file", certFile,
+			"--tls-private-key-file", keyFile,
+			"--repositories-prefix", "/some/test/prefix",
+		})
+
+		done := make(chan struct{})
+		go func() {
+			defer GinkgoRecover()
+
+			Expect(cmd.Execute()).To(Succeed())
+
+			close(done)
+		}()
+
+		helpers.WaitForTCPPort(GinkgoT(), ipAddr.String(), port)
+
+		testRoundTripper, err := httputils.TLSConfiguredRoundTripper(
+			remote.DefaultTransport,
+			net.JoinHostPort(ipAddr.String(), strconv.Itoa(port)),
+			false,
+			caCertFile,
+		)
+		Expect(err).NotTo(HaveOccurred())
+
+		helpers.ValidateImageIsAvailable(
+			GinkgoT(),
+			ipAddr.String(),
+			port,
+			"",
+			"some/test/prefix/stefanprodan/podinfo",
+			"6.2.0",
+			[]*v1.Platform{{
+				OS:           "linux",
+				Architecture: runtime.GOARCH,
+			}},
+			false,
+			remote.WithTransport(testRoundTripper),
+		)
+
+		close(stopCh)
+
+		Eventually(done).Should(BeClosed())
+	})
+
 	It("Bundle does not exist", func() {
 		cmd.SetArgs([]string{
 			"--image-bundle", bundleFile,

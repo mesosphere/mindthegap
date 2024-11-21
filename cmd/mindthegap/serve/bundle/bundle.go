@@ -26,11 +26,12 @@ func NewCommand(
 	bundleCmdName string,
 ) (cmd *cobra.Command, stopCh chan struct{}) {
 	var (
-		bundleFiles    []string
-		listenAddress  string
-		listenPort     uint16
-		tlsCertificate string
-		tlsKey         string
+		bundleFiles        []string
+		listenAddress      string
+		listenPort         uint16
+		tlsCertificate     string
+		tlsKey             string
+		repositoriesPrefix string
 	)
 
 	stopCh = make(chan struct{})
@@ -69,6 +70,12 @@ func NewCommand(
 			imagesCfg, chartsCfg, err := utils.ExtractBundles(tempDir, out, bundleFiles...)
 			if err != nil {
 				return err
+			}
+
+			if repositoriesPrefix != "" {
+				if err := addRepositoryPrefixToImages(tempDir, repositoriesPrefix); err != nil {
+					return err
+				}
 			}
 
 			// Write out the merged image bundle config to the target directory for completeness.
@@ -123,6 +130,37 @@ func NewCommand(
 		Uint16Var(&listenPort, "listen-port", 0, "Port to listen on (0 means use any free port)")
 	cmd.Flags().StringVar(&tlsCertificate, "tls-cert-file", "", "TLS certificate file")
 	cmd.Flags().StringVar(&tlsKey, "tls-private-key-file", "", "TLS private key file")
+	cmd.Flags().StringVar(&repositoriesPrefix, "repositories-prefix", "",
+		"Prefix to prepend to all repositories in the bundle when serving")
 
 	return cmd, stopCh
+}
+
+func addRepositoryPrefixToImages(tempDir, newPrefix string) error {
+	originalDirRepositoriesPrefix := filepath.Join(tempDir, "docker", "registry", "v2", "repositories")
+	existingRepositories, err := os.ReadDir(originalDirRepositoriesPrefix)
+	if err != nil {
+		return fmt.Errorf("failed to read existing repositories: %w", err)
+	}
+
+	newRepositoriesDir := filepath.Join(originalDirRepositoriesPrefix, newPrefix)
+	err = os.MkdirAll(newRepositoriesDir, 0o755)
+	if err != nil {
+		return fmt.Errorf("failed to create repositories prefix directory: %w", err)
+	}
+
+	for _, existingRepository := range existingRepositories {
+		if existingRepository.IsDir() &&
+			filepath.Join(originalDirRepositoriesPrefix, existingRepository.Name()) != newRepositoriesDir {
+			err = os.Rename(
+				filepath.Join(originalDirRepositoriesPrefix, existingRepository.Name()),
+				filepath.Join(newRepositoriesDir, existingRepository.Name()),
+			)
+			if err != nil {
+				return fmt.Errorf("failed to move existing repository: %w", err)
+			}
+		}
+	}
+
+	return nil
 }
