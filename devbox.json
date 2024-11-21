@@ -1,26 +1,30 @@
 {
-  "packages": [
-    "actionlint@latest",
-    "coreutils@latest",
-    "crane@latest",
-    "fd@latest",
-    "ginkgo@latest",
-    "git@latest",
-    "gnused@latest",
-    "gnugrep@latest",
-    "go@latest",
-    "go-task@latest",
-    "gojq@latest",
-    "golangci-lint@latest",
-    "golines@latest",
-    "goreleaser@latest",
-    "gotestsum@latest",
-    "ko@latest",
-    "kubernetes-helm@latest",
-    "pre-commit@latest",
-    "shfmt@latest",
-    "upx@latest",
-    "path:./hack/flakes#go-mod-upgrade",
-    "path:./hack/flakes#govulncheck"
-  ]
+  "packages": {
+    "actionlint":                        "latest",
+    "coreutils":                         "latest",
+    "crane":                             "latest",
+    "darwin.Security": {
+      "version":   "latest",
+      "platforms": ["aarch64-darwin"]
+    },
+    "fd":                                "latest",
+    "ginkgo":                            "latest",
+    "git":                               "latest",
+    "gnused":                            "latest",
+    "gnugrep":                           "latest",
+    "go":                                "latest",
+    "go-task":                           "latest",
+    "gojq":                              "latest",
+    "golangci-lint":                     "latest",
+    "golines":                           "latest",
+    "goreleaser":                        "latest",
+    "gotestsum":                         "latest",
+    "ko":                                "latest",
+    "kubernetes-helm":                   "latest",
+    "pre-commit":                        "latest",
+    "shfmt":                             "latest",
+    "upx":                               "latest",
+    "path:./hack/flakes#go-mod-upgrade": "",
+    "path:./hack/flakes#govulncheck":    ""
+  }
 }
