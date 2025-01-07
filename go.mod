@@ -3,8 +3,9 @@
 
 module github.com/mesosphere/mindthegap
 
-go 1.23
-toolchain go1.23.3
+go 1.23.0
+
+toolchain go1.23.4
 
 // TODO: This could be removed after https://github.com/mholt/archiver/pull/396 merged
 replace github.com/mholt/archiver/v3 => github.com/anchore/archiver/v3 v3.5.2
