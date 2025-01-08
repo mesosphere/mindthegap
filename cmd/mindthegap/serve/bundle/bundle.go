@@ -137,7 +137,13 @@ func NewCommand(
 }
 
 func addRepositoryPrefixToImages(tempDir, newPrefix string) error {
-	originalDirRepositoriesPrefix := filepath.Join(tempDir, "docker", "registry", "v2", "repositories")
+	originalDirRepositoriesPrefix := filepath.Join(
+		tempDir,
+		"docker",
+		"registry",
+		"v2",
+		"repositories",
+	)
 	existingRepositories, err := os.ReadDir(originalDirRepositoriesPrefix)
 	if err != nil {
 		return fmt.Errorf("failed to read existing repositories: %w", err)
@@ -151,7 +157,10 @@ func addRepositoryPrefixToImages(tempDir, newPrefix string) error {
 
 	for _, existingRepository := range existingRepositories {
 		if existingRepository.IsDir() &&
-			filepath.Join(originalDirRepositoriesPrefix, existingRepository.Name()) != newRepositoriesDir {
+			filepath.Join(
+				originalDirRepositoriesPrefix,
+				existingRepository.Name(),
+			) != newRepositoriesDir {
 			err = os.Rename(
 				filepath.Join(originalDirRepositoriesPrefix, existingRepository.Name()),
 				filepath.Join(newRepositoriesDir, existingRepository.Name()),
