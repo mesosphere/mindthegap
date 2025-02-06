@@ -274,6 +274,17 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.18.1 (2025-01-08)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Other Changes
+* build: Upgrade all tools by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/823
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.18.0...v1.18.1
+
 ## 1.18.0 (2024-11-21)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
