@@ -15,7 +15,6 @@
     "go":                                "latest",
     "go-task":                           "latest",
     "gojq":                              "latest",
-    "golangci-lint":                     "latest",
     "golines":                           "latest",
     "goreleaser":                        "latest",
     "gotestsum":                         "latest",
@@ -25,6 +24,7 @@
     "shfmt":                             "latest",
     "upx":                               "latest",
     "path:./hack/flakes#go-mod-upgrade": "",
+    "path:./hack/flakes#golangci-lint":  "",
     "path:./hack/flakes#govulncheck":    ""
   }
 }
