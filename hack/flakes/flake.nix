@@ -10,11 +10,32 @@
     flake-utils.lib.eachDefaultSystem (system:
       with nixpkgs.legacyPackages.${system}; rec {
         packages = rec {
-          golangci-lint  = pkgs.golangci-lint.override { buildGoModule = buildGo124Module; };
-
           govulncheck  = pkgs.govulncheck.override { buildGoModule = buildGo124Module; };
 
-          go-mod-upgrade = buildGo123Module rec {
+          golangci-lint = buildGo124Module rec {
+            pname = "golangci-lint";
+            version = "1.64.2";
+
+            src = fetchFromGitHub {
+              owner = "golangci";
+              repo = "golangci-lint";
+              rev = "v${version}";
+              hash = "sha256-ODnNBwtfILD0Uy2AKDR/e76ZrdyaOGlCktVUcf9ujy8=";
+            };
+
+            vendorHash = "sha256-/iq7Ju7c2gS7gZn3n+y0kLtPn2Nn8HY/YdqSDYjtEkI=";
+
+            subPackages = [ "cmd/golangci-lint" ];
+
+            ldflags = [
+              "-s"
+              "-X main.version=${version}"
+              "-X main.commit=v${version}"
+              "-X main.date=19700101-00:00:00"
+            ];
+          };
+
+          go-mod-upgrade = buildGo124Module rec {
             name = "go-mod-upgrade";
             version = "0.10.0";
             src = fetchFromGitHub {
