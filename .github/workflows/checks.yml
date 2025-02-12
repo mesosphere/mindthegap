@@ -26,7 +26,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Install devbox
-        uses: jetify-com/devbox-install-action@975fb35b9a6472bed4edf51e5db534d5efec2817 # v0.12.0
+        uses: jetify-com/devbox-install-action@734088efddca47cf44ff8a09289c6d0e51b73218 # v0.12.0
         with:
           enable-cache: true
       - name: Go cache
@@ -58,7 +58,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Install devbox
-        uses: jetify-com/devbox-install-action@975fb35b9a6472bed4edf51e5db534d5efec2817 # v0.12.0
+        uses: jetify-com/devbox-install-action@734088efddca47cf44ff8a09289c6d0e51b73218 # v0.12.0
         with:
           enable-cache: true
       - name: Set up QEMU
@@ -83,7 +83,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Install devbox
-        uses: jetify-com/devbox-install-action@975fb35b9a6472bed4edf51e5db534d5efec2817 # v0.12.0
+        uses: jetify-com/devbox-install-action@734088efddca47cf44ff8a09289c6d0e51b73218 # v0.12.0
         with:
           enable-cache: true
       - name: Export golang and golangci-lint versions
@@ -116,7 +116,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Install devbox
-        uses: jetify-com/devbox-install-action@975fb35b9a6472bed4edf51e5db534d5efec2817 # v0.12.0
+        uses: jetify-com/devbox-install-action@734088efddca47cf44ff8a09289c6d0e51b73218 # v0.12.0
         with:
           enable-cache: true
       - name: Go cache
@@ -143,7 +143,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Install devbox
-        uses: jetify-com/devbox-install-action@975fb35b9a6472bed4edf51e5db534d5efec2817 # v0.12.0
+        uses: jetify-com/devbox-install-action@734088efddca47cf44ff8a09289c6d0e51b73218 # v0.12.0
         with:
           enable-cache: true
       - id: govulncheck
