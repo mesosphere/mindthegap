@@ -94,7 +94,7 @@ jobs:
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@dd3fda91790ca90e75049e5c767509dc0ec7d99b # v2
         with:
-          fail_on_error: true
+          fail_level: error
           reporter: github-pr-review
           golangci_lint_version: v${{ steps.versions.outputs.golangci-lint }}
           go_version: v${{ steps.versions.outputs.golang }}
