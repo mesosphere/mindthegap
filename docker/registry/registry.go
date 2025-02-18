@@ -1,3 +1,6 @@
+// Copyright 2025 Nutanix. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 // Copyright 2021 D2iQ, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -22,14 +25,51 @@ import (
 	"github.com/phayes/freeport"
 	"github.com/sirupsen/logrus"
 	"sigs.k8s.io/controller-runtime/pkg/certwatcher"
+
+	_ "github.com/mesosphere/mindthegap/docker/registry/storage/driver/archive"
 )
 
 type Config struct {
-	StorageDirectory string
-	Host             string
-	Port             uint16
-	ReadOnly         bool
-	TLS              TLS
+	Storage  Storage
+	Host     string
+	Port     uint16
+	ReadOnly bool
+	TLS      TLS
+}
+
+type storageType string
+
+const (
+	storageTypeFilesystem storageType = "filesystem"
+	storageTypeArchive    storageType = "archive"
+)
+
+type Storage struct {
+	Type               storageType
+	Path               string
+	AlwaysReadOnly     bool
+	RepositoriesPrefix string
+}
+
+func FilesystemStorage(rootDir string) Storage {
+	return Storage{
+		Type: storageTypeFilesystem,
+		Path: rootDir,
+	}
+}
+
+func ArchiveStorage(repositoryPrefix string, tarballs ...string) Storage {
+	paths := make([]string, len(tarballs))
+	for i, tarball := range tarballs {
+		paths[i] = fmt.Sprintf("%q", tarball)
+	}
+
+	return Storage{
+		Type:               storageTypeArchive,
+		Path:               "[" + strings.Join(paths, ",") + "]",
+		AlwaysReadOnly:     true,
+		RepositoriesPrefix: repositoryPrefix,
+	}
 }
 
 type TLS struct {
@@ -54,13 +94,25 @@ func registryConfiguration(c Config) (string, error) {
 	configTmpl := `
 version: 0.1
 storage:
+  {{- if eq .Storage.Type "filesystem" }}
+  {{- with .Storage }}
   filesystem:
-    rootdirectory: {{ .StorageDirectory }}
+    rootdirectory: {{ .Path }}
+  {{- end }}
+  {{- else if eq .Storage.Type "archive" }}
+  {{- with .Storage }}
+  archive:
+    archives: {{ .Path }}
+    {{- with .RepositoriesPrefix }}
+    repositoriesPrefix: {{ . }}
+    {{- end }}
+  {{- end }}
+  {{- end }}
   maintenance:
     uploadpurging:
       enabled: false
     readonly:
-      enabled: {{ .ReadOnly }}
+      enabled: {{ or .Storage.AlwaysReadOnly .ReadOnly }}
 http:
   net: tcp
   addr: {{ .Host }}:{{ .Port }}
@@ -100,13 +152,13 @@ log:
 	template.Must(tmpl.Parse(configTmpl))
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, struct {
-		StorageDirectory string
-		Host             string
-		Port             uint16
-		ReadOnly         bool
-		TLSCertificate   string
-		TLSKey           string
-	}{c.StorageDirectory, host, port, c.ReadOnly, c.TLS.Certificate, c.TLS.Key}); err != nil {
+		Storage        Storage
+		Host           string
+		Port           uint16
+		ReadOnly       bool
+		TLSCertificate string
+		TLSKey         string
+	}{c.Storage, host, port, c.ReadOnly, c.TLS.Certificate, c.TLS.Key}); err != nil {
 		return "", fmt.Errorf("failed to render registry configuration: %w", err)
 	}
 

@@ -1,3 +1,6 @@
+// Copyright 2025 Nutanix. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 // Copyright 2021 D2iQ, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -126,7 +129,7 @@ func NewCommand(out output.Output) *cobra.Command {
 			out.EndOperationWithStatus(output.Success())
 
 			out.StartOperation("Starting temporary Docker registry")
-			reg, err := registry.NewRegistry(registry.Config{StorageDirectory: tempDir})
+			reg, err := registry.NewRegistry(registry.Config{Storage: registry.FilesystemStorage(tempDir)})
 			if err != nil {
 				out.EndOperationWithStatus(output.Failure())
 				return fmt.Errorf("failed to create local Docker registry: %w", err)
