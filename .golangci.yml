@@ -109,3 +109,11 @@ issues:
     - source: "flags.Parse|response.WriteError"
       linters:
         - errcheck
+    - path: docker/registry/registry.go
+      linters:
+        - gocritic
+      text: "hugeParam: c is heavy"
+    - path: docker/registry/registry.go
+      linters:
+        - gocritic
+      text: "hugeParam: cfg is heavy"

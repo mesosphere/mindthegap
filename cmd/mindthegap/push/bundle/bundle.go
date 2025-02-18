@@ -1,3 +1,6 @@
+// Copyright 2025 Nutanix. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 // Copyright 2021 D2iQ, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -97,14 +100,14 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			imagesCfg, chartsCfg, err := utils.ExtractBundles(tempDir, out, bundleFiles...)
+			imagesCfg, chartsCfg, err := utils.ExtractConfigs(tempDir, out, bundleFiles...)
 			if err != nil {
 				return err
 			}
 
 			out.StartOperation("Starting temporary Docker registry")
 			reg, err := registry.NewRegistry(
-				registry.Config{StorageDirectory: tempDir, ReadOnly: true},
+				registry.Config{Storage: registry.ArchiveStorage("", bundleFiles...)},
 			)
 			if err != nil {
 				out.EndOperationWithStatus(output.Failure())
