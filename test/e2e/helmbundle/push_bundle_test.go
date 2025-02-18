@@ -1,3 +1,6 @@
+// Copyright 2025 Nutanix. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 // Copyright 2021 D2iQ, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -52,8 +55,8 @@ var _ = Describe("Push Bundle", func() {
 		port, err := freeport.GetFreePort()
 		Expect(err).NotTo(HaveOccurred())
 		reg, err := registry.NewRegistry(registry.Config{
-			StorageDirectory: filepath.Join(tmpDir, "registry"),
-			Port:             uint16(port),
+			Storage: registry.FilesystemStorage(filepath.Join(tmpDir, "registry")),
+			Port:    uint16(port),
 		})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -126,9 +129,9 @@ var _ = Describe("Push Bundle", func() {
 		port, err := freeport.GetFreePort()
 		Expect(err).NotTo(HaveOccurred())
 		reg, err := registry.NewRegistry(registry.Config{
-			StorageDirectory: filepath.Join(tmpDir, "registry"),
-			Host:             ipAddr.String(),
-			Port:             uint16(port),
+			Storage: registry.FilesystemStorage(filepath.Join(tmpDir, "registry")),
+			Host:    ipAddr.String(),
+			Port:    uint16(port),
 			TLS: registry.TLS{
 				Certificate: certFile,
 				Key:         keyFile,
@@ -188,9 +191,9 @@ var _ = Describe("Push Bundle", func() {
 		port, err := freeport.GetFreePort()
 		Expect(err).NotTo(HaveOccurred())
 		reg, err := registry.NewRegistry(registry.Config{
-			StorageDirectory: filepath.Join(tmpDir, "registry"),
-			Host:             ipAddr.String(),
-			Port:             uint16(port),
+			Storage: registry.FilesystemStorage(filepath.Join(tmpDir, "registry")),
+			Host:    ipAddr.String(),
+			Port:    uint16(port),
 			TLS: registry.TLS{
 				Certificate: certFile,
 				Key:         keyFile,
