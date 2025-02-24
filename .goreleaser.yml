@@ -49,19 +49,6 @@ builds:
       - amd64
       - arm64
     mod_timestamp: '{{ .CommitTimestamp }}'
-    hooks:
-      post:
-        - |
-          sh -ec 'if [ {{ .IsSnapshot }} == true ] && [ {{ .Runtime.Goarch }} == {{ .Arch }} ]; then
-            env SOURCE_DATE_EPOCH=$(date +%s) \
-                KO_DATA_DATE_EPOCH=$(date +%s) \
-                KO_DOCKER_REPO=ko.local/mindthegap \
-                ko build \
-                  --bare \
-                  --platform linux/{{ .Arch }} \
-                  -t v{{ trimprefix .Version "v" }}-{{ .Arch }} \
-                  ./cmd/mindthegap
-          fi'
   - id: wait-for-file-to-exist
     dir: ./cmd/wait-for-file-to-exist
     binary: wait-for-file-to-exist
@@ -80,21 +67,6 @@ builds:
       - amd64
       - arm64
     mod_timestamp: '{{ .CommitTimestamp }}'
-    hooks:
-      post:
-        - |
-          sh -ec 'if [ {{ .IsSnapshot }} == true ] && [ {{ .Runtime.Goarch }} == {{ .Arch }} ]; then
-            cd ./cmd/wait-for-file-to-exist && \
-              env SOURCE_DATE_EPOCH=$(date +%s) \
-                  KO_DATA_DATE_EPOCH=$(date +%s) \
-                  KO_DOCKER_REPO=ko.local/wait-for-file-to-exist \
-                  KO_DEFAULTBASEIMAGE=cgr.dev/chainguard/busybox \
-                  ko build \
-                    --bare \
-                    --platform linux/{{ .Arch }} \
-                    -t v{{ trimprefix .Version "v" }}-{{ .Arch }} \
-                    .
-          fi'
   - id: copy-file-to-pod
     dir: ./cmd/copy-file-to-pod
     binary: copy-file-to-pod
@@ -113,20 +85,6 @@ builds:
       - amd64
       - arm64
     mod_timestamp: '{{ .CommitTimestamp }}'
-    hooks:
-      post:
-        - |
-          sh -ec 'if [ {{ .IsSnapshot }} == true ] && [ {{ .Runtime.Goarch }} == {{ .Arch }} ]; then
-            cd ./cmd/copy-file-to-pod && \
-              env SOURCE_DATE_EPOCH=$(date +%s) \
-                  KO_DATA_DATE_EPOCH=$(date +%s) \
-                  KO_DOCKER_REPO=ko.local/copy-file-to-pod \
-                  ko build \
-                    --bare \
-                    --platform linux/{{ .Arch }} \
-                    -t v{{ trimprefix .Version "v" }}-{{ .Arch }} \
-                    .
-          fi'
 
 upx:
   - enabled: "{{ not .IsSnapshot }}"
@@ -146,7 +104,8 @@ archives:
   - name_template: '{{ .ProjectName }}_v{{trimprefix .Version "v"}}_{{ .Os }}_{{ .Arch }}'
     format_overrides:
       - goos: windows
-        format: zip
+        formats:
+          - zip
     builds:
       - mindthegap
       - wait-for-file-to-exist
@@ -164,7 +123,8 @@ kos:
     platforms:
       - linux/amd64
       - linux/arm64
-    repository: ghcr.io/mesosphere/mindthegap
+    repositories:
+      - ghcr.io/mesosphere/mindthegap
     bare: true
     tags:
       - v{{trimprefix .Version "v"}}
@@ -179,7 +139,8 @@ kos:
     platforms:
       - linux/amd64
       - linux/arm64
-    repository: ghcr.io/mesosphere/wait-for-file-to-exist
+    repositories:
+      - ghcr.io/mesosphere/wait-for-file-to-exist
     base_image: cgr.dev/chainguard/busybox
     bare: true
     tags:
@@ -195,7 +156,8 @@ kos:
     platforms:
       - linux/amd64
       - linux/arm64
-    repository: ghcr.io/mesosphere/copy-file-to-pod
+    repositories:
+      - ghcr.io/mesosphere/copy-file-to-pod
     bare: true
     tags:
       - v{{trimprefix .Version "v"}}
