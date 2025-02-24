@@ -76,9 +76,9 @@ var _ = Describe("Push Bundle", func() {
 			port, err := freeport.GetFreePort()
 			Expect(err).NotTo(HaveOccurred())
 			reg, err := registry.NewRegistry(registry.Config{
-				StorageDirectory: filepath.Join(tmpDir, "registry"),
-				Host:             registryHost,
-				Port:             uint16(port),
+				Storage: registry.FilesystemStorage(filepath.Join(tmpDir, "registry")),
+				Host:    registryHost,
+				Port:    uint16(port),
 				TLS: registry.TLS{
 					Certificate: registryCertFile,
 					Key:         registryKeyFile,
@@ -283,9 +283,9 @@ var _ = Describe("Push Bundle", func() {
 				port, err := freeport.GetFreePort()
 				Expect(err).NotTo(HaveOccurred())
 				reg, err := registry.NewRegistry(registry.Config{
-					StorageDirectory: filepath.Join(tmpDir, "registry"),
-					Host:             "127.0.0.1",
-					Port:             uint16(port),
+					Storage: registry.FilesystemStorage(filepath.Join(tmpDir, "registry")),
+					Host:    "127.0.0.1",
+					Port:    uint16(port),
 				})
 				Expect(err).NotTo(HaveOccurred())
 				registryAddress = fmt.Sprintf("http://127.0.0.1:%d", port)
