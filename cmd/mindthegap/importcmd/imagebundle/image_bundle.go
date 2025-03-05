@@ -64,7 +64,7 @@ func NewCommand(out output.Output) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			cfg, _, err := utils.ExtractBundles(tempDir, out, imageBundleFiles...)
+			cfg, _, err := utils.ExtractConfigs(tempDir, out, imageBundleFiles...)
 			if err != nil {
 				return err
 			}
@@ -76,7 +76,7 @@ func NewCommand(out output.Output) *cobra.Command {
 
 			out.StartOperation("Starting temporary Docker registry")
 			reg, err := registry.NewRegistry(
-				registry.Config{StorageDirectory: tempDir, ReadOnly: true},
+				registry.Config{Storage: registry.ArchiveStorage("", imageBundleFiles...)},
 			)
 			if err != nil {
 				out.EndOperationWithStatus(output.Failure())
