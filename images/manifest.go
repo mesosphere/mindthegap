@@ -173,7 +173,7 @@ func indexForSinglePlatformImage(
 		imagePlatformForComparison.Variant = ""
 	}
 
-	if !imagePlatformForComparison.Equals(*v1Platform) {
+	if imagePlatformForComparison.Variant != "" && !imagePlatformForComparison.Equals(*v1Platform) {
 		return nil, fmt.Errorf(
 			"requested image %q does not match requested platform %q (image is for %q)",
 			ref,
