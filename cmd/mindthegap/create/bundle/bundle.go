@@ -16,6 +16,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/logs"
 	"github.com/google/go-containerregistry/pkg/name"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
@@ -38,12 +39,13 @@ import (
 
 func NewCommand(out output.Output) *cobra.Command {
 	var (
-		imagesConfigFile     string
-		helmChartsConfigFile string
-		platforms            = flags.NewPlatformsValue("linux/amd64")
-		outputFile           string
-		overwrite            bool
-		imagePullConcurrency int
+		imagesConfigFile       string
+		helmChartsConfigFile   string
+		ociArtifactsConfigFile string
+		platforms              = flags.NewPlatformsValue("linux/amd64")
+		outputFile             string
+		overwrite              bool
+		imagePullConcurrency   int
 	)
 
 	cmd := &cobra.Command{
@@ -54,8 +56,9 @@ func NewCommand(out output.Output) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var (
-				helmChartsConfig config.HelmChartsConfig
-				imagesConfig     config.ImagesConfig
+				helmChartsConfig   config.HelmChartsConfig
+				imagesConfig       config.ImagesConfig
+				ociArtifactsConfig config.ImagesConfig
 			)
 			if imagesConfigFile != "" {
 				out.StartOperation("Parsing image bundle config")
@@ -79,6 +82,19 @@ func NewCommand(out output.Output) *cobra.Command {
 				out.EndOperationWithStatus(output.Success())
 				out.V(4).Infof("Helm charts config: %+v", cfg)
 				helmChartsConfig = cfg
+			}
+
+			// for now, we start with re-using the same struct for OCI artifacts as for docker images.
+			if ociArtifactsConfigFile != "" {
+				out.StartOperation("Parsing OCI artifacts bundle config")
+				cfg, err := config.ParseImagesConfigFile(ociArtifactsConfigFile)
+				if err != nil {
+					out.EndOperationWithStatus(output.Failure())
+					return err
+				}
+				out.EndOperationWithStatus(output.Success())
+				out.V(4).Infof("OCI artifacts config: %+v", cfg)
+				ociArtifactsConfig = cfg
 			}
 
 			if !overwrite {
@@ -150,6 +166,7 @@ func NewCommand(out output.Output) *cobra.Command {
 					reg,
 					tempDir,
 					out,
+					false,
 				); err != nil {
 					return err
 				}
@@ -173,6 +190,19 @@ func NewCommand(out output.Output) *cobra.Command {
 				}
 			}
 
+			if ociArtifactsConfigFile != "" {
+				if err := pullOCIArtifacts(
+					ociArtifactsConfig,
+					platforms,
+					imagePullConcurrency,
+					reg,
+					tempDir,
+					out,
+				); err != nil {
+					return err
+				}
+			}
+
 			out.StartOperation(fmt.Sprintf("Archiving bundle to %s", outputFile))
 			if err := archive.ArchiveDirectory(tempDir, outputFile); err != nil {
 				out.EndOperationWithStatus(output.Failure())
@@ -188,7 +218,9 @@ func NewCommand(out output.Output) *cobra.Command {
 		"File containing list of images to create bundle from, either as YAML configuration or a simple list of images")
 	cmd.Flags().StringVar(&helmChartsConfigFile, "helm-charts-file", "",
 		"YAML file containing configuration of Helm charts to create bundle from")
-	cmd.MarkFlagsOneRequired("images-file", "helm-charts-file")
+	cmd.Flags().StringVar(&ociArtifactsConfigFile, "oci-artifacts-file", "",
+		"File containing list of oci images to create bundle from, either as YAML configuration or a simple list of images")
+	cmd.MarkFlagsOneRequired("images-file", "helm-charts-file", "oci-artifacts-file")
 	cmd.Flags().
 		Var(&platforms, "platform", "platforms to download images for (required format: <os>/<arch>[/<variant>])")
 	cmd.Flags().
@@ -208,6 +240,7 @@ func pullImages(
 	reg *registry.Registry,
 	outputDir string,
 	out output.Output,
+	isOCIArtifact bool,
 ) error {
 	// Sort registries for deterministic ordering.
 	regNames := cfg.SortedRegistryNames()
@@ -291,13 +324,18 @@ func pullImages(
 						imageTag,
 					)
 
-					imageIndex, err := images.ManifestListForImage(
-						srcImageName,
-						platformsStrings,
-						sourceRemoteOpts...,
-					)
-					if err != nil {
-						return err
+					var imageIndex v1.ImageIndex
+					if isOCIArtifact {
+						imageIndex, err = images.ManifestListForOCIArtifact(
+							srcImageName,
+							sourceRemoteOpts...,
+						)
+					} else {
+						imageIndex, err = images.ManifestListForImage(
+							srcImageName,
+							platformsStrings,
+							sourceRemoteOpts...,
+						)
 					}
 
 					destImageName := fmt.Sprintf(
@@ -343,6 +381,18 @@ func pullImages(
 	}
 
 	return nil
+}
+
+// for now, we start with re-using the same struct for OCI artifacts as for docker images.
+func pullOCIArtifacts(
+	cfg config.ImagesConfig,
+	platforms flags.Platforms,
+	imagePullConcurrency int,
+	reg *registry.Registry,
+	outputDir string,
+	out output.Output,
+) error {
+	return pullImages(cfg, platforms, imagePullConcurrency, reg, outputDir, out, true)
 }
 
 func pullCharts(
