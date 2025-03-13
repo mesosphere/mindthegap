@@ -450,3 +450,154 @@ func TestManifestListForImage_RemoteImage(t *testing.T) {
 		})
 	}
 }
+
+var (
+	gitOperatorIndexManifest = v1.IndexManifest{
+		Manifests: []v1.Descriptor{{
+			MediaType: types.OCIManifestSchema1,
+			Size:      406,
+			Digest: v1.Hash{
+				Algorithm: "sha256",
+				Hex:       "cf61dfcb070d4c71ca0bb94a2c91a4b84424b41fdc74f1a546f80c881ba5313a",
+			},
+			ArtifactType: "application/vnd.cncf.flux.config.v1+json",
+		}},
+		MediaType:     types.OCIImageIndex,
+		SchemaVersion: 2,
+	}
+	gitOperatorImageManifest = v1.Manifest{
+		SchemaVersion: 2,
+		MediaType:     types.OCIManifestSchema1,
+		Config: v1.Descriptor{
+			MediaType: "application/vnd.cncf.flux.config.v1+json",
+			Size:      233,
+			Digest: v1.Hash{
+				Algorithm: "sha256",
+				Hex:       "612eb1750b5f03932863404e963c1140ae844a8ec4495e65985f0ef6ae0eb3f3",
+			},
+		},
+		Layers: []v1.Descriptor{{
+			MediaType: "application/vnd.cncf.flux.content.v1.tar+gzip",
+			Size:      11484,
+			Digest: v1.Hash{
+				Algorithm: "sha256",
+				Hex:       "5e75932476182eb1047758b89cbae51c5991963e12e87605de872c0b2be33575",
+			},
+		}},
+	}
+	externalDnsIndexManifest = v1.IndexManifest{
+		Manifests: []v1.Descriptor{{
+			MediaType: types.OCIManifestSchema1,
+			Size:      486,
+			Digest: v1.Hash{
+				Algorithm: "sha256",
+				Hex:       "2f5f402eabce2e285911cf099d96da2f11e2e4e63d42b666f85da8323573c004",
+			},
+			ArtifactType: "application/vnd.cncf.helm.config.v1+json",
+		}},
+		MediaType:     types.OCIImageIndex,
+		SchemaVersion: 2,
+	}
+	externalDnsImageManifest = v1.Manifest{
+		SchemaVersion: 2,
+		MediaType:     types.OCIManifestSchema1,
+		Config: v1.Descriptor{
+			MediaType: "application/vnd.cncf.helm.config.v1+json",
+			Size:      890,
+			Digest: v1.Hash{
+				Algorithm: "sha256",
+				Hex:       "98ef98c10c8bc4550eea6c96e14b209d625dc25cf0e97dea3e8224eae424f097",
+			},
+		},
+		Layers: []v1.Descriptor{{
+			MediaType: "application/vnd.cncf.helm.chart.content.v1.tar+gzip",
+			Size:      63278,
+			Digest: v1.Hash{
+				Algorithm: "sha256",
+				Hex:       "655f8cf3e10558e093636eac5e1dbdeb413da8eae24691a32e04bb82058b0b84",
+			},
+			Annotations: map[string]string{
+				"org.opencontainers.image.title": "external-dns-7.5.6.tgz",
+			},
+		}},
+	}
+)
+
+func TestManifestListForOCIArtifact(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		img string
+	}
+
+	tests := []struct {
+		name              string
+		args              args
+		wantIndexManifest v1.IndexManifest
+		wantErr           string
+	}{
+		{
+			name:              "valid oci artifact image",
+			args:              args{img: "mesosphere/git-operator:v0.13.7"},
+			wantIndexManifest: gitOperatorIndexManifest,
+		},
+		{
+			name:              "valid oci artifact image - helm chart",
+			args:              args{img: "bitnamicharts/external-dns:7.5.6"},
+			wantIndexManifest: externalDnsIndexManifest,
+		},
+		{
+			name:    "valid image, invalid type",
+			args:    args{img: "mesosphere/kube-apiserver:v1.24.4_fips.0"},
+			wantErr: "not an OCI artifact",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			mux := http.NewServeMux()
+			mux.Handle("/v2/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			}))
+			mux.Handle(
+				"/v2/mesosphere/git-operator/manifests/v0.13.7",
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", string(types.OCIManifestSchema1))
+					json.NewEncoder(w).Encode(gitOperatorImageManifest)
+				}),
+			)
+			mux.Handle(
+				"/v2/bitnamicharts/external-dns/manifests/7.5.6",
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", string(types.OCIManifestSchema1))
+					json.NewEncoder(w).Encode(externalDnsImageManifest)
+				}),
+			)
+			mux.Handle(
+				"/v2/mesosphere/kube-apiserver/manifests/v1.24.4_fips.0",
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", string(types.DockerManifestSchema2))
+					json.NewEncoder(w).Encode(fipsImageManifest)
+				}),
+			)
+			svr := httptest.NewServer(mux)
+			defer svr.Close()
+
+			got, err := ManifestListForOCIArtifact(
+				fmt.Sprintf("%s/%s", svr.Listener.Addr(), tt.args.img),
+			)
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, got)
+				gotIndexManifest, err := got.IndexManifest()
+				require.NoError(t, err)
+				assert.Equal(t, tt.wantIndexManifest, *gotIndexManifest)
+			}
+		})
+	}
+
+}
