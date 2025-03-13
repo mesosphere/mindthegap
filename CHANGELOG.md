@@ -274,6 +274,24 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.19.0 (2025-03-05)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: Build with Go 1.24.0 by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/840
+* feat: go 1.24.1 by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/857
+### Other Changes
+* build: Upgrade all tools by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/823
+* build: Fix golangci-lint workflow by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/841
+* build: Update devbox.lock file by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/844
+* build: Only update github.com/docker/* with go-containerregistry by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/851
+* build: Remove deperecations from goreleaser config by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/852
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.18.0...v1.19.0
+
 ## 1.18.0 (2024-11-21)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
