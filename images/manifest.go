@@ -62,6 +62,36 @@ func ManifestListForImage(
 	}
 }
 
+func ManifestListForOCIArtifact(
+	img string,
+	opts ...remote.Option,
+) (v1.ImageIndex, error) {
+	ref, err := name.ParseReference(img)
+	if err != nil {
+		return nil, fmt.Errorf("invalid oci artifact reference %q: %w", img, err)
+	}
+	desc, err := remote.Get(ref, opts...)
+	if err != nil {
+		localImage, localErr := daemon.Image(ref)
+		if localErr != nil {
+			return nil, fmt.Errorf(
+				"failed to read oci artifact descriptor for %q from registry: %w",
+				img,
+				err,
+			)
+		}
+
+		return indexForOCIArtifact(ref, localImage)
+	}
+
+	image, err := desc.Image()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read image for %q: %w", img, err)
+	}
+
+	return indexForOCIArtifact(ref, image)
+}
+
 func retainOnlyRequestedPlatformsInIndex(
 	index v1.ImageIndex,
 	platforms ...string,
@@ -181,6 +211,36 @@ func indexForSinglePlatformImage(
 			imagePlatform,
 		)
 	}
+
+	return index, nil
+}
+
+func indexForOCIArtifact(
+	ref name.Reference,
+	image v1.Image,
+) (v1.ImageIndex, error) {
+	imageMediaType, err := image.MediaType()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get image media type for image %q: %w", ref, err)
+	}
+
+	indexMediaType := types.OCIImageIndex
+	if !strings.Contains(string(imageMediaType), types.OCIVendorPrefix) {
+		return nil, fmt.Errorf("image %q is not an OCI artifact, media type %q", ref, imageMediaType)
+	}
+
+	var index v1.ImageIndex = empty.Index
+	index = mutate.AppendManifests(
+		index,
+		mutate.IndexAddendum{
+			Add: image,
+			Descriptor: v1.Descriptor{
+				MediaType: imageMediaType,
+			},
+		},
+	)
+
+	index = mutate.IndexMediaType(index, indexMediaType)
 
 	return index, nil
 }
