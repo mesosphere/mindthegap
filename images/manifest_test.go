@@ -485,7 +485,7 @@ var (
 			},
 		}},
 	}
-	externalDnsIndexManifest = v1.IndexManifest{
+	externalDNSIndexManifest = v1.IndexManifest{
 		Manifests: []v1.Descriptor{{
 			MediaType: types.OCIManifestSchema1,
 			Size:      486,
@@ -498,7 +498,7 @@ var (
 		MediaType:     types.OCIImageIndex,
 		SchemaVersion: 2,
 	}
-	externalDnsImageManifest = v1.Manifest{
+	externalDNSImageManifest = v1.Manifest{
 		SchemaVersion: 2,
 		MediaType:     types.OCIManifestSchema1,
 		Config: v1.Descriptor{
@@ -544,7 +544,7 @@ func TestManifestListForOCIArtifact(t *testing.T) {
 		{
 			name:              "valid oci artifact image - helm chart",
 			args:              args{img: "bitnamicharts/external-dns:7.5.6"},
-			wantIndexManifest: externalDnsIndexManifest,
+			wantIndexManifest: externalDNSIndexManifest,
 		},
 		{
 			name:    "valid image, invalid type",
@@ -572,7 +572,7 @@ func TestManifestListForOCIArtifact(t *testing.T) {
 				"/v2/bitnamicharts/external-dns/manifests/7.5.6",
 				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					w.Header().Set("Content-Type", string(types.OCIManifestSchema1))
-					json.NewEncoder(w).Encode(externalDnsImageManifest)
+					json.NewEncoder(w).Encode(externalDNSImageManifest)
 				}),
 			)
 			mux.Handle(
@@ -599,5 +599,4 @@ func TestManifestListForOCIArtifact(t *testing.T) {
 			}
 		})
 	}
-
 }
