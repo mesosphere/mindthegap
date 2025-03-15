@@ -50,7 +50,7 @@ var _ = Describe("Push Bundle", func() {
 
 			cmd = helpers.NewCommand(
 				GinkgoT(),
-				func(out output.Output) *cobra.Command { return pushbundle.NewCommand(out, "image-bundle") },
+				func(out output.Output) *cobra.Command { return pushbundle.NewCommand(out, "bundle") },
 			)
 		})
 
@@ -113,7 +113,7 @@ var _ = Describe("Push Bundle", func() {
 			}
 
 			args := []string{
-				"--image-bundle", bundleFile,
+				"--bundle", bundleFile,
 				"--to-registry", registryHostWithOptionalScheme,
 			}
 			if registryInsecure {
@@ -214,7 +214,7 @@ var _ = Describe("Push Bundle", func() {
 
 		It("Bundle does not exist", func() {
 			cmd.SetArgs([]string{
-				"--image-bundle", bundleFile,
+				"--bundle", bundleFile,
 				"--to-registry", "127.0.0.1:0/charts",
 				"--to-registry-insecure-skip-tls-verify",
 			})
@@ -264,7 +264,7 @@ var _ = Describe("Push Bundle", func() {
 		}`),
 						0o644,
 					)
-					Expect(err).ToNot(HaveOccurred())
+					Expect(err).NotTo(HaveOccurred())
 				})
 
 				It("Success", func() {
@@ -329,7 +329,7 @@ var _ = Describe("Push Bundle", func() {
 
 			It("Successful push with explicit --on-existing-tag=skip flag even though doesn't exist yet", func() {
 				args := []string{
-					"--image-bundle", bundleFile,
+					"--bundle", bundleFile,
 					"--to-registry", registryAddress,
 					"--to-registry-insecure-skip-tls-verify",
 					"--on-existing-tag=skip",
@@ -340,12 +340,12 @@ var _ = Describe("Push Bundle", func() {
 
 				Expect(cmd.Execute()).To(Succeed())
 
-				Expect(outputBuf.String()).To(ContainSubstring("✓"))
+				Expect(outputBuf.String()).NotTo(ContainSubstring("✗"))
 			})
 
 			It("Successful push without on-existing-tag flag (default to overwrite)", func() {
 				args := []string{
-					"--image-bundle", bundleFile,
+					"--bundle", bundleFile,
 					"--to-registry", registryAddress,
 					"--to-registry-insecure-skip-tls-verify",
 					"--image-push-concurrency=4",
@@ -355,12 +355,12 @@ var _ = Describe("Push Bundle", func() {
 
 				Expect(cmd.Execute()).To(Succeed())
 
-				Expect(outputBuf.String()).To(ContainSubstring("✓"))
+				Expect(outputBuf.String()).NotTo(ContainSubstring("✗"))
 			})
 
 			It("Successful push with explicit --on-existing-tag=overwrite", func() {
 				args := []string{
-					"--image-bundle", bundleFile,
+					"--bundle", bundleFile,
 					"--to-registry", registryAddress,
 					"--to-registry-insecure-skip-tls-verify",
 					"--on-existing-tag=overwrite",
@@ -371,12 +371,12 @@ var _ = Describe("Push Bundle", func() {
 
 				Expect(cmd.Execute()).To(Succeed())
 
-				Expect(outputBuf.String()).To(ContainSubstring("✓"))
+				Expect(outputBuf.String()).NotTo(ContainSubstring("✗"))
 			})
 
 			It("Successful push with explicit --on-existing-tag=skip", func() {
 				args := []string{
-					"--image-bundle", bundleFile,
+					"--bundle", bundleFile,
 					"--to-registry", registryAddress,
 					"--to-registry-insecure-skip-tls-verify",
 					"--on-existing-tag=skip",
@@ -387,12 +387,12 @@ var _ = Describe("Push Bundle", func() {
 
 				Expect(cmd.Execute()).To(Succeed())
 
-				Expect(outputBuf.String()).To(ContainSubstring("✓"))
+				Expect(outputBuf.String()).NotTo(ContainSubstring("✗"))
 			})
 
 			It("Failed push with explicit --on-existing-tag=error", func() {
 				args := []string{
-					"--image-bundle", bundleFile,
+					"--bundle", bundleFile,
 					"--to-registry", registryAddress,
 					"--to-registry-insecure-skip-tls-verify",
 					"--on-existing-tag=error",

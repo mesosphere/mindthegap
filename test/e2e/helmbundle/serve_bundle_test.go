@@ -40,7 +40,7 @@ var _ = Describe("Serve Helm Bundle", func() {
 
 		cmd = helpers.NewCommand(GinkgoT(), func(out output.Output) *cobra.Command {
 			var c *cobra.Command
-			c, stopCh = servebundle.NewCommand(out, "helm-bundle")
+			c, stopCh = servebundle.NewCommand(out, "bundle")
 			return c
 		})
 	})
@@ -55,7 +55,7 @@ var _ = Describe("Serve Helm Bundle", func() {
 		port, err := freeport.GetFreePort()
 		Expect(err).NotTo(HaveOccurred())
 		cmd.SetArgs([]string{
-			"--helm-bundle", bundleFile,
+			"--bundle", bundleFile,
 			"--listen-port", strconv.Itoa(port),
 		})
 
@@ -114,7 +114,7 @@ var _ = Describe("Serve Helm Bundle", func() {
 		port, err := freeport.GetFreePort()
 		Expect(err).NotTo(HaveOccurred())
 		cmd.SetArgs([]string{
-			"--helm-bundle", bundleFile,
+			"--bundle", bundleFile,
 			"--listen-address", ipAddr.String(),
 			"--listen-port", strconv.Itoa(port),
 			"--tls-cert-file", certFile,
@@ -184,7 +184,7 @@ var _ = Describe("Serve Helm Bundle", func() {
 
 	It("Bundle does not exist", func() {
 		cmd.SetArgs([]string{
-			"--helm-bundle", bundleFile,
+			"--bundle", bundleFile,
 		})
 
 		Expect(
