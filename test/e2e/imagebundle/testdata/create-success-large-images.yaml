@@ -1,0 +1,8 @@
+# Copyright 2021 D2iQ, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+ghcr.io:
+  images:
+    mesosphere/kind-node:
+      - v1.31.7
+      - v1.32.3
