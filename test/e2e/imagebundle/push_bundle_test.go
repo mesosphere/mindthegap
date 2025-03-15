@@ -13,6 +13,7 @@ import (
 	"net"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -76,9 +77,9 @@ var _ = Describe("Push Bundle", func() {
 			port, err := freeport.GetFreePort()
 			Expect(err).NotTo(HaveOccurred())
 			reg, err := registry.NewRegistry(registry.Config{
-				StorageDirectory: filepath.Join(tmpDir, "registry"),
-				Host:             registryHost,
-				Port:             uint16(port),
+				Storage: registry.FilesystemStorage(filepath.Join(tmpDir, "registry")),
+				Host:    registryHost,
+				Port:    uint16(port),
 				TLS: registry.TLS{
 					Certificate: registryCertFile,
 					Key:         registryKeyFile,
@@ -283,9 +284,9 @@ var _ = Describe("Push Bundle", func() {
 				port, err := freeport.GetFreePort()
 				Expect(err).NotTo(HaveOccurred())
 				reg, err := registry.NewRegistry(registry.Config{
-					StorageDirectory: filepath.Join(tmpDir, "registry"),
-					Host:             "127.0.0.1",
-					Port:             uint16(port),
+					Storage: registry.FilesystemStorage(filepath.Join(tmpDir, "registry")),
+					Host:    "127.0.0.1",
+					Port:    uint16(port),
 				})
 				Expect(err).NotTo(HaveOccurred())
 				registryAddress = fmt.Sprintf("http://127.0.0.1:%d", port)
@@ -404,6 +405,86 @@ var _ = Describe("Push Bundle", func() {
 				Expect(cmd.Execute()).To(HaveOccurred())
 
 				Expect(outputBuf.String()).To(ContainSubstring("✗"))
+			})
+		})
+
+		Context("Checking memory limit", Ordered, func() {
+			var (
+				registryAddress string
+				outputBuf       *bytes.Buffer
+			)
+
+			BeforeAll(func() {
+				port, err := freeport.GetFreePort()
+				Expect(err).NotTo(HaveOccurred())
+				reg, err := registry.NewRegistry(registry.Config{
+					Storage: registry.FilesystemStorage(filepath.Join(tmpDir, "registry")),
+					Host:    "127.0.0.1",
+					Port:    uint16(port),
+				})
+				Expect(err).NotTo(HaveOccurred())
+				registryAddress = fmt.Sprintf("http://127.0.0.1:%d", port)
+
+				done := make(chan struct{})
+				go func() {
+					defer GinkgoRecover()
+
+					Expect(
+						reg.ListenAndServe(
+							funcr.New(func(prefix, args string) {
+								log.Println(prefix, args)
+							}, funcr.Options{}),
+						),
+					).To(Succeed())
+
+					close(done)
+				}()
+
+				DeferCleanup(func() {
+					Expect(reg.Shutdown(context.Background())).To((Succeed()))
+
+					Eventually(done).Should(BeClosed())
+				})
+
+				helpers.WaitForTCPPort(GinkgoT(), "127.0.0.1", port)
+			})
+
+			BeforeEach(func() {
+				helpers.CreateBundle(
+					GinkgoT(),
+					bundleFile,
+					filepath.Join("testdata", "create-success-large-images.yaml"),
+					"linux/"+runtime.GOARCH,
+				)
+
+				// Check bundle file is large enough for GOMEMLIMIT to actually be effective.
+				bundleFileInfo, err := os.Stat(bundleFile)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(bundleFileInfo.Size()).To(BeNumerically(">", 500*1024*1024))
+
+				DeferCleanup(GinkgoWriter.ClearTeeWriters)
+				outputBuf = bytes.NewBuffer(nil)
+				GinkgoWriter.TeeTo(outputBuf)
+			})
+
+			It("Successful push with GOMEMLIMIT set", func() {
+				bin, found := artifacts.SelectBinary("mindthegap", runtime.GOOS, runtime.GOARCH)
+				Expect(found).To(BeTrue())
+
+				cmd := exec.Command(
+					bin.Path,
+					"push",
+					"bundle",
+					"--bundle", bundleFile,
+					"--to-registry", registryAddress,
+					"--to-registry-insecure-skip-tls-verify",
+				)
+
+				cmd.Env = append(cmd.Env, "GOMEMLIMIT=100MiB")
+
+				output, err := cmd.CombinedOutput()
+				Expect(err).NotTo(HaveOccurred(), string(output))
+				Expect(output).NotTo(ContainSubstring("✗"))
 			})
 		})
 	})
