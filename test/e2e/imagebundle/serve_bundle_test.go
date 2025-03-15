@@ -40,7 +40,7 @@ var _ = Describe("Serve Image Bundle", func() {
 
 		cmd = helpers.NewCommand(GinkgoT(), func(out output.Output) *cobra.Command {
 			var c *cobra.Command
-			c, stopCh = servebundle.NewCommand(out, "image-bundle")
+			c, stopCh = servebundle.NewCommand(out, "bundle")
 			return c
 		})
 	})
@@ -56,7 +56,7 @@ var _ = Describe("Serve Image Bundle", func() {
 		port, err := freeport.GetFreePort()
 		Expect(err).NotTo(HaveOccurred())
 		cmd.SetArgs([]string{
-			"--image-bundle", bundleFile,
+			"--bundle", bundleFile,
 			"--listen-port", strconv.Itoa(port),
 		})
 

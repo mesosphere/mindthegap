@@ -53,7 +53,7 @@ tasks:
         silent: true
       - task: release
         vars:
-          GORELEASER_FLAGS: '--config={{.TEMP_CONFIG}} --release-notes={{.TEMP_RELEASE_NOTES}} --skip=announce,publish,validate'
+          GORELEASER_FLAGS: '--config={{.TEMP_CONFIG}} --release-notes={{.TEMP_RELEASE_NOTES}} --skip=announce,archive,publish,validate'
 
   release-snapshot:
     desc: Builds a snapshot release with goreleaser
