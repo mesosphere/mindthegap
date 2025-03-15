@@ -69,7 +69,7 @@ var _ = Describe("Import Bundle", Label("import"), Serial, func() {
 			c, err := dc.StartContainerWithPlatform(
 				ctx,
 				container.Config{
-					Image:      "ghcr.io/mesosphere/kind-node:v1.28.2",
+					Image:      "ghcr.io/mesosphere/kind-node:v1.32.3",
 					Entrypoint: strslice.StrSlice{"containerd"},
 				},
 				&specs.Platform{OS: opsys, Architecture: arch},
