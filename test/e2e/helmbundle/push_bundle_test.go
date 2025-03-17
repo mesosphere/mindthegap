@@ -38,7 +38,7 @@ var _ = Describe("Push Bundle", func() {
 
 		cmd = helpers.NewCommand(
 			GinkgoT(),
-			func(out output.Output) *cobra.Command { return pushbundle.NewCommand(out, "helm-bundle") },
+			func(out output.Output) *cobra.Command { return pushbundle.NewCommand(out, "bundle") },
 		)
 	})
 
@@ -75,7 +75,7 @@ var _ = Describe("Push Bundle", func() {
 		helpers.WaitForTCPPort(GinkgoT(), "127.0.0.1", port)
 
 		cmd.SetArgs([]string{
-			"--helm-bundle", bundleFile,
+			"--bundle", bundleFile,
 			"--to-registry", fmt.Sprintf("127.0.0.1:%d/charts", port),
 			"--to-registry-insecure-skip-tls-verify",
 		})
@@ -154,7 +154,7 @@ var _ = Describe("Push Bundle", func() {
 		helpers.WaitForTCPPort(GinkgoT(), ipAddr.String(), port)
 
 		cmd.SetArgs([]string{
-			"--helm-bundle", bundleFile,
+			"--bundle", bundleFile,
 			"--to-registry", fmt.Sprintf("%s:%d/charts", ipAddr, port),
 			"--to-registry-insecure-skip-tls-verify",
 		})
@@ -216,7 +216,7 @@ var _ = Describe("Push Bundle", func() {
 		helpers.WaitForTCPPort(GinkgoT(), ipAddr.String(), port)
 
 		cmd.SetArgs([]string{
-			"--helm-bundle", bundleFile,
+			"--bundle", bundleFile,
 			"--to-registry", fmt.Sprintf("%s:%d/charts", ipAddr, port),
 			"--to-registry-ca-cert-file", caCertFile,
 		})
@@ -233,7 +233,7 @@ var _ = Describe("Push Bundle", func() {
 
 	It("Bundle does not exist", func() {
 		cmd.SetArgs([]string{
-			"--helm-bundle", bundleFile,
+			"--bundle", bundleFile,
 			"--to-registry", "127.0.0.1:0/charts",
 			"--to-registry-insecure-skip-tls-verify",
 		})
