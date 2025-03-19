@@ -465,39 +465,6 @@ var (
 		MediaType:     types.OCIImageIndex,
 		SchemaVersion: 2,
 	}
-	gitOperatorImageManifest = v1.Manifest{
-		SchemaVersion: 2,
-		MediaType:     types.OCIManifestSchema1,
-		Config: v1.Descriptor{
-			MediaType: "application/vnd.cncf.flux.config.v1+json",
-			Size:      233,
-			Digest: v1.Hash{
-				Algorithm: "sha256",
-				Hex:       "612eb1750b5f03932863404e963c1140ae844a8ec4495e65985f0ef6ae0eb3f3",
-			},
-		},
-		Layers: []v1.Descriptor{{
-			MediaType: "application/vnd.cncf.flux.content.v1.tar+gzip",
-			Size:      11484,
-			Digest: v1.Hash{
-				Algorithm: "sha256",
-				Hex:       "5e75932476182eb1047758b89cbae51c5991963e12e87605de872c0b2be33575",
-			},
-		}},
-	}
-	externalDNSIndexManifest = v1.IndexManifest{
-		Manifests: []v1.Descriptor{{
-			MediaType: types.OCIManifestSchema1,
-			Size:      486,
-			Digest: v1.Hash{
-				Algorithm: "sha256",
-				Hex:       "2f5f402eabce2e285911cf099d96da2f11e2e4e63d42b666f85da8323573c004",
-			},
-			ArtifactType: "application/vnd.cncf.helm.config.v1+json",
-		}},
-		MediaType:     types.OCIImageIndex,
-		SchemaVersion: 2,
-	}
 	externalDNSImageManifest = v1.Manifest{
 		SchemaVersion: 2,
 		MediaType:     types.OCIManifestSchema1,
@@ -521,6 +488,89 @@ var (
 			},
 		}},
 	}
+	podinfoFluxKustomizationManifest = v1.Manifest{
+		SchemaVersion: 2,
+		MediaType:     types.OCIManifestSchema1,
+		Config: v1.Descriptor{
+			MediaType: "application/vnd.cncf.flux.config.v1+json",
+			Size:      233,
+			Digest: v1.Hash{
+				Algorithm: "sha256",
+				Hex:       "0646cbad91cb1473e2abb80dddb5c41497f187ab095cab9f59fec863d428cab9",
+			},
+		},
+		Layers: []v1.Descriptor{
+			{
+				MediaType: "application/vnd.cncf.flux.content.v1.tar+gzip",
+				Size:      1113,
+				Digest: v1.Hash{
+					Algorithm: "sha256",
+					Hex:       "f0a5371a156fe7c66d4312dee4f357e3c6783284fab239f723962de6c8df78d0",
+				},
+			},
+		},
+		Annotations: map[string]string{
+			"org.opencontainers.image.created":  "2025-03-11T09:31:44Z",
+			"org.opencontainers.image.revision": "6.8.0/b3396adb98a6a0f5eeedd1a600beaf5e954a1f28",
+			"org.opencontainers.image.source":   "https://github.com/stefanprodan/podinfo",
+		},
+	}
+	generalOCIArtifactManifest = v1.Manifest{
+		SchemaVersion: 2,
+		MediaType:     "application/vnd.oci.image.manifest.v1+json",
+		Config: v1.Descriptor{
+			MediaType: "application/vnd.oci.empty.v1+json",
+			Digest: v1.Hash{
+				Algorithm: "sha256",
+				Hex:       "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+			},
+			Size: 2,
+			Data: []byte("e30="),
+		},
+		Layers: []v1.Descriptor{
+			{
+				MediaType: "application/vnd.oci.image.layer.v1.tar+gzip",
+				Digest: v1.Hash{
+					Algorithm: "sha256",
+					Hex:       "07517841e1ceca8c6e06dc6270df17f9c5a131faa36b592fa8b7aa4755b330f1",
+				},
+				Size: 497097,
+				Annotations: map[string]string{
+					"io.deis.oras.content.digest":    "sha256:37a4d24994f788618183ddf9882fd32cdbd89b1844fb0b9234c12804843148c7",
+					"io.deis.oras.content.unpack":    "true",
+					"org.opencontainers.image.title": ".",
+				},
+			},
+		},
+		Annotations: map[string]string{
+			"org.opencontainers.image.created": "2025-03-04T08:45:12Z",
+		},
+	}
+	alpineImageManifest = v1.Manifest{
+		SchemaVersion: 2,
+		MediaType:     "application/vnd.oci.image.manifest.v1+json",
+		Config: v1.Descriptor{
+			MediaType: "application/vnd.oci.image.config.v1+json",
+			Digest:    v1.Hash{Algorithm: "sha256", Hex: "aded1e1a5b3705116fa0a92ba074a5e0b0031647d9c315983ccba2ee5428ec8b"},
+			Size:      581,
+		},
+		Layers: []v1.Descriptor{
+			{
+				MediaType: "application/vnd.oci.image.layer.v1.tar+gzip",
+				Digest:    v1.Hash{Algorithm: "sha256", Hex: "f18232174bc91741fdf3da96d85011092101a032a93a388b79e99e69c2d5c870"},
+				Size:      3642247,
+			},
+		},
+		Annotations: map[string]string{
+			"com.docker.official-images.bashbrew.arch": "amd64",
+			"org.opencontainers.image.base.name":       "scratch",
+			"org.opencontainers.image.created":         "2025-02-14T03:28:36Z",
+			"org.opencontainers.image.revision":        "17fe3d1e2d2cbf54d745139eab749c252e35b883",
+			"org.opencontainers.image.source":          "https://github.com/alpinelinux/docker-alpine.git#17fe3d1e2d2cbf54d745139eab749c252e35b883:x86_64",
+			"org.opencontainers.image.url":             "https://hub.docker.com/_/alpine",
+			"org.opencontainers.image.version":         "3.21.3",
+		},
+	}
 )
 
 func TestManifestListForOCIArtifact(t *testing.T) {
@@ -531,25 +581,40 @@ func TestManifestListForOCIArtifact(t *testing.T) {
 	}
 
 	tests := []struct {
-		name              string
-		args              args
-		wantIndexManifest v1.IndexManifest
-		wantErr           string
+		name         string
+		args         args
+		wantManifest v1.Manifest
+		wantErr      string
 	}{
 		{
-			name:              "valid oci artifact image",
-			args:              args{img: "mesosphere/git-operator:v0.13.7"},
-			wantIndexManifest: gitOperatorIndexManifest,
+			name:    "valid oci image - not oci artifact",
+			args:    args{img: "mesosphere/git-operator:v0.13.7"},
+			wantErr: "unexpected media type in descriptor for OCI artifact",
 		},
 		{
-			name:              "valid oci artifact image - helm chart",
-			args:              args{img: "bitnamicharts/external-dns:7.5.6"},
-			wantIndexManifest: externalDNSIndexManifest,
-		},
-		{
-			name:    "valid image, invalid type",
+			name:    "valid oci image, invalid oci artifact",
 			args:    args{img: "mesosphere/kube-apiserver:v1.24.4_fips.0"},
-			wantErr: "not an OCI artifact",
+			wantErr: "unexpected media type in descriptor for OCI artifact",
+		},
+		{
+			name:    "valid oci image with image config",
+			args:    args{img: "library/alpine:v1-amd64"},
+			wantErr: "unsupported OCI artifact",
+		},
+		{
+			name:         "valid oci artifact - helm chart",
+			args:         args{img: "bitnamicharts/external-dns:7.5.6"},
+			wantManifest: externalDNSImageManifest,
+		},
+		{
+			name:         "valid oci artifact - flux kustomization",
+			args:         args{img: "stefanprodan/manifests/podinfo:6.8.0"},
+			wantManifest: podinfoFluxKustomizationManifest,
+		},
+		{
+			name:         "valid oci artifact - general oci artifact",
+			args:         args{img: "general/oci:1.0.0"},
+			wantManifest: generalOCIArtifactManifest,
 		},
 	}
 
@@ -564,8 +629,8 @@ func TestManifestListForOCIArtifact(t *testing.T) {
 			mux.Handle(
 				"/v2/mesosphere/git-operator/manifests/v0.13.7",
 				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.Header().Set("Content-Type", string(types.OCIManifestSchema1))
-					json.NewEncoder(w).Encode(gitOperatorImageManifest)
+					w.Header().Set("Content-Type", string(types.OCIImageIndex))
+					json.NewEncoder(w).Encode(gitOperatorIndexManifest)
 				}),
 			)
 			mux.Handle(
@@ -576,16 +641,36 @@ func TestManifestListForOCIArtifact(t *testing.T) {
 				}),
 			)
 			mux.Handle(
+				"/v2/stefanprodan/manifests/podinfo/manifests/6.8.0",
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", string(types.OCIManifestSchema1))
+					json.NewEncoder(w).Encode(podinfoFluxKustomizationManifest)
+				}),
+			)
+			mux.Handle(
+				"/v2/general/oci/manifests/1.0.0",
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", string(types.OCIManifestSchema1))
+					json.NewEncoder(w).Encode(generalOCIArtifactManifest)
+				}),
+			)
+			mux.Handle(
 				"/v2/mesosphere/kube-apiserver/manifests/v1.24.4_fips.0",
 				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					w.Header().Set("Content-Type", string(types.DockerManifestSchema2))
 					json.NewEncoder(w).Encode(fipsImageManifest)
 				}),
 			)
+			mux.Handle(
+				"/v2/library/alpine/manifests/v1-amd64",
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", string(types.OCIManifestSchema1))
+					json.NewEncoder(w).Encode(alpineImageManifest)
+				}),
+			)
 			svr := httptest.NewServer(mux)
 			defer svr.Close()
-
-			got, err := ManifestListForOCIArtifact(
+			got, err := OCIArtifactImage(
 				fmt.Sprintf("%s/%s", svr.Listener.Addr(), tt.args.img),
 			)
 			if tt.wantErr != "" {
@@ -593,10 +678,18 @@ func TestManifestListForOCIArtifact(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				require.NotNil(t, got)
-				gotIndexManifest, err := got.IndexManifest()
+				gotManifest, err := got.Manifest()
 				require.NoError(t, err)
-				assert.Equal(t, tt.wantIndexManifest, *gotIndexManifest)
+				assert.Equal(t, tt.wantManifest, *gotManifest)
 			}
 		})
 	}
+}
+
+func TestFoo(t *testing.T) {
+	img, err := OCIArtifactImage("ghcr.io/mesosphere/kommander-applications:v2.14.0")
+	assert.NoError(t, err)
+	manifest, err := img.Manifest()
+	assert.NoError(t, err)
+	assert.Empty(t, manifest.Config)
 }

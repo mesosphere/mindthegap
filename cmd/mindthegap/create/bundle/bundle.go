@@ -16,7 +16,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/logs"
 	"github.com/google/go-containerregistry/pkg/name"
-	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
@@ -324,18 +323,21 @@ func pullImages(
 						imageTag,
 					)
 
-					var imageIndex v1.ImageIndex
+					var image remote.Taggable
 					if isOCIArtifact {
-						imageIndex, err = images.ManifestListForOCIArtifact(
+						image, err = images.OCIArtifactImage(
 							srcImageName,
 							sourceRemoteOpts...,
 						)
 					} else {
-						imageIndex, err = images.ManifestListForImage(
+						image, err = images.ManifestListForImage(
 							srcImageName,
 							platformsStrings,
 							sourceRemoteOpts...,
 						)
+					}
+					if err != nil {
+						return fmt.Errorf("failed to get image %q: %w", srcImageName, err)
 					}
 
 					destImageName := fmt.Sprintf(
@@ -349,7 +351,7 @@ func pullImages(
 						return err
 					}
 
-					if err := remote.WriteIndex(ref, imageIndex, destRemoteOpts...); err != nil {
+					if err := remote.Push(ref, image, destRemoteOpts...); err != nil {
 						return err
 					}
 
