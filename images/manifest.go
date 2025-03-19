@@ -101,7 +101,11 @@ func OCIArtifactImage(
 	// OCI image config media type for the manifest config.
 	// https://github.com/opencontainers/image-spec/blob/c05acf7eb327dae4704a4efe01253a0e60af6b34/artifacts-guidance.md
 	if manifest.Config.MediaType.IsConfig() {
-		return nil, fmt.Errorf("unsupported OCI artifact %q which has config with media type %q", img, manifest.Config.MediaType)
+		return nil, fmt.Errorf(
+			"unsupported OCI artifact %q which has config with media type %q",
+			img,
+			manifest.Config.MediaType,
+		)
 	}
 
 	return image, nil

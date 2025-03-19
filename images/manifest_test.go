@@ -566,9 +566,10 @@ var (
 			"org.opencontainers.image.base.name":       "scratch",
 			"org.opencontainers.image.created":         "2025-02-14T03:28:36Z",
 			"org.opencontainers.image.revision":        "17fe3d1e2d2cbf54d745139eab749c252e35b883",
-			"org.opencontainers.image.source":          "https://github.com/alpinelinux/docker-alpine.git#17fe3d1e2d2cbf54d745139eab749c252e35b883:x86_64",
-			"org.opencontainers.image.url":             "https://hub.docker.com/_/alpine",
-			"org.opencontainers.image.version":         "3.21.3",
+			"org.opencontainers.image.source": "https://github.com/alpinelinux/docker-alpine.git" +
+				"#17fe3d1e2d2cbf54d745139eab749c252e35b883:x86_64",
+			"org.opencontainers.image.url":     "https://hub.docker.com/_/alpine",
+			"org.opencontainers.image.version": "3.21.3",
 		},
 	}
 )

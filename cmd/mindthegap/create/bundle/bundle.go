@@ -218,7 +218,8 @@ func NewCommand(out output.Output) *cobra.Command {
 	cmd.Flags().StringVar(&helmChartsConfigFile, "helm-charts-file", "",
 		"YAML file containing configuration of Helm charts to create bundle from")
 	cmd.Flags().StringVar(&ociArtifactsConfigFile, "oci-artifacts-file", "",
-		"File containing list of oci artifacts to create bundle from, either as YAML configuration or a simple list of images")
+		"File containing list of oci artifacts to create bundle from, "+
+			"either as YAML configuration or a simple list of images")
 	cmd.MarkFlagsOneRequired("images-file", "helm-charts-file", "oci-artifacts-file")
 	cmd.Flags().
 		Var(&platforms, "platform", "platforms to download images for (required format: <os>/<arch>[/<variant>])")
