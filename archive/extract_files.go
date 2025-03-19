@@ -4,30 +4,58 @@
 package archive
 
 import (
+	"context"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 
-	"github.com/mholt/archiver/v3"
+	"github.com/mholt/archives"
 )
 
 func ExtractFileToDirectory(archive, destDir, fileName string) error {
-	archiverByExtension, err := archiver.ByExtension(archive)
+	archiveFile, err := os.Open(archive)
+	if err != nil {
+		return fmt.Errorf("failed to open archive %s: %w", archive, err)
+	}
+	defer archiveFile.Close()
+
+	archiver, archiveStream, err := archives.Identify(context.Background(), fileName, archiveFile)
 	if err != nil {
 		return fmt.Errorf("failed to identify archive format: %w", err)
 	}
 
-	unarc, ok := archiverByExtension.(archiver.Extractor)
+	unarc, ok := archiver.(archives.Extractor)
 	if !ok {
 		return fmt.Errorf("not an valid archive extension")
 	}
 
-	switch t := unarc.(type) {
-	case *archiver.TarGz:
-		t.OverwriteExisting = true
-	case *archiver.Tar:
-		t.OverwriteExisting = true
-	}
+	err = unarc.Extract(context.Background(), archiveStream, func(ctx context.Context, f archives.FileInfo) error {
+		if f.NameInArchive != fileName {
+			return nil
+		}
 
-	if err := unarc.Extract(archive, fileName, destDir); err != nil {
+		fi, err := f.Open()
+		if err != nil {
+			return fmt.Errorf("failed to open file %s: %w", f.NameInArchive, err)
+		}
+		defer fi.Close()
+
+		destFilePath := filepath.Join(destDir, fileName)
+		destFile, err := os.Create(destFilePath)
+		if err != nil {
+			return fmt.Errorf("failed to create file %s: %w", destFilePath, err)
+		}
+		defer destFile.Close()
+
+		_, err = io.Copy(destFile, fi)
+		if err != nil {
+			return fmt.Errorf("failed to copy %s: %w", fileName, err)
+		}
+
+		return nil
+	})
+	if err != nil {
 		return fmt.Errorf("failed to extract %s: %w", fileName, err)
 	}
 

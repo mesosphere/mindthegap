@@ -92,9 +92,6 @@ linters-settings:
       - style
   gofumpt:
     extra-rules: true
-  gomoddirectives:
-    replace-allow-list:
-      - github.com/mholt/archiver/v3
   lll:
     line-length: 120
 
