@@ -6,12 +6,15 @@
 package imagebundle_test
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"path/filepath"
 	"strconv"
 
+	"github.com/go-logr/logr/funcr"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	. "github.com/onsi/ginkgo/v2"
@@ -22,7 +25,9 @@ import (
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
 	createbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/create/bundle"
+	pushbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/push/bundle"
 	servebundle "github.com/mesosphere/mindthegap/cmd/mindthegap/serve/bundle"
+	"github.com/mesosphere/mindthegap/docker/registry"
 	"github.com/mesosphere/mindthegap/images/httputils"
 	"github.com/mesosphere/mindthegap/test/e2e/imagebundle/helpers"
 )
@@ -157,5 +162,61 @@ var _ = Describe("Serve Image Bundle with OCI artifacts", func() {
 			"--oci-artifacts-file", imagesTxt,
 		})
 		Expect(createBundleCmd.Execute()).To(MatchError(ContainSubstring("unexpected media type in descriptor for OCI artifact")))
+	})
+
+	It("pushes OCI artifacts to the registry", func() {
+		helpers.CreateBundleOCI(
+			GinkgoT(),
+			bundleFile,
+			filepath.Join("testdata", "create-success-oci.yaml"),
+		)
+
+		port, err := freeport.GetFreePort()
+		Expect(err).NotTo(HaveOccurred())
+		reg, err := registry.NewRegistry(registry.Config{
+			Storage: registry.FilesystemStorage(filepath.Join(GinkgoT().TempDir(), "registry")),
+			Host:    "127.0.0.1",
+			Port:    uint16(port),
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		done := make(chan struct{})
+		go func() {
+			defer GinkgoRecover()
+
+			Expect(
+				reg.ListenAndServe(
+					funcr.New(func(prefix, args string) {
+						log.Println(prefix, args)
+					}, funcr.Options{}),
+				),
+			).To(Succeed())
+
+			close(done)
+		}()
+
+		helpers.WaitForTCPPort(GinkgoT(), "127.0.0.1", port)
+
+		cmd := helpers.NewCommand(
+			GinkgoT(),
+			func(out output.Output) *cobra.Command { return pushbundle.NewCommand(out, "bundle") },
+		)
+		args := []string{
+			"--bundle", bundleFile,
+			"--to-registry", fmt.Sprintf("127.0.0.1:%d", port),
+		}
+		cmd.SetArgs(args)
+		Expect(cmd.Execute()).To(Succeed())
+
+		for _, imageRef := range expectedOCIArtifacts {
+			mindthegapRef := fmt.Sprintf("127.0.0.1:%d/%s", port, imageRef)
+			ref, err := name.ParseReference(mindthegapRef)
+			Expect(err).NotTo(HaveOccurred())
+			_, err = remote.Image(ref)
+			Expect(err).NotTo(HaveOccurred())
+		}
+
+		Expect(reg.Shutdown(context.Background())).To((Succeed()))
+		Eventually(done).Should(BeClosed())
 	})
 })
