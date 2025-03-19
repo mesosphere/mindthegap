@@ -50,15 +50,34 @@ log:
     disabled: true
   level: error
 `
+
+	configWithArchive = `
+version: 0.1
+storage:
+  archive:
+    archives: ["/tmp/1.tar","/some/other/path/2.tar"]
+  maintenance:
+    uploadpurging:
+      enabled: false
+    readonly:
+      enabled: true
+http:
+  net: tcp
+  addr: 0.0.0.0:5000
+log:
+  accesslog:
+    disabled: true
+  level: error
+`
 )
 
 func Test_registryConfiguration_withoutTLS(t *testing.T) {
 	t.Parallel()
 	c := Config{
-		StorageDirectory: "/tmp",
-		Host:             "0.0.0.0",
-		Port:             5000,
-		ReadOnly:         true,
+		Storage:  FilesystemStorage("/tmp"),
+		Host:     "0.0.0.0",
+		Port:     5000,
+		ReadOnly: true,
 	}
 
 	config, err := registryConfiguration(c)
@@ -69,10 +88,10 @@ func Test_registryConfiguration_withoutTLS(t *testing.T) {
 func Test_registryConfiguration_withTLS(t *testing.T) {
 	t.Parallel()
 	c := Config{
-		StorageDirectory: "/tmp",
-		Host:             "0.0.0.0",
-		Port:             5000,
-		ReadOnly:         true,
+		Storage:  FilesystemStorage("/tmp"),
+		Host:     "0.0.0.0",
+		Port:     5000,
+		ReadOnly: true,
 		TLS: TLS{
 			Certificate: "/tmp/tls.cert",
 			Key:         "/tmp/tls.key",
@@ -82,4 +101,18 @@ func Test_registryConfiguration_withTLS(t *testing.T) {
 	config, err := registryConfiguration(c)
 	require.NoError(t, err)
 	require.Equal(t, configWithTLS, config)
+}
+
+func Test_registryConfiguration_archvve(t *testing.T) {
+	t.Parallel()
+	c := Config{
+		Storage:  ArchiveStorage("", "/tmp/1.tar", "/some/other/path/2.tar"),
+		Host:     "0.0.0.0",
+		Port:     5000,
+		ReadOnly: true,
+	}
+
+	config, err := registryConfiguration(c)
+	require.NoError(t, err)
+	require.Equal(t, configWithArchive, config)
 }

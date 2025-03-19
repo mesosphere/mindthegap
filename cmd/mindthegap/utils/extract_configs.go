@@ -15,7 +15,7 @@ import (
 	"github.com/mesosphere/mindthegap/config"
 )
 
-func ExtractBundles(
+func ExtractConfigs(
 	dest string,
 	out output.Output,
 	imageBundleFiles ...string,
@@ -41,12 +41,20 @@ func ExtractBundles(
 		}
 		extractedBundles[imageBundleFile] = struct{}{}
 
-		out.StartOperation(fmt.Sprintf("Unarchiving image bundle %q", imageBundleFile))
-		err := archive.UnarchiveToDirectory(imageBundleFile, dest)
+		out.StartOperation(fmt.Sprintf("Extracting bundle configs from %q", imageBundleFile))
+		err := archive.ExtractFileToDirectory(imageBundleFile, dest, "images.yaml")
 		if err != nil {
 			out.EndOperationWithStatus(output.Failure())
 			return nil, nil, fmt.Errorf(
-				"failed to unarchive image bundle: %w",
+				"failed to extract images config from bundle: %w",
+				err,
+			)
+		}
+		err = archive.ExtractFileToDirectory(imageBundleFile, dest, "charts.yaml")
+		if err != nil && !os.IsNotExist(err) {
+			out.EndOperationWithStatus(output.Failure())
+			return nil, nil, fmt.Errorf(
+				"failed to extract images config from bundle: %w",
 				err,
 			)
 		}

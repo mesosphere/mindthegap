@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -17,7 +16,6 @@ import (
 	"github.com/mesosphere/mindthegap/cleanup"
 	"github.com/mesosphere/mindthegap/cmd/mindthegap/flags"
 	"github.com/mesosphere/mindthegap/cmd/mindthegap/utils"
-	"github.com/mesosphere/mindthegap/config"
 	"github.com/mesosphere/mindthegap/docker/registry"
 )
 
@@ -54,49 +52,20 @@ func NewCommand(
 			cleaner := cleanup.NewCleaner()
 			defer cleaner.Cleanup()
 			out.StartOperation("Creating temporary directory")
-			tempDir, err := os.MkdirTemp("", ".bundle-*")
-			if err != nil {
-				out.EndOperationWithStatus(output.Failure())
-				return fmt.Errorf("failed to create temporary directory: %w", err)
-			}
-			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempDir) })
 
 			out.EndOperationWithStatus(output.Success())
 
-			bundleFiles, err = utils.FilesWithGlobs(bundleFiles)
+			bundleFiles, err := utils.FilesWithGlobs(bundleFiles)
 			if err != nil {
 				return err
-			}
-			imagesCfg, chartsCfg, err := utils.ExtractBundles(tempDir, out, bundleFiles...)
-			if err != nil {
-				return err
-			}
-
-			if repositoriesPrefix != "" {
-				if err := addRepositoryPrefixToImages(tempDir, repositoriesPrefix); err != nil {
-					return err
-				}
-			}
-
-			// Write out the merged image bundle config to the target directory for completeness.
-			if imagesCfg != nil {
-				if err := config.WriteSanitizedImagesConfig(*imagesCfg, filepath.Join(tempDir, "images.yaml")); err != nil {
-					return err
-				}
-			}
-			// Write out the merged chart bundle config to the target directory for completeness.
-			if chartsCfg != nil {
-				if err := config.WriteSanitizedHelmChartsConfig(*chartsCfg, filepath.Join(tempDir, "charts.yaml")); err != nil {
-					return err
-				}
 			}
 
 			out.StartOperation("Creating Docker registry")
 			reg, err := registry.NewRegistry(registry.Config{
-				StorageDirectory: tempDir,
-				ReadOnly:         true,
-				Host:             listenAddress,
-				Port:             listenPort,
+				Storage:  registry.ArchiveStorage(repositoriesPrefix, bundleFiles...),
+				ReadOnly: true,
+				Host:     listenAddress,
+				Port:     listenPort,
 				TLS: registry.TLS{
 					Certificate: tlsCertificate,
 					Key:         tlsKey,
@@ -134,42 +103,4 @@ func NewCommand(
 		"Prefix to prepend to all repositories in the bundle when serving")
 
 	return cmd, stopCh
-}
-
-func addRepositoryPrefixToImages(tempDir, newPrefix string) error {
-	originalDirRepositoriesPrefix := filepath.Join(
-		tempDir,
-		"docker",
-		"registry",
-		"v2",
-		"repositories",
-	)
-	existingRepositories, err := os.ReadDir(originalDirRepositoriesPrefix)
-	if err != nil {
-		return fmt.Errorf("failed to read existing repositories: %w", err)
-	}
-
-	newRepositoriesDir := filepath.Join(originalDirRepositoriesPrefix, newPrefix)
-	err = os.MkdirAll(newRepositoriesDir, 0o755)
-	if err != nil {
-		return fmt.Errorf("failed to create repositories prefix directory: %w", err)
-	}
-
-	for _, existingRepository := range existingRepositories {
-		if existingRepository.IsDir() &&
-			filepath.Join(
-				originalDirRepositoriesPrefix,
-				existingRepository.Name(),
-			) != newRepositoriesDir {
-			err = os.Rename(
-				filepath.Join(originalDirRepositoriesPrefix, existingRepository.Name()),
-				filepath.Join(newRepositoriesDir, existingRepository.Name()),
-			)
-			if err != nil {
-				return fmt.Errorf("failed to move existing repository: %w", err)
-			}
-		}
-	}
-
-	return nil
 }

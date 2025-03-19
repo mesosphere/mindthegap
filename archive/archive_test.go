@@ -8,7 +8,9 @@ import (
 	"bytes"
 	"compress/gzip"
 	"errors"
+	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -140,4 +142,27 @@ func TestArchiveDirectoryUnreadableSource(t *testing.T) {
 		archive.ArchiveDirectory(unreadable, outputFile),
 		"expected error archiving directory",
 	)
+}
+
+func walkDirContentsToMap(dir string) (map[string]string, error) {
+	testDataContents := map[string]string{}
+	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, _ error) error {
+		if d.IsDir() {
+			return nil
+		}
+		contents, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("error reading test data file %q: %w", path, err)
+		}
+		rel, err := filepath.Rel(dir, path)
+		if err != nil {
+			return fmt.Errorf("error getting relative path for test data %q: %w", path, err)
+		}
+		testDataContents[rel] = string(contents)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return testDataContents, nil
 }
