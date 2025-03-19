@@ -685,11 +685,3 @@ func TestManifestListForOCIArtifact(t *testing.T) {
 		})
 	}
 }
-
-func TestFoo(t *testing.T) {
-	img, err := OCIArtifactImage("ghcr.io/mesosphere/kommander-applications:v2.14.0")
-	assert.NoError(t, err)
-	manifest, err := img.Manifest()
-	assert.NoError(t, err)
-	assert.Empty(t, manifest.Config)
-}
