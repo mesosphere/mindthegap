@@ -1,0 +1,14 @@
+# Copyright 2021 D2iQ, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+ghcr.io:
+  images:
+    # flux kustomization
+    stefanprodan/manifests/podinfo:
+      - 6.8.0
+    # helm chart
+    stefanprodan/charts/podinfo:
+      - 6.8.0
+    # generic artifact created with oras cli
+    mesosphere/kommander-applications:
+      - v2.14.0

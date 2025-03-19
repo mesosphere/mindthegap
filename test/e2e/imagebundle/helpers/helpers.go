@@ -51,6 +51,15 @@ func CreateBundle(t ginkgo.GinkgoTInterface, bundleFile, cfgFile string, platfor
 	gomega.ExpectWithOffset(1, createBundleCmd.Execute()).To(gomega.Succeed())
 }
 
+func CreateBundleOCI(t ginkgo.GinkgoTInterface, bundleFile, cfgFile string) {
+	createBundleCmd := NewCommand(t, createbundle.NewCommand)
+	createBundleCmd.SetArgs([]string{
+		"--output-file", bundleFile,
+		"--oci-artifacts-file", cfgFile,
+	})
+	gomega.ExpectWithOffset(1, createBundleCmd.Execute()).To(gomega.Succeed())
+}
+
 func NewCommand(
 	t ginkgo.GinkgoTInterface,
 	newFn func(out output.Output) *cobra.Command,

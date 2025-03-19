@@ -1,0 +1,161 @@
+// Copyright 2021 D2iQ, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+//go:build e2e
+
+package imagebundle_test
+
+import (
+	"fmt"
+	"net"
+	"os"
+	"path/filepath"
+	"strconv"
+
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	"github.com/phayes/freeport"
+	"github.com/spf13/cobra"
+
+	"github.com/mesosphere/dkp-cli-runtime/core/output"
+
+	createbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/create/bundle"
+	servebundle "github.com/mesosphere/mindthegap/cmd/mindthegap/serve/bundle"
+	"github.com/mesosphere/mindthegap/images/httputils"
+	"github.com/mesosphere/mindthegap/test/e2e/imagebundle/helpers"
+)
+
+var _ = Describe("Serve Image Bundle with OCI artifacts", func() {
+	var (
+		bundleFile           string
+		cmd                  *cobra.Command
+		stopCh               chan struct{}
+		expectedOCIArtifacts = []string{
+			"stefanprodan/manifests/podinfo:6.8.0",
+			"stefanprodan/charts/podinfo:6.8.0",
+			"mesosphere/kommander-applications:v2.14.0",
+		}
+	)
+
+	BeforeEach(func() {
+		tmpDir := GinkgoT().TempDir()
+
+		bundleFile = filepath.Join(tmpDir, "image-bundle.tar")
+
+		cmd = helpers.NewCommand(GinkgoT(), func(out output.Output) *cobra.Command {
+			var c *cobra.Command
+			c, stopCh = servebundle.NewCommand(out, "bundle")
+			return c
+		})
+	})
+
+	It("supports various oci artifacts media types", func() {
+		helpers.CreateBundleOCI(
+			GinkgoT(),
+			bundleFile,
+			filepath.Join("testdata", "create-success-oci.yaml"),
+		)
+
+		port, err := freeport.GetFreePort()
+		Expect(err).NotTo(HaveOccurred())
+		cmd.SetArgs([]string{
+			"--bundle", bundleFile,
+			"--listen-port", strconv.Itoa(port),
+		})
+
+		done := make(chan struct{})
+		go func() {
+			defer GinkgoRecover()
+
+			Expect(cmd.Execute()).To(Succeed())
+
+			close(done)
+		}()
+
+		helpers.WaitForTCPPort(GinkgoT(), "127.0.0.1", port)
+
+		for _, imageRef := range expectedOCIArtifacts {
+			mindthegapRef := fmt.Sprintf("127.0.0.1:%d/%s", port, imageRef)
+			ref, err := name.ParseReference(mindthegapRef)
+			Expect(err).NotTo(HaveOccurred())
+			_, err = remote.Image(ref)
+			Expect(err).NotTo(HaveOccurred())
+		}
+
+		close(stopCh)
+
+		Eventually(done).Should(BeClosed())
+	})
+
+	It("With repositories prefix", func() {
+		ipAddr := helpers.GetFirstNonLoopbackIP(GinkgoT())
+
+		tempCertDir := GinkgoT().TempDir()
+		caCertFile, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(
+			GinkgoT(),
+			tempCertDir,
+			ipAddr,
+		)
+
+		helpers.CreateBundleOCI(
+			GinkgoT(),
+			bundleFile,
+			filepath.Join("testdata", "create-success-oci.yaml"),
+		)
+
+		port, err := freeport.GetFreePort()
+		Expect(err).NotTo(HaveOccurred())
+		cmd.SetArgs([]string{
+			"--bundle", bundleFile,
+			"--listen-address", ipAddr.String(),
+			"--listen-port", strconv.Itoa(port),
+			"--tls-cert-file", certFile,
+			"--tls-private-key-file", keyFile,
+			"--repositories-prefix", "/some/test/prefix",
+		})
+
+		done := make(chan struct{})
+		go func() {
+			defer GinkgoRecover()
+
+			Expect(cmd.Execute()).To(Succeed())
+
+			close(done)
+		}()
+
+		helpers.WaitForTCPPort(GinkgoT(), ipAddr.String(), port)
+
+		testRoundTripper, err := httputils.TLSConfiguredRoundTripper(
+			remote.DefaultTransport,
+			net.JoinHostPort(ipAddr.String(), strconv.Itoa(port)),
+			false,
+			caCertFile,
+		)
+		Expect(err).NotTo(HaveOccurred())
+
+		for _, imageRef := range expectedOCIArtifacts {
+			mindthegapRef := fmt.Sprintf("%s:%d%s/%s", ipAddr, port, "/some/test/prefix", imageRef)
+			ref, err := name.ParseReference(mindthegapRef)
+			Expect(err).NotTo(HaveOccurred())
+			_, err = remote.Image(ref, remote.WithTransport(testRoundTripper))
+			Expect(err).NotTo(HaveOccurred())
+		}
+
+		close(stopCh)
+
+		Eventually(done).Should(BeClosed())
+	})
+
+	It("failes to create bundle with OCI image in OCI artifacts list", func() {
+		imagesTxt := filepath.Join(GinkgoT().TempDir(), "oic-images.txt")
+		Expect(os.WriteFile(imagesTxt, []byte("stefanprodan/podinfo:6.8.0"), 0644)).To(Succeed())
+		createBundleCmd := helpers.NewCommand(GinkgoT(), createbundle.NewCommand)
+		createBundleCmd.SetArgs([]string{
+			"--output-file", bundleFile,
+			"--oci-artifacts-file", imagesTxt,
+		})
+		Expect(createBundleCmd.Execute()).To(MatchError(ContainSubstring("unexpected media type in descriptor for OCI artifact")))
+	})
+})
