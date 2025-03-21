@@ -12,10 +12,12 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 
 	"github.com/go-logr/logr/funcr"
 	"github.com/google/go-containerregistry/pkg/name"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -32,7 +34,7 @@ import (
 	"github.com/mesosphere/mindthegap/test/e2e/imagebundle/helpers"
 )
 
-var _ = Describe("Serve Image Bundle with OCI artifacts", func() {
+var _ = Describe("OCI artifacts support", func() {
 	var (
 		bundleFile           string
 		cmd                  *cobra.Command
@@ -94,7 +96,7 @@ var _ = Describe("Serve Image Bundle with OCI artifacts", func() {
 		Eventually(done).Should(BeClosed())
 	})
 
-	It("With repositories prefix", func() {
+	It("bundles OCI artifacts with repositories prefix", func() {
 		ipAddr := helpers.GetFirstNonLoopbackIP(GinkgoT())
 
 		tempCertDir := GinkgoT().TempDir()
@@ -164,7 +166,7 @@ var _ = Describe("Serve Image Bundle with OCI artifacts", func() {
 		Expect(createBundleCmd.Execute()).To(MatchError(ContainSubstring("unexpected media type in descriptor for OCI artifact")))
 	})
 
-	It("pushes OCI artifacts to the registry", func() {
+	It("pushes OCI artifacts from OCI artfacts only bundle to the registry", func() {
 		helpers.CreateBundleOCI(
 			GinkgoT(),
 			bundleFile,
@@ -215,6 +217,78 @@ var _ = Describe("Serve Image Bundle with OCI artifacts", func() {
 			_, err = remote.Image(ref)
 			Expect(err).NotTo(HaveOccurred())
 		}
+
+		Expect(reg.Shutdown(context.Background())).To((Succeed()))
+		Eventually(done).Should(BeClosed())
+	})
+
+	It("pushes images from mixes bundle with OCI images and OCI artfacts to the registry", func() {
+		helpers.CreateBundleOCIAndImages(
+			GinkgoT(),
+			bundleFile,
+			filepath.Join("testdata", "create-success-oci.yaml"),
+			filepath.Join("testdata", "create-success.yaml"),
+			"linux/"+runtime.GOARCH,
+		)
+
+		port, err := freeport.GetFreePort()
+		Expect(err).NotTo(HaveOccurred())
+		reg, err := registry.NewRegistry(registry.Config{
+			Storage: registry.FilesystemStorage(filepath.Join(GinkgoT().TempDir(), "registry")),
+			Host:    "127.0.0.1",
+			Port:    uint16(port),
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		done := make(chan struct{})
+		go func() {
+			defer GinkgoRecover()
+
+			Expect(
+				reg.ListenAndServe(
+					funcr.New(func(prefix, args string) {
+						log.Println(prefix, args)
+					}, funcr.Options{}),
+				),
+			).To(Succeed())
+
+			close(done)
+		}()
+
+		helpers.WaitForTCPPort(GinkgoT(), "127.0.0.1", port)
+
+		cmd := helpers.NewCommand(
+			GinkgoT(),
+			func(out output.Output) *cobra.Command { return pushbundle.NewCommand(out, "bundle") },
+		)
+		args := []string{
+			"--bundle", bundleFile,
+			"--to-registry", fmt.Sprintf("127.0.0.1:%d", port),
+		}
+		cmd.SetArgs(args)
+		Expect(cmd.Execute()).To(Succeed())
+
+		for _, imageRef := range expectedOCIArtifacts {
+			mindthegapRef := fmt.Sprintf("127.0.0.1:%d/%s", port, imageRef)
+			ref, err := name.ParseReference(mindthegapRef)
+			Expect(err).NotTo(HaveOccurred())
+			_, err = remote.Image(ref)
+			Expect(err).NotTo(HaveOccurred())
+		}
+
+		helpers.ValidateImageIsAvailable(
+			GinkgoT(),
+			"127.0.0.1",
+			port,
+			"",
+			"stefanprodan/podinfo",
+			"6.2.0",
+			[]*v1.Platform{{
+				OS:           "linux",
+				Architecture: runtime.GOARCH,
+			}},
+			false,
+		)
 
 		Expect(reg.Shutdown(context.Background())).To((Succeed()))
 		Eventually(done).Should(BeClosed())

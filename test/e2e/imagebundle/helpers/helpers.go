@@ -60,6 +60,21 @@ func CreateBundleOCI(t ginkgo.GinkgoTInterface, bundleFile, cfgFile string) {
 	gomega.ExpectWithOffset(1, createBundleCmd.Execute()).To(gomega.Succeed())
 }
 
+func CreateBundleOCIAndImages(t ginkgo.GinkgoTInterface, bundleFile, ociArtifactsFiles string, imagesFile string, platforms ...string) {
+	platformFlags := make([]string, 0, len(platforms))
+	for _, p := range platforms {
+		platformFlags = append(platformFlags, "--platform", p)
+	}
+
+	createBundleCmd := NewCommand(t, createbundle.NewCommand)
+	createBundleCmd.SetArgs(append([]string{
+		"--output-file", bundleFile,
+		"--oci-artifacts-file", ociArtifactsFiles,
+		"--images-file", imagesFile,
+	}, platformFlags...))
+	gomega.ExpectWithOffset(1, createBundleCmd.Execute()).To(gomega.Succeed())
+}
+
 func NewCommand(
 	t ginkgo.GinkgoTInterface,
 	newFn func(out output.Output) *cobra.Command,
