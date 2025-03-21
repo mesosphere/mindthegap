@@ -157,15 +157,15 @@ func NewCommand(out output.Output) *cobra.Command {
 			logs.Debug.SetOutput(out.V(4).InfoWriter())
 			logs.Warn.SetOutput(out.V(2).InfoWriter())
 
-			if imagesConfigFile != "" {
-				if err := pullImages(
+			if imagesConfigFile != "" || ociArtifactsConfigFile != "" {
+				if err := pullImagesAndOCIArtifacts(
 					imagesConfig,
+					ociArtifactsConfig,
 					platforms,
 					imagePullConcurrency,
 					reg,
 					tempDir,
 					out,
-					false,
 				); err != nil {
 					return err
 				}
@@ -187,23 +187,6 @@ func NewCommand(out output.Output) *cobra.Command {
 				); err != nil {
 					return err
 				}
-			}
-
-			if ociArtifactsConfigFile != "" {
-				if err := pullOCIArtifacts(
-					ociArtifactsConfig,
-					platforms,
-					imagePullConcurrency,
-					reg,
-					tempDir,
-					out,
-				); err != nil {
-					return err
-				}
-			}
-
-			if err := config.WriteSanitizedImagesConfigs(filepath.Join(tempDir, "images.yaml"), imagesConfig, ociArtifactsConfig); err != nil {
-				return err
 			}
 
 			out.StartOperation(fmt.Sprintf("Archiving bundle to %s", outputFile))
@@ -237,13 +220,71 @@ func NewCommand(out output.Output) *cobra.Command {
 	return cmd
 }
 
+func pullImagesAndOCIArtifacts(
+	imagesConfig config.ImagesConfig,
+	ociArtifactsConfig config.ImagesConfig,
+	platforms flags.Platforms,
+	imagePullConcurrency int,
+	reg *registry.Registry,
+	outputDir string,
+	out output.Output,
+) error {
+	pullGauge := &output.ProgressGauge{}
+	pullGauge.SetCapacity(imagesConfig.TotalImages() + ociArtifactsConfig.TotalImages())
+	pullGauge.SetStatus("Pulling requested images")
+	out.StartOperationWithProgress(pullGauge)
+	progressFn := func() { pullGauge.Inc() }
+
+	if imagesConfig.TotalImages() > 0 {
+		if err := pullImages(
+			imagesConfig,
+			platforms,
+			imagePullConcurrency,
+			reg,
+			outputDir,
+			progressFn,
+			false,
+		); err != nil {
+			out.EndOperationWithStatus(output.Failure())
+			return err
+		}
+	}
+
+	if ociArtifactsConfig.TotalImages() > 0 {
+		if err := pullImages(
+			ociArtifactsConfig,
+			platforms,
+			imagePullConcurrency,
+			reg,
+			outputDir,
+			progressFn,
+			true,
+		); err != nil {
+			out.EndOperationWithStatus(output.Failure())
+			return err
+		}
+	}
+
+	if err := config.WriteSanitizedImagesConfigs(
+		filepath.Join(outputDir, "images.yaml"),
+		imagesConfig,
+		ociArtifactsConfig,
+	); err != nil {
+		out.EndOperationWithStatus(output.Failure())
+		return err
+	}
+
+	out.EndOperationWithStatus(output.Success())
+	return nil
+}
+
 func pullImages(
 	cfg config.ImagesConfig,
 	platforms flags.Platforms,
 	imagePullConcurrency int,
 	reg *registry.Registry,
 	outputDir string,
-	out output.Output,
+	progressFn func(),
 	isOCIArtifact bool,
 ) error {
 	// Sort registries for deterministic ordering.
@@ -251,10 +292,6 @@ func pullImages(
 
 	eg, egCtx := errgroup.WithContext(context.Background())
 	eg.SetLimit(imagePullConcurrency)
-
-	pullGauge := &output.ProgressGauge{}
-	pullGauge.SetCapacity(cfg.TotalImages())
-	pullGauge.SetStatus("Pulling requested images")
 
 	destTLSRoundTripper, err := httputils.InsecureTLSRoundTripper(remote.DefaultTransport)
 	if err != nil {
@@ -271,8 +308,6 @@ func pullImages(
 		remote.WithUserAgent(utils.Useragent()),
 	}
 
-	out.StartOperationWithProgress(pullGauge)
-
 	for registryIdx := range regNames {
 		registryName := regNames[registryIdx]
 
@@ -285,7 +320,6 @@ func pullImages(
 			"",
 		)
 		if err != nil {
-			out.EndOperationWithStatus(output.Failure())
 			return fmt.Errorf("error configuring TLS for source registry: %w", err)
 		}
 
@@ -359,7 +393,7 @@ func pullImages(
 						return err
 					}
 
-					pullGauge.Inc()
+					progressFn()
 
 					return nil
 				})
@@ -376,25 +410,10 @@ func pullImages(
 	}
 
 	if err := eg.Wait(); err != nil {
-		out.EndOperationWithStatus(output.Failure())
 		return err
 	}
 
-	out.EndOperationWithStatus(output.Success())
-
 	return nil
-}
-
-// for now, we start with re-using the same struct for OCI artifacts as for docker images.
-func pullOCIArtifacts(
-	cfg config.ImagesConfig,
-	platforms flags.Platforms,
-	imagePullConcurrency int,
-	reg *registry.Registry,
-	outputDir string,
-	out output.Output,
-) error {
-	return pullImages(cfg, platforms, imagePullConcurrency, reg, outputDir, out, true)
 }
 
 func pullCharts(
