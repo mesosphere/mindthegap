@@ -50,6 +50,14 @@ The output file will be a tarball that can be seeded into a registry,
 or that can be untarred and used as the storage directory for an OCI registry
 served via `registry:2`.
 
+It is possible to include OCI artifacts that are not OCI images.
+This is useful for bundling Flux kustomizations, Helm Charts directly from OCI
+registries, and any arbitrary OCI artifacts. To include an OCI artifacts, specify
+the `--oci-artifacts-file` path. The format of the provided file matches the
+`--images-file` format. The `--platform` flag has no effect on OCI artifacts.
+
+The OCI artifacts with image index are not supported.
+
 #### Pushing an image bundle
 
 **_This command is deprecated - see [Pushing a bundle](#pushing-a-bundle-supports-both-image-or-helm-chart)_**

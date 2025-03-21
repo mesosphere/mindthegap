@@ -38,12 +38,13 @@ import (
 
 func NewCommand(out output.Output) *cobra.Command {
 	var (
-		imagesConfigFile     string
-		helmChartsConfigFile string
-		platforms            = flags.NewPlatformsValue("linux/amd64")
-		outputFile           string
-		overwrite            bool
-		imagePullConcurrency int
+		imagesConfigFile       string
+		helmChartsConfigFile   string
+		ociArtifactsConfigFile string
+		platforms              = flags.NewPlatformsValue("linux/amd64")
+		outputFile             string
+		overwrite              bool
+		imagePullConcurrency   int
 	)
 
 	cmd := &cobra.Command{
@@ -54,8 +55,9 @@ func NewCommand(out output.Output) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var (
-				helmChartsConfig config.HelmChartsConfig
-				imagesConfig     config.ImagesConfig
+				helmChartsConfig   config.HelmChartsConfig
+				imagesConfig       config.ImagesConfig
+				ociArtifactsConfig config.ImagesConfig
 			)
 			if imagesConfigFile != "" {
 				out.StartOperation("Parsing image bundle config")
@@ -79,6 +81,19 @@ func NewCommand(out output.Output) *cobra.Command {
 				out.EndOperationWithStatus(output.Success())
 				out.V(4).Infof("Helm charts config: %+v", cfg)
 				helmChartsConfig = cfg
+			}
+
+			// for now, we start with re-using the same struct for OCI artifacts as for docker images.
+			if ociArtifactsConfigFile != "" {
+				out.StartOperation("Parsing OCI artifacts bundle config")
+				cfg, err := config.ParseImagesConfigFile(ociArtifactsConfigFile)
+				if err != nil {
+					out.EndOperationWithStatus(output.Failure())
+					return err
+				}
+				out.EndOperationWithStatus(output.Success())
+				out.V(4).Infof("OCI artifacts config: %+v", cfg)
+				ociArtifactsConfig = cfg
 			}
 
 			if !overwrite {
@@ -142,9 +157,10 @@ func NewCommand(out output.Output) *cobra.Command {
 			logs.Debug.SetOutput(out.V(4).InfoWriter())
 			logs.Warn.SetOutput(out.V(2).InfoWriter())
 
-			if imagesConfigFile != "" {
-				if err := pullImages(
+			if imagesConfigFile != "" || ociArtifactsConfigFile != "" {
+				if err := pullImagesAndOCIArtifacts(
 					imagesConfig,
+					ociArtifactsConfig,
 					platforms,
 					imagePullConcurrency,
 					reg,
@@ -188,7 +204,10 @@ func NewCommand(out output.Output) *cobra.Command {
 		"File containing list of images to create bundle from, either as YAML configuration or a simple list of images")
 	cmd.Flags().StringVar(&helmChartsConfigFile, "helm-charts-file", "",
 		"YAML file containing configuration of Helm charts to create bundle from")
-	cmd.MarkFlagsOneRequired("images-file", "helm-charts-file")
+	cmd.Flags().StringVar(&ociArtifactsConfigFile, "oci-artifacts-file", "",
+		"File containing list of oci artifacts to create bundle from, "+
+			"either as YAML configuration or a simple list of images")
+	cmd.MarkFlagsOneRequired("images-file", "helm-charts-file", "oci-artifacts-file")
 	cmd.Flags().
 		Var(&platforms, "platform", "platforms to download images for (required format: <os>/<arch>[/<variant>])")
 	cmd.Flags().
@@ -201,23 +220,75 @@ func NewCommand(out output.Output) *cobra.Command {
 	return cmd
 }
 
-func pullImages(
-	cfg config.ImagesConfig,
+func pullImagesAndOCIArtifacts(
+	imagesConfig config.ImagesConfig,
+	ociArtifactsConfig config.ImagesConfig,
 	platforms flags.Platforms,
 	imagePullConcurrency int,
 	reg *registry.Registry,
 	outputDir string,
 	out output.Output,
 ) error {
+	pullGauge := &output.ProgressGauge{}
+	pullGauge.SetCapacity(imagesConfig.TotalImages() + ociArtifactsConfig.TotalImages())
+	pullGauge.SetStatus("Pulling requested images")
+	out.StartOperationWithProgress(pullGauge)
+	progressFn := func() { pullGauge.Inc() }
+
+	if imagesConfig.TotalImages() > 0 {
+		if err := pullImages(
+			imagesConfig,
+			platforms,
+			imagePullConcurrency,
+			reg,
+			progressFn,
+			false,
+		); err != nil {
+			out.EndOperationWithStatus(output.Failure())
+			return err
+		}
+	}
+
+	if ociArtifactsConfig.TotalImages() > 0 {
+		if err := pullImages(
+			ociArtifactsConfig,
+			platforms,
+			imagePullConcurrency,
+			reg,
+			progressFn,
+			true,
+		); err != nil {
+			out.EndOperationWithStatus(output.Failure())
+			return err
+		}
+	}
+
+	if err := config.WriteSanitizedImagesConfigs(
+		filepath.Join(outputDir, "images.yaml"),
+		imagesConfig,
+		ociArtifactsConfig,
+	); err != nil {
+		out.EndOperationWithStatus(output.Failure())
+		return err
+	}
+
+	out.EndOperationWithStatus(output.Success())
+	return nil
+}
+
+func pullImages(
+	cfg config.ImagesConfig,
+	platforms flags.Platforms,
+	imagePullConcurrency int,
+	reg *registry.Registry,
+	progressFn func(),
+	isOCIArtifact bool,
+) error {
 	// Sort registries for deterministic ordering.
 	regNames := cfg.SortedRegistryNames()
 
 	eg, egCtx := errgroup.WithContext(context.Background())
 	eg.SetLimit(imagePullConcurrency)
-
-	pullGauge := &output.ProgressGauge{}
-	pullGauge.SetCapacity(cfg.TotalImages())
-	pullGauge.SetStatus("Pulling requested images")
 
 	destTLSRoundTripper, err := httputils.InsecureTLSRoundTripper(remote.DefaultTransport)
 	if err != nil {
@@ -234,8 +305,6 @@ func pullImages(
 		remote.WithUserAgent(utils.Useragent()),
 	}
 
-	out.StartOperationWithProgress(pullGauge)
-
 	for registryIdx := range regNames {
 		registryName := regNames[registryIdx]
 
@@ -248,7 +317,6 @@ func pullImages(
 			"",
 		)
 		if err != nil {
-			out.EndOperationWithStatus(output.Failure())
 			return fmt.Errorf("error configuring TLS for source registry: %w", err)
 		}
 
@@ -290,16 +358,6 @@ func pullImages(
 						imageName,
 						imageTag,
 					)
-
-					imageIndex, err := images.ManifestListForImage(
-						srcImageName,
-						platformsStrings,
-						sourceRemoteOpts...,
-					)
-					if err != nil {
-						return err
-					}
-
 					destImageName := fmt.Sprintf(
 						"%s/%s:%s",
 						reg.Address(),
@@ -311,11 +369,28 @@ func pullImages(
 						return err
 					}
 
-					if err := remote.WriteIndex(ref, imageIndex, destRemoteOpts...); err != nil {
+					var image remote.Taggable
+					if isOCIArtifact {
+						image, err = images.OCIArtifactImage(
+							srcImageName,
+							sourceRemoteOpts...,
+						)
+					} else {
+						image, err = images.ManifestListForImage(
+							srcImageName,
+							platformsStrings,
+							sourceRemoteOpts...,
+						)
+					}
+					if err != nil {
+						return fmt.Errorf("failed to get image %q: %w", srcImageName, err)
+					}
+
+					if err := remote.Push(ref, image, destRemoteOpts...); err != nil {
 						return err
 					}
 
-					pullGauge.Inc()
+					progressFn()
 
 					return nil
 				})
@@ -332,13 +407,6 @@ func pullImages(
 	}
 
 	if err := eg.Wait(); err != nil {
-		out.EndOperationWithStatus(output.Failure())
-		return err
-	}
-
-	out.EndOperationWithStatus(output.Success())
-
-	if err := config.WriteSanitizedImagesConfig(cfg, filepath.Join(outputDir, "images.yaml")); err != nil {
 		return err
 	}
 

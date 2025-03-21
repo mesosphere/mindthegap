@@ -62,6 +62,55 @@ func ManifestListForImage(
 	}
 }
 
+// OCIArtifactImage gets the image from the registry and checks if the image is an OCI artifact.
+func OCIArtifactImage(
+	img string,
+	opts ...remote.Option,
+) (v1.Image, error) {
+	ref, err := name.ParseReference(img)
+	if err != nil {
+		return nil, fmt.Errorf("invalid OCI artifact reference %q: %w", img, err)
+	}
+
+	desc, err := remote.Get(ref, opts...)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to read OCI artifact descriptor for %q from registry: %w",
+			img,
+			err,
+		)
+	}
+
+	if desc.MediaType != types.OCIManifestSchema1 {
+		return nil, fmt.Errorf(
+			"unexpected media type in descriptor for OCI artifact %q", desc.MediaType,
+		)
+	}
+
+	image, err := desc.Image()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read OCI artifact %q: %w", img, err)
+	}
+
+	manifest, err := image.Manifest()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read OCI artifact manifest for %q: %w", img, err)
+	}
+
+	// The only official recommendation for OCI artifacts in the spec is to not use
+	// OCI image config media type for the manifest config.
+	// https://github.com/opencontainers/image-spec/blob/c05acf7eb327dae4704a4efe01253a0e60af6b34/artifacts-guidance.md
+	if manifest.Config.MediaType.IsConfig() {
+		return nil, fmt.Errorf(
+			"unsupported OCI artifact %q which has config with media type %q",
+			img,
+			manifest.Config.MediaType,
+		)
+	}
+
+	return image, nil
+}
+
 func retainOnlyRequestedPlatformsInIndex(
 	index v1.ImageIndex,
 	platforms ...string,
