@@ -202,6 +202,10 @@ func NewCommand(out output.Output) *cobra.Command {
 				}
 			}
 
+			if err := config.WriteSanitizedImagesConfigs(filepath.Join(tempDir, "images.yaml"), imagesConfig, ociArtifactsConfig); err != nil {
+				return err
+			}
+
 			out.StartOperation(fmt.Sprintf("Archiving bundle to %s", outputFile))
 			if err := archive.ArchiveDirectory(tempDir, outputFile); err != nil {
 				out.EndOperationWithStatus(output.Failure())
@@ -323,6 +327,16 @@ func pullImages(
 						imageName,
 						imageTag,
 					)
+					destImageName := fmt.Sprintf(
+						"%s/%s:%s",
+						reg.Address(),
+						imageName,
+						imageTag,
+					)
+					ref, err := name.ParseReference(destImageName, name.StrictValidation)
+					if err != nil {
+						return err
+					}
 
 					var image remote.Taggable
 					if isOCIArtifact {
@@ -339,17 +353,6 @@ func pullImages(
 					}
 					if err != nil {
 						return fmt.Errorf("failed to get image %q: %w", srcImageName, err)
-					}
-
-					destImageName := fmt.Sprintf(
-						"%s/%s:%s",
-						reg.Address(),
-						imageName,
-						imageTag,
-					)
-					ref, err := name.ParseReference(destImageName, name.StrictValidation)
-					if err != nil {
-						return err
 					}
 
 					if err := remote.Push(ref, image, destRemoteOpts...); err != nil {
@@ -378,10 +381,6 @@ func pullImages(
 	}
 
 	out.EndOperationWithStatus(output.Success())
-
-	if err := config.WriteSanitizedImagesConfig(cfg, filepath.Join(outputDir, "images.yaml")); err != nil {
-		return err
-	}
 
 	return nil
 }
