@@ -241,7 +241,6 @@ func pullImagesAndOCIArtifacts(
 			platforms,
 			imagePullConcurrency,
 			reg,
-			outputDir,
 			progressFn,
 			false,
 		); err != nil {
@@ -256,7 +255,6 @@ func pullImagesAndOCIArtifacts(
 			platforms,
 			imagePullConcurrency,
 			reg,
-			outputDir,
 			progressFn,
 			true,
 		); err != nil {
@@ -283,7 +281,6 @@ func pullImages(
 	platforms flags.Platforms,
 	imagePullConcurrency int,
 	reg *registry.Registry,
-	outputDir string,
 	progressFn func(),
 	isOCIArtifact bool,
 ) error {
