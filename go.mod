@@ -3,7 +3,7 @@
 
 module github.com/mesosphere/mindthegap
 
-go 1.23.0
+go 1.23.7
 
 toolchain go1.24.1
 
@@ -12,7 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.29.9
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.43.0
 	github.com/containers/image/v5 v5.34.2
-	github.com/distribution/distribution/v3 v3.0.0-rc.3
+	github.com/distribution/distribution/v3 v3.0.0-rc.4
 	github.com/distribution/reference v0.6.0
 	github.com/docker/cli v27.5.1+incompatible
 	github.com/docker/docker v27.5.1+incompatible
