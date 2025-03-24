@@ -432,19 +432,32 @@ func pushTag(
 	destRemoteOpts []remote.Option,
 	forceOCIMediaTypes bool,
 ) error {
-	idx, err := remote.Index(srcImage, sourceRemoteOpts...)
+	desc, err := remote.Get(srcImage, sourceRemoteOpts...)
 	if err != nil {
 		return err
 	}
 
-	if forceOCIMediaTypes {
-		idx, err = convertToOCIIndex(idx, srcImage, sourceRemoteOpts)
+	if desc.MediaType.IsIndex() {
+		idx, err := desc.ImageIndex()
 		if err != nil {
-			return fmt.Errorf("failed to convert index to OCI format: %w", err)
+			return err
 		}
+
+		if forceOCIMediaTypes {
+			idx, err = convertToOCIIndex(idx, srcImage, sourceRemoteOpts)
+			if err != nil {
+				return fmt.Errorf("failed to convert index to OCI format: %w", err)
+			}
+		}
+
+		return remote.WriteIndex(destImage, idx, destRemoteOpts...)
 	}
 
-	return remote.WriteIndex(destImage, idx, destRemoteOpts...)
+	image, err := desc.Image()
+	if err != nil {
+		return err
+	}
+	return remote.Write(destImage, image, destRemoteOpts...)
 }
 
 func pushOCIArtifacts(

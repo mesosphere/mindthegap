@@ -208,7 +208,13 @@ func ParseImagesConfigFile(configFile string) (ImagesConfig, error) {
 	return config, nil
 }
 
-func WriteSanitizedImagesConfig(cfg ImagesConfig, fileName string) error {
+func WriteSanitizedImagesConfigs(fileName string, cfgs ...ImagesConfig) error {
+	merged := &ImagesConfig{}
+	for _, cfg := range cfgs {
+		merged = merged.Merge(cfg)
+	}
+
+	cfg := *merged
 	for regName, regConfig := range cfg {
 		regConfig.Credentials = nil
 		regConfig.TLSVerify = nil
