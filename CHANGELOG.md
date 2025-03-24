@@ -274,6 +274,30 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.19.0 (2025-03-24)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: Build with Go 1.24.0 by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/840
+* feat: go 1.24.1 by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/857
+* feat: Use ArchiveFS instead of extracting where possible by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/845
+* feat: Move to github.com/mholt/archives for all archive functionality by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/846
+* feat: add support for OCI artifacts by @mhrabovcin in https://github.com/mesosphere/mindthegap/pull/866
+### Other Changes
+* build: Upgrade all tools by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/823
+* build: Fix golangci-lint workflow by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/841
+* build: Update devbox.lock file by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/844
+* build: Only update github.com/docker/* with go-containerregistry by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/851
+* build: Remove deperecations from goreleaser config by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/852
+* test(e2e): Remove use of deprecated subcommands by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/863
+
+## New Contributors
+* @mhrabovcin made their first contribution in https://github.com/mesosphere/mindthegap/pull/866
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.18.0...v1.19.0
+
 ## 1.18.0 (2024-11-21)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
