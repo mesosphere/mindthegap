@@ -107,7 +107,11 @@ func fromParametersImpl(parameters map[string]interface{}) (*DriverParameters, e
 		return nil, errors.New("archives config is required")
 	}
 
-	maxThreads, err := base.GetLimitFromParameter(parameters["maxthreads"], minThreads, defaultMaxThreads)
+	maxThreads, err := base.GetLimitFromParameter(
+		parameters["maxthreads"],
+		minThreads,
+		defaultMaxThreads,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("maxthreads config error: %s", err.Error())
 	}
@@ -277,7 +281,12 @@ func (d *driver) List(ctx context.Context, subPath string) ([]string, error) {
 			keys = append(
 				keys,
 				path.Join(
-					strings.Replace("/"+archiveSubpath, dockerReposPath, path.Join(dockerReposPath, d.repositoriesPrefix), 1),
+					strings.Replace(
+						"/"+archiveSubpath,
+						dockerReposPath,
+						path.Join(dockerReposPath, d.repositoriesPrefix),
+						1,
+					),
 					dirEntry.Name(),
 				),
 			)
@@ -306,7 +315,10 @@ func (d *driver) RedirectURL(*http.Request, string) (string, error) {
 // Walk traverses a filesystem defined within driver, starting
 // from the given path, calling f on each file and directory.
 func (d *driver) Walk(
-	ctx context.Context, path string, f storagedriver.WalkFn, options ...func(*storagedriver.WalkOptions),
+	ctx context.Context,
+	path string,
+	f storagedriver.WalkFn,
+	options ...func(*storagedriver.WalkOptions),
 ) error {
 	return storagedriver.WalkFallback(ctx, d, path, f, options...)
 }

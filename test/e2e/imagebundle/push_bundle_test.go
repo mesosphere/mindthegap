@@ -30,6 +30,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
+
 	pushbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/push/bundle"
 	"github.com/mesosphere/mindthegap/docker/registry"
 	"github.com/mesosphere/mindthegap/images/httputils"
@@ -104,7 +105,12 @@ var _ = Describe("Push Bundle", func() {
 
 			helpers.WaitForTCPPort(GinkgoT(), registryHost, port)
 
-			registryHostWithOptionalScheme := fmt.Sprintf("%s:%d/%s", registryHost, port, strings.TrimLeft(registryPath, "/"))
+			registryHostWithOptionalScheme := fmt.Sprintf(
+				"%s:%d/%s",
+				registryHost,
+				port,
+				strings.TrimLeft(registryPath, "/"),
+			)
 			if registryScheme != "" {
 				registryHostWithOptionalScheme = fmt.Sprintf(
 					"%s://%s",
@@ -159,7 +165,8 @@ var _ = Describe("Push Bundle", func() {
 			Eventually(done).Should(BeClosed())
 		}
 
-		DescribeTable("Success",
+		DescribeTable(
+			"Success",
 			func(
 				registryHost string,
 				registryScheme string,
@@ -174,14 +181,34 @@ var _ = Describe("Push Bundle", func() {
 					"linux/"+runtime.GOARCH,
 				)
 
-				runTest(registryHost, registryScheme, registryPath, registryInsecure, forceOCIMediaTypes)
+				runTest(
+					registryHost,
+					registryScheme,
+					registryPath,
+					registryInsecure,
+					forceOCIMediaTypes,
+				)
 			},
 
 			Entry("Without TLS", "127.0.0.1", "", "", true, false),
 
-			Entry("With TLS", helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "", false, false),
+			Entry(
+				"With TLS",
+				helpers.GetFirstNonLoopbackIP(GinkgoT()).String(),
+				"",
+				"",
+				false,
+				false,
+			),
 
-			Entry("With Insecure TLS", helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "", true, false),
+			Entry(
+				"With Insecure TLS",
+				helpers.GetFirstNonLoopbackIP(GinkgoT()).String(),
+				"",
+				"",
+				true,
+				false,
+			),
 
 			Entry(
 				"With http registry",
@@ -210,7 +237,14 @@ var _ = Describe("Push Bundle", func() {
 				false,
 			),
 
-			Entry("With force OCI media types", helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "", false, true),
+			Entry(
+				"With force OCI media types",
+				helpers.GetFirstNonLoopbackIP(GinkgoT()).String(),
+				"",
+				"",
+				false,
+				true,
+			),
 		)
 
 		It("Bundle does not exist", func() {
@@ -328,21 +362,24 @@ var _ = Describe("Push Bundle", func() {
 				GinkgoWriter.TeeTo(outputBuf)
 			})
 
-			It("Successful push with explicit --on-existing-tag=skip flag even though doesn't exist yet", func() {
-				args := []string{
-					"--bundle", bundleFile,
-					"--to-registry", registryAddress,
-					"--to-registry-insecure-skip-tls-verify",
-					"--on-existing-tag=skip",
-					"--image-push-concurrency=4",
-				}
+			It(
+				"Successful push with explicit --on-existing-tag=skip flag even though doesn't exist yet",
+				func() {
+					args := []string{
+						"--bundle", bundleFile,
+						"--to-registry", registryAddress,
+						"--to-registry-insecure-skip-tls-verify",
+						"--on-existing-tag=skip",
+						"--image-push-concurrency=4",
+					}
 
-				cmd.SetArgs(args)
+					cmd.SetArgs(args)
 
-				Expect(cmd.Execute()).To(Succeed())
+					Expect(cmd.Execute()).To(Succeed())
 
-				Expect(outputBuf.String()).NotTo(ContainSubstring("✗"))
-			})
+					Expect(outputBuf.String()).NotTo(ContainSubstring("✗"))
+				},
+			)
 
 			It("Successful push without on-existing-tag flag (default to overwrite)", func() {
 				args := []string{

@@ -30,31 +30,35 @@ func ExtractFileToDirectory(archive, destDir, fileName string) error {
 		return fmt.Errorf("not an valid archive extension")
 	}
 
-	err = unarc.Extract(context.Background(), archiveStream, func(ctx context.Context, f archives.FileInfo) error {
-		if f.NameInArchive != fileName {
+	err = unarc.Extract(
+		context.Background(),
+		archiveStream,
+		func(ctx context.Context, f archives.FileInfo) error {
+			if f.NameInArchive != fileName {
+				return nil
+			}
+
+			fi, err := f.Open()
+			if err != nil {
+				return fmt.Errorf("failed to open file %s: %w", f.NameInArchive, err)
+			}
+			defer fi.Close()
+
+			destFilePath := filepath.Join(destDir, fileName)
+			destFile, err := os.Create(destFilePath)
+			if err != nil {
+				return fmt.Errorf("failed to create file %s: %w", destFilePath, err)
+			}
+			defer destFile.Close()
+
+			_, err = io.Copy(destFile, fi)
+			if err != nil {
+				return fmt.Errorf("failed to copy %s: %w", fileName, err)
+			}
+
 			return nil
-		}
-
-		fi, err := f.Open()
-		if err != nil {
-			return fmt.Errorf("failed to open file %s: %w", f.NameInArchive, err)
-		}
-		defer fi.Close()
-
-		destFilePath := filepath.Join(destDir, fileName)
-		destFile, err := os.Create(destFilePath)
-		if err != nil {
-			return fmt.Errorf("failed to create file %s: %w", destFilePath, err)
-		}
-		defer destFile.Close()
-
-		_, err = io.Copy(destFile, fi)
-		if err != nil {
-			return fmt.Errorf("failed to copy %s: %w", fileName, err)
-		}
-
-		return nil
-	})
+		},
+	)
 	if err != nil {
 		return fmt.Errorf("failed to extract %s: %w", fileName, err)
 	}

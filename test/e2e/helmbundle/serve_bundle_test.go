@@ -133,15 +133,33 @@ var _ = Describe("Serve Helm Bundle", func() {
 		helpers.WaitForTCPPort(GinkgoT(), ipAddr.String(), port)
 
 		// First check that the helm chart is accessible with the old certificate.
-		helpers.ValidateChartIsAvailable(GinkgoT(), Default, ipAddr.String(), port, "podinfo", "6.2.0", helm.CAFileOpt(originalCACertFile))
+		helpers.ValidateChartIsAvailable(
+			GinkgoT(),
+			Default,
+			ipAddr.String(),
+			port,
+			"podinfo",
+			"6.2.0",
+			helm.CAFileOpt(originalCACertFile),
+		)
 
-		helpers.ValidateChartIsAvailable(GinkgoT(), Default, ipAddr.String(), port, "node-feature-discovery", "0.15.2", helm.CAFileOpt(originalCACertFile))
+		helpers.ValidateChartIsAvailable(
+			GinkgoT(),
+			Default,
+			ipAddr.String(),
+			port,
+			"node-feature-discovery",
+			"0.15.2",
+			helm.CAFileOpt(originalCACertFile),
+		)
 
 		// Backup the original CA file to be used after checking the new CA file works.
 		// This is to ensure that the server is definitely using the new certificate.
 		backupDir := GinkgoT().TempDir()
 		caCertFileName := filepath.Base(originalCACertFile)
-		Expect(os.Rename(originalCACertFile, filepath.Join(backupDir, caCertFileName))).To(Succeed())
+		Expect(
+			os.Rename(originalCACertFile, filepath.Join(backupDir, caCertFileName)),
+		).To(Succeed())
 		originalCACertFile = filepath.Join(backupDir, caCertFileName)
 
 		// Create a new certificate. This can happen at any time the server is running,
@@ -155,9 +173,25 @@ var _ = Describe("Serve Helm Bundle", func() {
 		)
 
 		Eventually(func(g Gomega) {
-			helpers.ValidateChartIsAvailable(GinkgoT(), g, ipAddr.String(), port, "podinfo", "6.2.0", helm.CAFileOpt(newCACertFile))
+			helpers.ValidateChartIsAvailable(
+				GinkgoT(),
+				g,
+				ipAddr.String(),
+				port,
+				"podinfo",
+				"6.2.0",
+				helm.CAFileOpt(newCACertFile),
+			)
 
-			helpers.ValidateChartIsAvailable(GinkgoT(), g, ipAddr.String(), port, "node-feature-discovery", "0.15.2", helm.CAFileOpt(newCACertFile))
+			helpers.ValidateChartIsAvailable(
+				GinkgoT(),
+				g,
+				ipAddr.String(),
+				port,
+				"node-feature-discovery",
+				"0.15.2",
+				helm.CAFileOpt(newCACertFile),
+			)
 		}).WithTimeout(time.Second * 5).WithPolling(time.Second * 1).Should(Succeed())
 
 		// Now check that the original CA file is now no longer valid, ensuring that the new
