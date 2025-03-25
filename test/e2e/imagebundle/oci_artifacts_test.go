@@ -157,13 +157,15 @@ var _ = Describe("OCI artifacts support", func() {
 
 	It("failes to create bundle with OCI image in OCI artifacts list", func() {
 		imagesTxt := filepath.Join(GinkgoT().TempDir(), "oic-images.txt")
-		Expect(os.WriteFile(imagesTxt, []byte("stefanprodan/podinfo:6.8.0"), 0644)).To(Succeed())
+		Expect(os.WriteFile(imagesTxt, []byte("stefanprodan/podinfo:6.8.0"), 0o644)).To(Succeed())
 		createBundleCmd := helpers.NewCommand(GinkgoT(), createbundle.NewCommand)
 		createBundleCmd.SetArgs([]string{
 			"--output-file", bundleFile,
 			"--oci-artifacts-file", imagesTxt,
 		})
-		Expect(createBundleCmd.Execute()).To(MatchError(ContainSubstring("unexpected media type in descriptor for OCI artifact")))
+		Expect(
+			createBundleCmd.Execute(),
+		).To(MatchError(ContainSubstring("unexpected media type in descriptor for OCI artifact")))
 	})
 
 	It("pushes OCI artifacts from OCI artfacts only bundle to the registry", func() {

@@ -141,7 +141,9 @@ func NewCommand(out output.Output) *cobra.Command {
 			out.EndOperationWithStatus(output.Success())
 
 			out.StartOperation("Starting temporary Docker registry")
-			reg, err := registry.NewRegistry(registry.Config{Storage: registry.FilesystemStorage(tempDir)})
+			reg, err := registry.NewRegistry(
+				registry.Config{Storage: registry.FilesystemStorage(tempDir)},
+			)
 			if err != nil {
 				out.EndOperationWithStatus(output.Failure())
 				return fmt.Errorf("failed to create local Docker registry: %w", err)

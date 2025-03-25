@@ -551,14 +551,20 @@ var (
 		MediaType:     "application/vnd.oci.image.manifest.v1+json",
 		Config: v1.Descriptor{
 			MediaType: "application/vnd.oci.image.config.v1+json",
-			Digest:    v1.Hash{Algorithm: "sha256", Hex: "aded1e1a5b3705116fa0a92ba074a5e0b0031647d9c315983ccba2ee5428ec8b"},
-			Size:      581,
+			Digest: v1.Hash{
+				Algorithm: "sha256",
+				Hex:       "aded1e1a5b3705116fa0a92ba074a5e0b0031647d9c315983ccba2ee5428ec8b",
+			},
+			Size: 581,
 		},
 		Layers: []v1.Descriptor{
 			{
 				MediaType: "application/vnd.oci.image.layer.v1.tar+gzip",
-				Digest:    v1.Hash{Algorithm: "sha256", Hex: "f18232174bc91741fdf3da96d85011092101a032a93a388b79e99e69c2d5c870"},
-				Size:      3642247,
+				Digest: v1.Hash{
+					Algorithm: "sha256",
+					Hex:       "f18232174bc91741fdf3da96d85011092101a032a93a388b79e99e69c2d5c870",
+				},
+				Size: 3642247,
 			},
 		},
 		Annotations: map[string]string{

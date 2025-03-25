@@ -1,5 +1,17 @@
 {
   "go.buildTags": "e2e",
+  "go.lintTool": "golangci-lint-v2",
+  "go.lintFlags": [
+    "--fast-only"
+  ],
+  "go.formatTool": "custom",
+  "go.alternateTools": {
+    "customFormatter": "golangci-lint"
+  },
+  "go.formatFlags": [
+    "fmt",
+    "--stdin"
+  ],
   "ginkgotestexplorer.buildTags": "e2e",
   "yaml.schemas": {
     "https://taskfile.dev/schema.json": [

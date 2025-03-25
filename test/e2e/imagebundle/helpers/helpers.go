@@ -60,7 +60,11 @@ func CreateBundleOCI(t ginkgo.GinkgoTInterface, bundleFile, cfgFile string) {
 	gomega.ExpectWithOffset(1, createBundleCmd.Execute()).To(gomega.Succeed())
 }
 
-func CreateBundleOCIAndImages(t ginkgo.GinkgoTInterface, bundleFile, ociArtifactsFiles string, imagesFile string, platforms ...string) {
+func CreateBundleOCIAndImages(
+	t ginkgo.GinkgoTInterface,
+	bundleFile, ociArtifactsFiles, imagesFile string,
+	platforms ...string,
+) {
 	platformFlags := make([]string, 0, len(platforms))
 	for _, p := range platforms {
 		platformFlags = append(platformFlags, "--platform", p)

@@ -1,11 +1,9 @@
 # Copyright 2021 D2iQ, Inc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-run:
-  timeout: 10m
-
+version: "2"
 linters:
-  disable-all: true
+  default: none
   enable:
     - asciicheck
     - bidichk
@@ -22,7 +20,6 @@ linters:
     - errname
     - errorlint
     - exhaustive
-    - gci
     - ginkgolinter
     - gocheckcompilerdirectives
     - gochecknoinits
@@ -31,10 +28,8 @@ linters:
     - gocritic
     - gocyclo
     - godot
-    - gofumpt
     - gomoddirectives
     - gosec
-    - gosimple
     - govet
     - ineffassign
     - interfacebloat
@@ -51,66 +46,83 @@ linters:
     - prealloc
     - reassign
     - staticcheck
-    - stylecheck
-    - tenv
     - testableexamples
     - testifylint
     - thelper
     - tparallel
-    - typecheck
     - unconvert
     - unparam
     - unused
     - usestdlibvars
+    - usetesting
     - whitespace
-
-linters-settings:
-  depguard:
+  settings:
+    depguard:
+      rules:
+        main:
+          deny:
+            - pkg: k8s.io/kubernetes
+              desc: do not use k8s.io/kubernetes directly
+    errcheck:
+      exclude-functions:
+        - encoding/json.Marshal
+        - encoding/json.MarshalIndent
+    errchkjson:
+      check-error-free-encoding: true
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - experimental
+        - opinionated
+        - performance
+        - style
+    lll:
+      line-length: 120
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
     rules:
-      main:
-        deny:
-          - pkg: k8s.io/kubernetes
-            desc: "do not use k8s.io/kubernetes directly"
-  errcheck:
-    exclude-functions:
-      - encoding/json.Marshal
-      - encoding/json.MarshalIndent
-  errchkjson:
-    check-error-free-encoding: true
-  gci:
-    sections:
-      - Standard
-      - Default
-      - Prefix(github.com/mesosphere)
-      - Prefix(github.com/mesosphere/mindthegap)
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - experimental
-      - opinionated
-      - performance
-      - style
-  gofumpt:
-    extra-rules: true
-  lll:
-    line-length: 120
-
-issues:
-  exclude-rules:
-    # ignore errcheck for code under a /test folder
-    - path: "test/*"
-      linters:
-        - errcheck
-    # ignore errcheck for flags.Parse (it is expected that we flag.ExitOnError)
-    # ignore response.WriteError as it always returns the err it was passed
-    - source: "flags.Parse|response.WriteError"
-      linters:
-        - errcheck
-    - path: docker/registry/registry.go
-      linters:
-        - gocritic
-      text: "hugeParam: c is heavy"
-    - path: docker/registry/registry.go
-      linters:
-        - gocritic
-      text: "hugeParam: cfg is heavy"
+      - linters:
+          - errcheck
+        path: test/*
+      - linters:
+          - errcheck
+        source: flags.Parse|response.WriteError
+      - linters:
+          - gocritic
+        path: docker/registry/registry.go
+        text: 'hugeParam: c is heavy'
+      - linters:
+          - gocritic
+        path: docker/registry/registry.go
+        text: 'hugeParam: cfg is heavy'
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofumpt
+    - golines
+  settings:
+    gci:
+      sections:
+        - Standard
+        - Default
+        - Prefix(github.com/mesosphere)
+        - Prefix(github.com/mesosphere/mindthegap)
+    gofumpt:
+      extra-rules: true
+    golines:
+      max-len: 120
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
