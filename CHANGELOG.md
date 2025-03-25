@@ -274,6 +274,17 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.19.1 (2025-03-25)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Other Changes
+* build: Upgrade to golangci-lint v2.0.1 by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/872
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.19.0...v1.19.1
+
 ## 1.19.0 (2025-03-24)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
