@@ -12,7 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.29.12
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.43.0
 	github.com/containers/image/v5 v5.34.3
-	github.com/distribution/distribution/v3 v3.0.0-rc.4
+	github.com/distribution/distribution/v3 v3.0.0
 	github.com/distribution/reference v0.6.0
 	github.com/docker/cli v27.5.1+incompatible
 	github.com/docker/docker v27.5.1+incompatible
@@ -238,7 +238,7 @@ require (
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/exp v0.0.0-20250103183323-7d7fa50e5329 // indirect
 	golang.org/x/net v0.37.0 // indirect
-	golang.org/x/oauth2 v0.25.0 // indirect
+	golang.org/x/oauth2 v0.28.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/term v0.30.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
