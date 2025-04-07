@@ -128,34 +128,31 @@ func retainOnlyRequestedPlatformsInIndex(
 		return index, nil
 	}
 
-	return mutate.RemoveManifests(
-		index,
-		notMatcher(platformsIgnoringVariantIfNotSpecified(v1Platforms...)),
-	), nil
+	return filterIndex(index, v1Platforms), nil
 }
 
-func notMatcher(matcher match.Matcher) match.Matcher {
-	return func(desc v1.Descriptor) bool {
-		return !matcher(desc)
-	}
+func filterIndex(idx v1.ImageIndex, platforms []v1.Platform) v1.ImageIndex {
+	matcher := not(satisfiesPlatforms(platforms))
+	return mutate.RemoveManifests(idx, matcher)
 }
 
-func platformsIgnoringVariantIfNotSpecified(platforms ...v1.Platform) match.Matcher {
+func satisfiesPlatforms(platforms []v1.Platform) match.Matcher {
 	return func(desc v1.Descriptor) bool {
 		if desc.Platform == nil {
 			return false
 		}
-		for _, platform := range platforms {
-			if desc.Platform.Equals(platform) {
-				return true
-			}
-			if platform.Variant == "" &&
-				platform.OS == desc.Platform.OS &&
-				platform.Architecture == desc.Platform.Architecture {
+		for _, p := range platforms {
+			if desc.Platform.Satisfies(p) {
 				return true
 			}
 		}
 		return false
+	}
+}
+
+func not(in match.Matcher) match.Matcher {
+	return func(desc v1.Descriptor) bool {
+		return !in(desc)
 	}
 }
 
