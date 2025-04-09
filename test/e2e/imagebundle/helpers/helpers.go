@@ -256,3 +256,41 @@ func ValidateImageIsAvailable(
 		)
 	}
 }
+
+func ValidatePlatformDigestsInIndex(
+	t ginkgo.GinkgoTInterface,
+	addr string,
+	port int,
+	registryPath, image, tag string,
+	platformDigests map[*v1.Platform]string,
+	opts ...remote.Option,
+) {
+	t.Helper()
+
+	imagePath := path.Join(strings.TrimLeft(registryPath, "/"), image)
+	imageName := fmt.Sprintf("%s:%d/%s:%s", addr, port, imagePath, tag)
+	ref, err := name.ParseReference(imageName, name.StrictValidation)
+	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
+	idx, err := remote.Index(
+		ref,
+		opts...,
+	)
+	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
+
+	manifest, err := idx.IndexManifest()
+	gomega.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
+
+	for p, digest := range platformDigests {
+		gomega.ExpectWithOffset(1, manifest.Manifests).To(
+			gomega.ContainElement(
+				gstruct.MatchFields(
+					gstruct.IgnoreExtras|gstruct.IgnoreMissing,
+					gstruct.Fields{
+						"Platform": gomega.Equal(p),
+						"Digest":   gomega.WithTransform(func(h v1.Hash) string { return h.String() }, gomega.Equal(digest)),
+					},
+				),
+			),
+		)
+	}
+}

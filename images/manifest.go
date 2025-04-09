@@ -37,7 +37,7 @@ func ManifestListForImage(
 			)
 		}
 
-		return indexForSinglePlatformImage(ref, localImage, platforms...)
+		return IndexForSinglePlatformImage(ref, localImage, platforms...)
 	}
 
 	switch {
@@ -46,13 +46,13 @@ func ManifestListForImage(
 		if err != nil {
 			return nil, fmt.Errorf("failed to read image index for %q: %w", img, err)
 		}
-		return retainOnlyRequestedPlatformsInIndex(index, platforms...)
+		return RetainOnlyRequestedPlatformsInIndex(index, platforms...)
 	case desc.MediaType.IsImage():
 		image, err := desc.Image()
 		if err != nil {
 			return nil, fmt.Errorf("failed to read image for %q: %w", img, err)
 		}
-		return indexForSinglePlatformImage(ref, image, platforms...)
+		return IndexForSinglePlatformImage(ref, image, platforms...)
 	default:
 		return nil, fmt.Errorf(
 			"unexpected media type in descriptor for image %q: %v",
@@ -111,7 +111,7 @@ func OCIArtifactImage(
 	return image, nil
 }
 
-func retainOnlyRequestedPlatformsInIndex(
+func RetainOnlyRequestedPlatformsInIndex(
 	index v1.ImageIndex,
 	platforms ...string,
 ) (v1.ImageIndex, error) {
@@ -156,7 +156,7 @@ func not(in match.Matcher) match.Matcher {
 	}
 }
 
-func indexForSinglePlatformImage(
+func IndexForSinglePlatformImage(
 	ref name.Reference,
 	image v1.Image,
 	platforms ...string,

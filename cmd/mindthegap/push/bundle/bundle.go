@@ -34,6 +34,7 @@ import (
 	"github.com/mesosphere/mindthegap/config"
 	"github.com/mesosphere/mindthegap/docker/ecr"
 	"github.com/mesosphere/mindthegap/docker/registry"
+	"github.com/mesosphere/mindthegap/images"
 	"github.com/mesosphere/mindthegap/images/authnhelpers"
 	"github.com/mesosphere/mindthegap/images/httputils"
 )
@@ -44,12 +45,16 @@ const (
 	Overwrite onExistingTagMode = iota
 	Error
 	Skip
+	MergeWithRetain
+	MergeWithOverwrite
 )
 
 var onExistingTagModes = map[onExistingTagMode][]string{
-	Overwrite: {"overwrite"},
-	Error:     {"error"},
-	Skip:      {"skip"},
+	Overwrite:          {"overwrite"},
+	Error:              {"error"},
+	Skip:               {"skip"},
+	MergeWithRetain:    {"merge-with-retain"},
+	MergeWithOverwrite: {"merge-with-overwrite"},
 }
 
 func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
@@ -303,6 +308,33 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 
 type prePushFunc func(destRepositoryName name.Repository, imageTags ...string) error
 
+type pushConfig struct {
+	forceOCIMediaTypes bool
+	onExistingTag      onExistingTagMode
+}
+
+type pushOpt func(*pushConfig)
+
+func withForceOCIMediaTypes(force bool) pushOpt {
+	return func(cfg *pushConfig) {
+		cfg.forceOCIMediaTypes = force
+	}
+}
+
+func withOnExistingTagMode(mode onExistingTagMode) pushOpt {
+	return func(cfg *pushConfig) {
+		cfg.onExistingTag = mode
+	}
+}
+
+type pushFunc func(
+	srcImage name.Reference,
+	sourceRemoteOpts []remote.Option,
+	destImage name.Reference,
+	destRemoteOpts []remote.Option,
+	pushOpts ...pushOpt,
+) error
+
 func pushImages(
 	cfg config.ImagesConfig,
 	sourceRegistry name.Registry, sourceRemoteOpts []remote.Option,
@@ -381,16 +413,16 @@ func pushImages(
 					srcImage := srcRepository.Tag(imageTag)
 					destImage := destRepository.Tag(imageTag)
 
-					pushFn := pushTag
+					var pushFn pushFunc = pushTag
 
 					switch onExistingTag {
-					case Overwrite:
-						// Do nothing, just attempt to overwrite
+					case Overwrite, MergeWithRetain, MergeWithOverwrite:
+						// Nothing to do here, pushFn is already set to pushTag above.
 					case Skip:
 						// If tag exists already then do nothing.
 						if _, exists := existingImageTags[imageTag]; exists {
 							pushFn = func(
-								_ name.Reference, _ []remote.Option, _ name.Reference, _ []remote.Option, _ bool,
+								_ name.Reference, _ []remote.Option, _ name.Reference, _ []remote.Option, _ ...pushOpt,
 							) error {
 								return nil
 							}
@@ -403,7 +435,12 @@ func pushImages(
 						}
 					}
 
-					if err := pushFn(srcImage, sourceRemoteOpts, destImage, destRemoteOpts, forceOCIMediaTypes); err != nil {
+					opts := []pushOpt{withOnExistingTagMode(onExistingTag)}
+					if forceOCIMediaTypes {
+						opts = append(opts, withForceOCIMediaTypes(forceOCIMediaTypes))
+					}
+
+					if err := pushFn(srcImage, sourceRemoteOpts, destImage, destRemoteOpts, opts...); err != nil {
 						return err
 					}
 
@@ -430,34 +467,60 @@ func pushTag(
 	sourceRemoteOpts []remote.Option,
 	destImage name.Reference,
 	destRemoteOpts []remote.Option,
-	forceOCIMediaTypes bool,
+	pushOpts ...pushOpt,
 ) error {
+	var pushCfg pushConfig
+	for _, opt := range pushOpts {
+		opt(&pushCfg)
+	}
+
 	desc, err := remote.Get(srcImage, sourceRemoteOpts...)
 	if err != nil {
 		return err
 	}
 
-	if desc.MediaType.IsIndex() {
-		idx, err := desc.ImageIndex()
+	if !desc.MediaType.IsIndex() {
+		image, err := desc.Image()
 		if err != nil {
 			return err
 		}
-
-		if forceOCIMediaTypes {
-			idx, err = convertToOCIIndex(idx, srcImage, sourceRemoteOpts)
-			if err != nil {
-				return fmt.Errorf("failed to convert index to OCI format: %w", err)
-			}
-		}
-
-		return remote.WriteIndex(destImage, idx, destRemoteOpts...)
+		return remote.Write(destImage, image, destRemoteOpts...)
 	}
 
-	image, err := desc.Image()
+	idx, err := desc.ImageIndex()
 	if err != nil {
 		return err
 	}
-	return remote.Write(destImage, image, destRemoteOpts...)
+
+	// Get the existing index from the destination registry if merging is enabled.
+	if pushCfg.onExistingTag == MergeWithOverwrite || pushCfg.onExistingTag == MergeWithRetain {
+		existingIdx, err := fetchExistingIndex(
+			destImage,
+			destRemoteOpts,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to fetch existing index: %w", err)
+		}
+
+		mergeFromIndex, mergeToIndex := idx, existingIdx
+		if pushCfg.onExistingTag == MergeWithRetain {
+			mergeFromIndex, mergeToIndex = existingIdx, idx
+		}
+
+		idx, err = mergeIndexesOverwriteExisting(mergeFromIndex, mergeToIndex)
+		if err != nil {
+			return fmt.Errorf("failed to merge indexes: %w", err)
+		}
+	}
+
+	if pushCfg.forceOCIMediaTypes {
+		idx, err = convertToOCIIndex(idx, srcImage, sourceRemoteOpts)
+		if err != nil {
+			return fmt.Errorf("failed to convert index to OCI format: %w", err)
+		}
+	}
+
+	return remote.WriteIndex(destImage, idx, destRemoteOpts...)
 }
 
 func pushOCIArtifacts(
@@ -631,4 +694,103 @@ func convertToOCIIndex(
 	}
 
 	return ociIdx, nil
+}
+
+func fetchExistingIndex(destImage name.Reference, destRemoteOpts []remote.Option) (v1.ImageIndex, error) {
+	existingDesc, err := remote.Get(destImage, destRemoteOpts...)
+	if err != nil {
+		var terr *transport.Error
+		if errors.As(err, &terr) {
+			if terr.StatusCode == http.StatusNotFound {
+				return empty.Index, nil
+			}
+		}
+		return nil, fmt.Errorf("failed to fetch existing descriptor: %w", err)
+	}
+
+	switch {
+	case existingDesc.MediaType.IsIndex():
+		index, err := existingDesc.ImageIndex()
+		if err != nil {
+			return nil, fmt.Errorf("failed to read image index for %q: %w", destImage, err)
+		}
+		return index, nil
+	case existingDesc.MediaType.IsImage():
+		image, err := existingDesc.Image()
+		if err != nil {
+			return nil, fmt.Errorf("failed to read image for %q: %w", destImage, err)
+		}
+		return images.IndexForSinglePlatformImage(destImage, image)
+	default:
+		return nil, fmt.Errorf(
+			"unexpected media type in descriptor for image %q: %v",
+			destImage,
+			existingDesc.MediaType,
+		)
+	}
+}
+
+func mergeIndexesOverwriteExisting(
+	mergeFromIndex v1.ImageIndex,
+	mergeToIndex v1.ImageIndex,
+) (v1.ImageIndex, error) {
+	mergeFromIndexManifest, err := mergeFromIndex.IndexManifest()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read index manifest: %w", err)
+	}
+
+	// Collect all platforms from the mergeFromIndex.
+	var fromPlatforms []v1.Platform
+	for manifestIdx := range mergeFromIndexManifest.Manifests {
+		child := mergeFromIndexManifest.Manifests[manifestIdx]
+		if child.Platform != nil {
+			fromPlatforms = append(fromPlatforms, *child.Platform)
+		}
+	}
+
+	// Filter out all the platforms in mergeToIndex that were already in mergeFromIndex.
+	mergeToIndex = mutate.RemoveManifests(mergeToIndex, func(manifest v1.Descriptor) bool {
+		if manifest.Platform == nil {
+			return false
+		}
+
+		for _, fromPlatform := range fromPlatforms {
+			if manifest.Platform.Satisfies(fromPlatform) {
+				return true
+			}
+		}
+
+		return false
+	})
+
+	var adds []mutate.IndexAddendum
+	for manifestIdx := range mergeFromIndexManifest.Manifests {
+		child := mergeFromIndexManifest.Manifests[manifestIdx]
+		switch {
+		case child.MediaType.IsImage():
+			img, err := mergeFromIndex.Image(child.Digest)
+			if err != nil {
+				return nil, err
+			}
+			adds = append(adds, mutate.IndexAddendum{
+				Add:        img,
+				Descriptor: child,
+			})
+		case child.MediaType.IsIndex():
+			idx, err := mergeFromIndex.ImageIndex(child.Digest)
+			if err != nil {
+				return nil, err
+			}
+			adds = append(adds, mutate.IndexAddendum{
+				Add:        idx,
+				Descriptor: child,
+			})
+		default:
+			return nil, fmt.Errorf("unexpected child %q with media type %q", child.Digest, child.MediaType)
+		}
+	}
+
+	mergedIndex := mutate.AppendManifests(mergeToIndex, adds...)
+
+	return mergedIndex, nil
 }
