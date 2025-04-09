@@ -5,7 +5,7 @@ module github.com/nutanix-cloud-native/copy-file-to-pod
 
 go 1.23.2
 
-toolchain go1.24.1
+toolchain go1.24.2
 
 require (
 	k8s.io/cli-runtime v0.31.2
