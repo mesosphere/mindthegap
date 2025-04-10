@@ -13,13 +13,14 @@ OCI registry.
 
 ## Usage
 
-### Image bundles
-
-#### Creating an image bundle
+### Creating a bundle
 
 ```shell
-mindthegap create image-bundle --images-file <path/to/images.yaml> \
-  --platform <platform> [--platform <platform> ...] \
+mindthegap create bundle \
+  [--images-file <path/to/images.yaml>] \
+  [--platform <platform> [--platform <platform> ...]] \
+  [--helm-charts-file <path/to/helm-charts.yaml>] \
+  [--oci-artifacts-file <path/to/helm-charts.yaml>] \
   [--output-file <path/to/output.tar>]
 ```
 
@@ -30,7 +31,6 @@ an image per line, e.g.
 ```plain
 nginx:1.21.5
 test.registry2.io/test-image6:atag
-```
 
 Note that images from Docker Hub must be prefixed with `docker.io` and those "official" images
 must have the `library` namespace specified.
@@ -50,6 +50,9 @@ The output file will be a tarball that can be seeded into a registry,
 or that can be untarred and used as the storage directory for an OCI registry
 served via `registry:2`.
 
+See the [example helm-charts.yaml](helm-example.yaml) for the structure of the
+Helm charts config file.
+
 It is possible to include OCI artifacts that are not OCI images.
 This is useful for bundling Flux kustomizations, Helm Charts directly from OCI
 registries, and any arbitrary OCI artifacts. To include an OCI artifacts, specify
@@ -58,92 +61,7 @@ the `--oci-artifacts-file` path. The format of the provided file matches the
 
 The OCI artifacts with image index are not supported.
 
-#### Pushing an image bundle
-
-**_This command is deprecated - see [Pushing a bundle](#pushing-a-bundle-supports-both-image-or-helm-chart)_**
-
-```shell
-mindthegap push image-bundle --image-bundle <path/to/images.tar> \
-  --to-registry <registry.address> \
-  [--to-registry-insecure-skip-tls-verify]
-```
-
-All images in the image bundle tar file will be pushed to the target OCI registry.
-
-Some registries (e.g. [zot](https://zotregistry.dev/) are strict about what media types they support. If you are pushing
-to a registry that only accepts OCI media types, then specify the `--force-oci-media-types` flag. This will internally
-convert any images that currently use Docker media types (`application/vnd.docker.*`) to OCI compatible media types
-(`application/vnd.oci.*`). Using the images via any container runtime does not change.
-
-#### Serving an image bundle
-
-**_This command is deprecated - see [Serving a bundle](#serving-a-bundle-supports-both-image-or-helm-chart)_**
-
-```shell
-mindthegap serve image-bundle --image-bundle <path/to/images.tar> \
-  [--listen-address <listen.address>] \
-  [--listen-port <listen.port>]
-```
-
-Start an OCI registry serving the contents of the image bundle. Note that the OCI registry will
-be in read-only mode to reflect the source of the data being a static tarball so pushes to this
-registry will fail.
-
-#### Importing an image bundle into containerd
-
-```shell
-mindthegap import image-bundle --image-bundle <path/to/images.tar> \
-  [--containerd-namespace <containerd.namespace]
-```
-
-Import the images from the image bundle into containerd in the specified namespace. If
-`--containerd-namespace` is not specified, images will be imported into `k8s.io` namespace. This
-command requires `ctr` to be in the `PATH`.
-
-### Helm chart bundles
-
-#### Creating a Helm chart bundle
-
-```shell
-mindthegap create helm-bundle --helm-charts-file <path/to/helm-charts.yaml> \
-  [--output-file <path/to/output.tar>]
-```
-
-See the [example helm-charts.yaml](helm-example.yaml) for the structure of the
-Helm charts config file.
-
-The output file will be a tarball that can be seeded into a registry,
-or that can be untarred and used as the storage directory for an OCI registry
-served via `registry:2`.
-
-#### Pushing a Helm chart bundle
-
-**_This command is deprecated - see [Pushing a bundle](#pushing-a-bundle-supports-both-image-or-helm-chart)_**
-
-```shell
-mindthegap push helm-bundle --image-bundle <path/to/helm-charts.tar> \
-  --to-registry <registry.address> \
-  [--to-registry-insecure-skip-tls-verify]
-```
-
-All Helm charts in the bundle tar file will be pushed to the target OCI registry.
-
-#### Serving a Helm chart bundle
-
-**_This command is deprecated - see [Serving a bundle](#serving-a-bundle-supports-both-image-or-helm-chart)_**
-
-```shell
-mindthegap serve helm-bundle --helm-bundle <path/to/helm-charts.tar> \
-  [--listen-address <addr>] \
-  [--list-port <port>] \
-  [--tls-cert-file <path/to/cert/file> --tls-private-key-file <path/to/key/file>]
-```
-
-Start an OCI registry serving the contents of the image bundle. Note that the OCI registry will
-be in read-only mode to reflect the source of the data being a static tarball so pushes to this
-registry will fail.
-
-### Pushing a bundle (supports both image or Helm chart)
+### Pushing a bundle
 
 ```shell
 mindthegap push bundle --bundle <path/to/bundle.tar> \
@@ -153,7 +71,20 @@ mindthegap push bundle --bundle <path/to/bundle.tar> \
 
 All images in an image bundle tar file, or Helm charts in a chart bundle, will be pushed to the target OCI registry.
 
-### Serving a bundle (supports both image or Helm chart)
+#### Existing tag behaviour
+
+When pushing to a registry which could already contain tags that are included in the bundle, the behaviour can be
+specified via the `--on-existing-tag` flag. The following strategies are available:
+
+- `overwrite`: Overwrite the tag with the contents from the bundle (Default)
+- `error`: Return an error if a matching tag already exists
+- `skip`: Do not push the tag if it already exists
+- `merge-with-retain`: Merge the image index from the bundle with the existing tag, retaining any platforms that already
+  exist in the registry
+- `merge-with-overwrite`: Merge the image index from the bundle with the existing tag, overwriting any platforms that
+  already exist in the registry
+
+### Serving a bundle
 
 ```shell
 mindthegap serve bundle --bundle <path/to/bundle.tar> \
@@ -164,6 +95,17 @@ mindthegap serve bundle --bundle <path/to/bundle.tar> \
 Start an OCI registry serving the contents of the image bundle or Helm charts bundle. Note that the OCI registry will
 be in read-only mode to reflect the source of the data being a static tarball so pushes to this
 registry will fail.
+
+### Importing an image bundle into containerd
+
+```shell
+mindthegap import image-bundle --image-bundle <path/to/images.tar> \
+  [--containerd-namespace <containerd.namespace]
+```
+
+Import the images from the image bundle into containerd in the specified namespace. If
+`--containerd-namespace` is not specified, images will be imported into `k8s.io` namespace. This
+command requires `ctr` to be in the `PATH`.
 
 ## How does it work?
 

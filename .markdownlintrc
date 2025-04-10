@@ -4,7 +4,7 @@
   "MD004": { "style": "dash" },
   "MD007": { "indent": 4 },
   "MD013": { "line_length": 120 },
-  "MD030": { "ul_multi": 3, "ol_multi": 2 },
+  "MD030": { "ul_multi": 1, "ol_multi": 1 },
   "MD033": { "allowed_elements": ["h1", "img"]},
   "MD035": { "style": "---" }
 }
