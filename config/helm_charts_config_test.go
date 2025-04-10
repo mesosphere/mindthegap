@@ -115,11 +115,24 @@ func TestParseHelmChartsFile(t *testing.T) {
 				},
 			},
 		},
+	}, {
+		name: "multiple charts with with multiple versions in plain text file", want: HelmChartsConfig{
+			ChartURLs: []string{
+				"oci://test.registry.io/test-image:tag1",
+				"oci://test.registry.io/test-image:tag3",
+				"http://test.registry2.io/test-image-v0.3.1.tgz",
+				"oci://plain/image:tag",
+				"oci://image2:tag2",
+			},
+		},
 	}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ext := "yaml"
+			if strings.HasSuffix(tt.name, "in plain text file") {
+				ext = "txt"
+			}
 			got, err := ParseHelmChartsConfigFile(
 				filepath.Join(
 					"testdata",

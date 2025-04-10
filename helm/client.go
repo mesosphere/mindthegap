@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/distribution/reference"
 	"github.com/hashicorp/go-getter"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
@@ -170,6 +171,12 @@ func (c *Client) GetChartFromRepo(
 }
 
 func (c *Client) GetChartFromURL(outputDir, chartURL, workingDir string) (string, error) {
+	// Charts pulled from OCI registries will have the scheme "oci://" for the chart name.
+	// We can use the built-in Helm downloader to fetch these charts.
+	if strings.HasPrefix(chartURL, OCIScheme) {
+		return c.getChartFromOCIURL(outputDir, chartURL)
+	}
+
 	getters := make(map[string]getter.Getter, len(getter.Getters))
 	for scheme, getter := range getter.Getters {
 		getters[scheme] = getter
@@ -198,6 +205,34 @@ func (c *Client) GetChartFromURL(outputDir, chartURL, workingDir string) (string
 		return "", fmt.Errorf("failed to fetch chart from %s: %w", chartURL, err)
 	}
 	return filepath.Join(outputDir, filepath.Base(chartURL)), nil
+}
+
+func (c *Client) getChartFromOCIURL(outputDir, chartURL string) (string, error) {
+	ociURL, err := url.Parse(chartURL)
+	if err != nil {
+		return "", fmt.Errorf("invalid OCI chart URL %q: %w", chartURL, err)
+	}
+
+	ociRef, err := reference.ParseNormalizedNamed(strings.TrimPrefix(chartURL, ociURL.Scheme+"://"))
+	if err != nil {
+		return "", fmt.Errorf("invalid OCI chart URL %q: %w", chartURL, err)
+	}
+
+	taggedOCIRef, ok := ociRef.(reference.NamedTagged)
+	if !ok {
+		tagged, err := reference.WithTag(ociRef, "latest")
+		if err != nil {
+			return "", fmt.Errorf("invalid OCI chart URL %q: %w", chartURL, err)
+		}
+		taggedOCIRef = tagged
+	}
+
+	return c.GetChartFromRepo(
+		outputDir,
+		"",
+		OCIScheme+"://"+taggedOCIRef.Name(),
+		taggedOCIRef.Tag(),
+	)
 }
 
 func (c *Client) CreateHelmRepoIndex(dir string) error {
