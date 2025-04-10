@@ -274,6 +274,19 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.20.0 (2025-04-10)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: go 1.24.2 to fix CVE by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/883
+* feat: Introduce merge-with-{overwrite,retain} push modes by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/882
+* feat: Support plain text charts file and fix OCI charts by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/886
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.19.1...v1.20.0
+
 ## 1.19.1 (2025-04-07)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
