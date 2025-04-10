@@ -517,6 +517,10 @@ func pullCharts(
 
 		_, ok := cfg.Repositories["local"]
 		if !ok {
+			if cfg.Repositories == nil {
+				cfg.Repositories = make(map[string]config.HelmRepositorySyncConfig, 1)
+			}
+
 			cfg.Repositories["local"] = config.HelmRepositorySyncConfig{
 				Charts: make(map[string][]string, 1),
 			}

@@ -31,6 +31,7 @@ an image per line, e.g.
 ```plain
 nginx:1.21.5
 test.registry2.io/test-image6:atag
+```
 
 Note that images from Docker Hub must be prefixed with `docker.io` and those "official" images
 must have the `library` namespace specified.
@@ -51,9 +52,14 @@ or that can be untarred and used as the storage directory for an OCI registry
 served via `registry:2`.
 
 See the [example helm-charts.yaml](helm-example.yaml) for the structure of the
-Helm charts config file.
+Helm charts config file.  You can also provide the images file in a simple file with
+a chart URL per line, e.g.
 
-It is possible to include OCI artifacts that are not OCI images.
+```plain
+oci://ghcr.io/stefanprodan/charts/podinfo:6.1.0
+```
+
+It is also possible to include OCI artifacts that are not OCI images.
 This is useful for bundling Flux kustomizations, Helm Charts directly from OCI
 registries, and any arbitrary OCI artifacts. To include an OCI artifacts, specify
 the `--oci-artifacts-file` path. The format of the provided file matches the

@@ -13,3 +13,5 @@ repositories:
     charts:
       node-feature-discovery:
       - "0.15.2"
+chartURLs:
+  - oci://ghcr.io/stefanprodan/charts/podinfo:6.3.0

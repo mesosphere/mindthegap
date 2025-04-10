@@ -90,6 +90,17 @@ var _ = Describe("Serve Helm Bundle", func() {
 			helm.InsecureSkipTLSverifyOpt(),
 		)
 
+		// This one is bundled via OCI.
+		helpers.ValidateChartIsAvailable(
+			GinkgoT(),
+			Default,
+			"127.0.0.1",
+			port,
+			"podinfo",
+			"6.3.0",
+			helm.InsecureSkipTLSverifyOpt(),
+		)
+
 		close(stopCh)
 
 		Eventually(done).Should(BeClosed())
@@ -151,6 +162,17 @@ var _ = Describe("Serve Helm Bundle", func() {
 			"node-feature-discovery",
 			"0.15.2",
 			helm.CAFileOpt(originalCACertFile),
+		)
+
+		// This one is bundled via OCI.
+		helpers.ValidateChartIsAvailable(
+			GinkgoT(),
+			Default,
+			ipAddr.String(),
+			port,
+			"podinfo",
+			"6.3.0",
+			helm.InsecureSkipTLSverifyOpt(),
 		)
 
 		// Backup the original CA file to be used after checking the new CA file works.

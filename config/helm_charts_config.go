@@ -4,9 +4,12 @@
 package config
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"sort"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -149,8 +152,23 @@ func ParseHelmChartsConfigFile(configFile string) (HelmChartsConfig, error) {
 	)
 	dec.KnownFields(true)
 	yamlParseErr = dec.Decode(&config)
-	if yamlParseErr != nil {
-		return HelmChartsConfig{}, fmt.Errorf("failed to parse config file: %w", yamlParseErr)
+	if yamlParseErr == nil {
+		return config, nil
+	}
+
+	if _, seekErr := f.Seek(0, io.SeekStart); seekErr != nil {
+		return HelmChartsConfig{}, fmt.Errorf("failed to reset file reader for parsing: %w", seekErr)
+	}
+
+	fileScanner := bufio.NewScanner(f)
+	fileScanner.Split(bufio.ScanLines)
+	for fileScanner.Scan() {
+		trimmedLine := strings.TrimSpace(fileScanner.Text())
+		if trimmedLine == "" || strings.HasPrefix(trimmedLine, "#") {
+			continue
+		}
+
+		config.ChartURLs = append(config.ChartURLs, trimmedLine)
 	}
 
 	return config, nil

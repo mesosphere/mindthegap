@@ -12,7 +12,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/spf13/cobra"
 
-	createhelmbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/create/helmbundle"
+	createbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/create/bundle"
 	"github.com/mesosphere/mindthegap/test/e2e/helmbundle/helpers"
 )
 
@@ -27,7 +27,7 @@ var _ = Describe("Create Bundle", func() {
 
 		bundleFile = filepath.Join(tmpDir, "helm-bundle.tar")
 
-		cmd = helpers.NewCommand(GinkgoT(), createhelmbundle.NewCommand)
+		cmd = helpers.NewCommand(GinkgoT(), createbundle.NewCommand)
 		cmd.SilenceUsage = true
 	})
 
