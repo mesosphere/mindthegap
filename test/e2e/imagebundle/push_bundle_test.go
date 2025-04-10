@@ -443,6 +443,179 @@ var _ = Describe("Push Bundle", func() {
 
 				Expect(outputBuf.String()).To(ContainSubstring("✗"))
 			})
+
+		})
+
+		Context("Merge existing", Ordered, func() {
+			var (
+				registryAddress                  string
+				outputBuf                        *bytes.Buffer
+				arm64BundleFile, amd64BundleFile string
+				registryHost                     string
+				registryPort                     int
+			)
+
+			BeforeAll(func() {
+				port, err := freeport.GetFreePort()
+				Expect(err).NotTo(HaveOccurred())
+				reg, err := registry.NewRegistry(registry.Config{
+					Storage: registry.FilesystemStorage(filepath.Join(tmpDir, "registry")),
+					Host:    "127.0.0.1",
+					Port:    uint16(port),
+				})
+				registryHost = "127.0.0.1"
+				registryPort = port
+				registryAddress = fmt.Sprintf("http://127.0.0.1:%d", port)
+
+				done := make(chan struct{})
+				go func() {
+					defer GinkgoRecover()
+
+					Expect(
+						reg.ListenAndServe(
+							funcr.New(func(prefix, args string) {
+								log.Println(prefix, args)
+							}, funcr.Options{}),
+						),
+					).To(Succeed())
+
+					close(done)
+				}()
+
+				DeferCleanup(func() {
+					Expect(reg.Shutdown(context.Background())).To((Succeed()))
+
+					Eventually(done).Should(BeClosed())
+				})
+
+				helpers.WaitForTCPPort(GinkgoT(), "127.0.0.1", port)
+			})
+
+			BeforeEach(func() {
+				// Deliberately copy an older tag to the test registry so we can test overwrite and retain.
+				craneCopyOutput, err := exec.Command(
+					"crane",
+					"copy",
+					"ghcr.io/stefanprodan/podinfo:6.1.0",
+					fmt.Sprintf("%s:%d/stefanprodan/podinfo:6.2.0", registryHost, registryPort),
+				).CombinedOutput()
+				Expect(err).NotTo(HaveOccurred(), string(craneCopyOutput))
+
+				amd64BundleFile = filepath.Join(tmpDir, "amd64-image-bundle.tar")
+				helpers.CreateBundle(
+					GinkgoT(),
+					amd64BundleFile,
+					filepath.Join("testdata", "create-success.yaml"),
+					"linux/amd64",
+				)
+
+				arm64BundleFile = filepath.Join(tmpDir, "arm64-image-bundle.tar")
+				helpers.CreateBundle(
+					GinkgoT(),
+					arm64BundleFile,
+					filepath.Join("testdata", "create-success.yaml"),
+					"linux/arm64",
+				)
+
+				DeferCleanup(GinkgoWriter.ClearTeeWriters)
+				outputBuf = bytes.NewBuffer(nil)
+				GinkgoWriter.TeeTo(outputBuf)
+			})
+
+			It("Successful push with explicit --on-existing-tag=merge-with-overwrite", func() {
+				args := []string{
+					"--bundle", arm64BundleFile,
+					"--to-registry", registryAddress,
+					"--to-registry-insecure-skip-tls-verify",
+					"--on-existing-tag=merge-with-overwrite",
+					"--image-push-concurrency=4",
+				}
+				cmd.SetArgs(args)
+				Expect(cmd.Execute()).To(Succeed())
+
+				args = []string{
+					"--bundle", amd64BundleFile,
+					"--to-registry", registryAddress,
+					"--to-registry-insecure-skip-tls-verify",
+					"--on-existing-tag=merge-with-overwrite",
+					"--image-push-concurrency=4",
+				}
+				cmd.SetArgs(args)
+				Expect(cmd.Execute()).To(Succeed())
+
+				helpers.ValidatePlatformDigestsInIndex(
+					GinkgoT(),
+					registryHost,
+					registryPort,
+					"",
+					"stefanprodan/podinfo",
+					"6.2.0",
+					map[*v1.Platform]string{
+						// Two new digests overwritten by the pushes above.
+						&v1.Platform{
+							OS:           "linux",
+							Architecture: "amd64",
+						}: "sha256:f60e14b08375a64528113dd8808b16030c771f626e66961dfaf511b74d6f68dc",
+						&v1.Platform{
+							OS:           "linux",
+							Architecture: "arm64",
+						}: "sha256:87e43935515a74fcb742d66ee23f5229bd8ac5782f2810787b23c47325cb963e",
+						// And another existing digest that was retained.
+						&v1.Platform{
+							OS:           "linux",
+							Architecture: "arm",
+							Variant:      "v7",
+						}: "sha256:26e9410e14d2090953bc1773b4b80beaeeb9171701eda64309a02bc8e87a3f64",
+					},
+				)
+			})
+
+			It("Successful push with explicit --on-existing-tag=merge-with-retain", func() {
+				args := []string{
+					"--bundle", arm64BundleFile,
+					"--to-registry", registryAddress,
+					"--to-registry-insecure-skip-tls-verify",
+					"--on-existing-tag=merge-with-retain",
+					"--image-push-concurrency=4",
+				}
+				cmd.SetArgs(args)
+				Expect(cmd.Execute()).To(Succeed())
+
+				args = []string{
+					"--bundle", amd64BundleFile,
+					"--to-registry", registryAddress,
+					"--to-registry-insecure-skip-tls-verify",
+					"--on-existing-tag=merge-with-retain",
+					"--image-push-concurrency=4",
+				}
+				cmd.SetArgs(args)
+				Expect(cmd.Execute()).To(Succeed())
+
+				helpers.ValidatePlatformDigestsInIndex(
+					GinkgoT(),
+					registryHost,
+					registryPort,
+					"",
+					"stefanprodan/podinfo",
+					"6.2.0",
+					map[*v1.Platform]string{
+						// All digests should be retained.
+						&v1.Platform{
+							OS:           "linux",
+							Architecture: "amd64",
+						}: "sha256:6c84106ca01450e29f2fe21a93d9e93554bcde3ed1ce2c8da49d572b30f932f0",
+						&v1.Platform{
+							OS:           "linux",
+							Architecture: "arm64",
+						}: "sha256:76f835bf06880d0ec867ba008a3ae099651f17720cab39af12149ab725e34efd",
+						&v1.Platform{
+							OS:           "linux",
+							Architecture: "arm",
+							Variant:      "v7",
+						}: "sha256:26e9410e14d2090953bc1773b4b80beaeeb9171701eda64309a02bc8e87a3f64",
+					},
+				)
+			})
 		})
 
 		Context("Checking memory limit", Ordered, func() {
