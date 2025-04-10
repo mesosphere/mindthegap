@@ -35,7 +35,7 @@ require (
 	github.com/thediveo/enumflag/v2 v2.0.7
 	golang.org/x/sync v0.13.0
 	gopkg.in/yaml.v3 v3.0.1
-	helm.sh/helm/v3 v3.17.2
+	helm.sh/helm/v3 v3.17.3
 	k8s.io/apimachinery v0.32.3
 	k8s.io/klog/v2 v2.130.1
 	k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738
