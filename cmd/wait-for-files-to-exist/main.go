@@ -15,13 +15,13 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-const usage = `wait-for-file-to-exist is a simple utility that waits for file(s) to exist and then exits.
+const usage = `wait-for-files-to-exist is a simple utility that waits for file(s) to exist and then exits.
 An optional timeout can be provided which will cause the program to exit with an error. A timeout of zero (the default)
 or less means no timeout.
 
 Usage:
 
-    wait-for-file-to-exist [--timeout duration] file1 file2
+    wait-for-files-to-exist [--timeout duration] file1 file2
 `
 
 // Watch for files to exist and then exit.
