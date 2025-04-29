@@ -118,31 +118,29 @@ func main() {
 }
 
 func podNameFromFlags(f cmdutil.Factory, podName, podSelector, namespace string) (string, error) {
+	if podName != "" {
+		return podName, nil
+	}
+
 	cs, err := f.KubernetesClientSet()
 	if err != nil {
 		return "", err
 	}
 
-	var pod string
-	if podName != "" {
-		pod = podName
-	} else {
-		pods, err := cs.CoreV1().Pods(namespace).List(
-			context.Background(),
-			metav1.ListOptions{LabelSelector: podSelector},
-		)
-		if err != nil {
-			return "", fmt.Errorf("error listing pods: %w", err)
-		}
-		if len(pods.Items) == 0 {
-			return "", fmt.Errorf("no pods found matching selector %q", podSelector)
-		} else if len(pods.Items) > 1 {
-			return "", fmt.Errorf("multiple pods found matching selector %q, use --pod instead", podSelector)
-		}
-		podName = pods.Items[0].Name
+	pods, err := cs.CoreV1().Pods(namespace).List(
+		context.Background(),
+		metav1.ListOptions{LabelSelector: podSelector},
+	)
+	if err != nil {
+		return "", fmt.Errorf("error listing pods: %w", err)
+	}
+	if len(pods.Items) == 0 {
+		return "", fmt.Errorf("no pods found matching selector %q", podSelector)
+	} else if len(pods.Items) > 1 {
+		return "", fmt.Errorf("multiple pods found matching selector %q, use --pod instead", podSelector)
 	}
 
-	return pod, nil
+	return pods.Items[0].Name, nil
 }
 
 func printOutput(format string, a ...interface{}) {
