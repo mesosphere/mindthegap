@@ -209,10 +209,12 @@ spec:
           args:
             - --namespace
             - kube-system
+            - --pod
+            - temporary-registry
             - --container
             - wait
             - /registry-data/bundle.tar
-            - temporary-registry:/registry-data/bundle.tar
+            - /registry-data/bundle.tar
           volumeMounts:
             - name: bundle
               mountPath: /registry-data/bundle.tar
