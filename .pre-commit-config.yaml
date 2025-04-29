@@ -2,13 +2,25 @@
 # SPDX-License-Identifier: Apache-2.0
 
 repos:
-- repo: https://github.com/tekwizely/pre-commit-golang
-  rev: v1.0.0-rc.1
+- repo: local
   hooks:
   - id: go-mod-tidy
+    name: go mod tidy
     stages: [pre-commit]
-  - id: golangci-lint-mod
+    entry: task go:mod-tidy
+    language: system
+    types_or:
+      - go-mod
+      - go-sum
+      - go
+    pass_filenames: false
+  - id: golangci-lint
+    name: golangci-lint
     stages: [pre-commit]
+    entry: task go:lint
+    language: system
+    types: [go]
+    pass_filenames: false
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v5.0.0
   hooks:

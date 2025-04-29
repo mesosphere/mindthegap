@@ -287,7 +287,10 @@ func ValidatePlatformDigestsInIndex(
 					gstruct.IgnoreExtras|gstruct.IgnoreMissing,
 					gstruct.Fields{
 						"Platform": gomega.Equal(p),
-						"Digest":   gomega.WithTransform(func(h v1.Hash) string { return h.String() }, gomega.Equal(digest)),
+						"Digest": gomega.WithTransform(
+							func(h v1.Hash) string { return h.String() },
+							gomega.Equal(digest),
+						),
 					},
 				),
 			),

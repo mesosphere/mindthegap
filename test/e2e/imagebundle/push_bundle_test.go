@@ -443,7 +443,6 @@ var _ = Describe("Push Bundle", func() {
 
 				Expect(outputBuf.String()).To(ContainSubstring("✗"))
 			})
-
 		})
 
 		Context("Merge existing", Ordered, func() {
@@ -552,16 +551,16 @@ var _ = Describe("Push Bundle", func() {
 					"6.2.0",
 					map[*v1.Platform]string{
 						// Two new digests overwritten by the pushes above.
-						&v1.Platform{
+						{
 							OS:           "linux",
 							Architecture: "amd64",
 						}: "sha256:f60e14b08375a64528113dd8808b16030c771f626e66961dfaf511b74d6f68dc",
-						&v1.Platform{
+						{
 							OS:           "linux",
 							Architecture: "arm64",
 						}: "sha256:87e43935515a74fcb742d66ee23f5229bd8ac5782f2810787b23c47325cb963e",
 						// And another existing digest that was retained.
-						&v1.Platform{
+						{
 							OS:           "linux",
 							Architecture: "arm",
 							Variant:      "v7",
@@ -600,15 +599,15 @@ var _ = Describe("Push Bundle", func() {
 					"6.2.0",
 					map[*v1.Platform]string{
 						// All digests should be retained.
-						&v1.Platform{
+						{
 							OS:           "linux",
 							Architecture: "amd64",
 						}: "sha256:6c84106ca01450e29f2fe21a93d9e93554bcde3ed1ce2c8da49d572b30f932f0",
-						&v1.Platform{
+						{
 							OS:           "linux",
 							Architecture: "arm64",
 						}: "sha256:76f835bf06880d0ec867ba008a3ae099651f17720cab39af12149ab725e34efd",
-						&v1.Platform{
+						{
 							OS:           "linux",
 							Architecture: "arm",
 							Variant:      "v7",
