@@ -11,13 +11,14 @@ tasks:
       vars:
         - MODULE_DIR
     cmds:
-      - echo "Running golangci-lint for '{{.MODULE_DIR}}'"
-      - golangci-lint fmt --config='{{.ROOT_DIR}}/.golangci.yml' ./...
+      - task: fmt-macro
+        vars:
+          MODULE_DIR: '{{.MODULE_DIR}}'
+      - echo "Running golangci-lint run for '{{.MODULE_DIR}}'"
       - golangci-lint run --fix --config='{{.ROOT_DIR}}/.golangci.yml' ./...
-      - go fix ./...
 
   lint:
-    desc: Runs golangci-lint for all modules in repository
+    desc: Runs golangci-lint run for all modules in repository
     vars:
       GO_SUBMODULES:
         sh: fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/
@@ -27,6 +28,31 @@ tasks:
           MODULE_DIR: .
       - for: {var: GO_SUBMODULES, as: GO_SUBMODULE_PATH}
         task: lint-macro
+        vars:
+          MODULE_DIR: '{{.GO_SUBMODULE_PATH}}'
+
+  fmt-macro:
+    internal: true
+    dir: '{{.MODULE_DIR}}'
+    requires:
+      vars:
+        - MODULE_DIR
+    cmds:
+      - echo "Running golangci-lint fmt for '{{.MODULE_DIR}}'"
+      - golangci-lint fmt --config='{{.ROOT_DIR}}/.golangci.yml' ./...
+      - go fix ./...
+
+  fmt:
+    desc: Runs golangci-lint fmt for all modules in repository
+    vars:
+      GO_SUBMODULES:
+        sh: fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/
+    cmds:
+      - task: fmt-macro
+        vars:
+          MODULE_DIR: .
+      - for: {var: GO_SUBMODULES, as: GO_SUBMODULE_PATH}
+        task: fmt-macro
         vars:
           MODULE_DIR: '{{.GO_SUBMODULE_PATH}}'
 

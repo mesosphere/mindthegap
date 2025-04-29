@@ -98,6 +98,8 @@ jobs:
           reporter: github-pr-review
           golangci_lint_version: v${{ steps.versions.outputs.golangci-lint }}
           go_version: v${{ steps.versions.outputs.golang }}
+      - name: golangci-lint-fmt
+        run: devbox run -- task go:fmt
   lint-gha:
     runs-on: ubuntu-22.04
     steps:
