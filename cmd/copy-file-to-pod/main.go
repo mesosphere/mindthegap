@@ -26,7 +26,8 @@ the destination file.
 
 Usage:
 
-    copy-file-to-pod [--kubeconfig file] [--namespace namespace] [--container container] [--pod-selector="app=remote-dst"] --pod pod file remote-path
+	copy-file-to-pod [--kubeconfig file] [--namespace namespace] [--container container] \
+      (--pod-selector="app=remote-dst" | --pod=podName) file remote-path
 `
 
 // Copy file to a pod.
