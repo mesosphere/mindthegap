@@ -155,6 +155,12 @@ rules:
       - ""
     resources:
       - pods
+    verbs:
+      - list
+  - apiGroups:
+      - ""
+    resources:
+      - pods
     resourceNames:
       - temporary-registry
     verbs:
@@ -209,8 +215,8 @@ spec:
           args:
             - --namespace
             - kube-system
-            - --pod
-            - temporary-registry
+            - --pod-selector
+            - app=in-cluster-registry
             - --container
             - wait
             - /registry-data/bundle.tar
