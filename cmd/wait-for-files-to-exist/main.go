@@ -21,7 +21,7 @@ or less means no timeout.
 
 Usage:
 
-    wait-for-files-to-exist [--timeout duration] file1 file2
+    wait-for-files-to-exist [--timeout duration] file1 [file2 ...]
 `
 
 // Watch for files to exist and then exit.
@@ -52,7 +52,7 @@ func main() {
 	// Validate and exit early if any file is invalid.
 	for _, f := range fileToWaitFor {
 		if err := validateFileToWaitFor(f); err != nil {
-			exit("%w", err)
+			exit("%v", err)
 		}
 	}
 
@@ -79,7 +79,7 @@ func main() {
 
 	for res := range resultCh {
 		if res.err != nil {
-			exit("error waiting for file %q: %w", res.file, res.err)
+			exit("error waiting for file %q: %v", res.file, res.err)
 		}
 		printOutput("file %q exists!", res.file)
 	}
@@ -101,16 +101,17 @@ func validateFileToWaitFor(fileToWaitFor string) error {
 				err,
 			)
 		}
+		return nil
 	case err != nil:
 		return fmt.Errorf("failed to stat %q: %w", fileToWaitFor, err)
 	case st.IsDir():
 		return fmt.Errorf("%q is a directory, not a file", fileToWaitFor)
 	case !st.Mode().IsRegular():
 		return fmt.Errorf("%q exists but is not a regular file - type is %s", fileToWaitFor, st.Mode().String())
+	default:
+		// File exists and is a regular file.
+		return nil
 	}
-
-	// File already exists and is a regular file.
-	return nil
 }
 
 func waitForFile(ctx context.Context, fileToWaitFor string) error {
@@ -120,8 +121,11 @@ func waitForFile(ctx context.Context, fileToWaitFor string) error {
 	}
 	defer w.Close()
 
+	// Create a child context to cancel the watcher when the file already exists.
+	subCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	errChan := make(chan error)
-	go fileLoop(ctx, w, fileToWaitFor, errChan)
+	go fileLoop(subCtx, w, fileToWaitFor, errChan)
 
 	_, err = os.Lstat(fileToWaitFor)
 	if os.IsNotExist(err) {
