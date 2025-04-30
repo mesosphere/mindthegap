@@ -10,8 +10,8 @@ import (
 	"os"
 	"os/signal"
 	"slices"
-	"strings"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/genericiooptions"
 	"k8s.io/kubectl/pkg/cmd/cp"
@@ -26,7 +26,8 @@ the destination file.
 
 Usage:
 
-    copy-file-to-pod [--kubeconfig file] [--namespace namespace] [--container container] file pod:/path
+	copy-file-to-pod [--kubeconfig file] [--namespace namespace] [--container container] \
+      (--pod-selector="app=remote-dst" | --pod=podName) file remote-path
 `
 
 // Copy file to a pod.
@@ -36,6 +37,8 @@ func main() {
 
 	kubeconfig := flag.String("kubeconfig", "", "path to the kubeconfig file")
 	namespace := flag.String("namespace", "", "namespace of the pod to copy to")
+	podName := flag.String("pod", "", "name of the pod to copy to")
+	podSelector := flag.String("pod-selector", "", "label selector of the pod to copy to")
 	container := flag.String("container", "", "container of the pod to copy to")
 
 	flag.Usage = func() {
@@ -47,13 +50,13 @@ func main() {
 		exit(usage)
 	}
 
-	fileSrc := flag.Arg(0)
-	podAndFileDest := flag.Arg(1)
-
-	pod, fileDest, found := strings.Cut(podAndFileDest, ":")
-	if !found {
-		exit(usage)
+	// Enforce exactly one of --pod or --selector.
+	if (*podName == "" && *podSelector == "") || (*podName != "" && *podSelector != "") {
+		exit("you must specify exactly one of --pod or --pod-selector")
 	}
+
+	fileSrc := flag.Arg(0)
+	fileDest := flag.Arg(1)
 
 	kubeConfigFlags := genericclioptions.NewConfigFlags(false)
 	kubeConfigFlags.KubeConfig = kubeconfig
@@ -62,6 +65,12 @@ func main() {
 	matchVersionKubeConfigFlags := cmdutil.NewMatchVersionFlags(kubeConfigFlags)
 
 	f := cmdutil.NewFactory(matchVersionKubeConfigFlags)
+
+	// Resolve the pod name.
+	pod, err := podNameFromFlags(f, *podName, *podSelector, *namespace)
+	if err != nil {
+		exit("failed to resolve pod name: %v", err)
+	}
 
 	var rootKubectlArgs []string
 	if *namespace != "" {
@@ -107,6 +116,32 @@ func main() {
 	}
 
 	printOutput("successfully copied %s to %s:%s", fileSrc, pod, fileDest)
+}
+
+func podNameFromFlags(f cmdutil.Factory, podName, podSelector, namespace string) (string, error) {
+	if podName != "" {
+		return podName, nil
+	}
+
+	cs, err := f.KubernetesClientSet()
+	if err != nil {
+		return "", err
+	}
+
+	pods, err := cs.CoreV1().Pods(namespace).List(
+		context.Background(),
+		metav1.ListOptions{LabelSelector: podSelector},
+	)
+	if err != nil {
+		return "", fmt.Errorf("error listing pods: %w", err)
+	}
+	if len(pods.Items) == 0 {
+		return "", fmt.Errorf("no pods found matching selector %q", podSelector)
+	} else if len(pods.Items) > 1 {
+		return "", fmt.Errorf("multiple pods found matching selector %q, use --pod instead", podSelector)
+	}
+
+	return pods.Items[0].Name, nil
 }
 
 func printOutput(format string, a ...interface{}) {
