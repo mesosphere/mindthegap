@@ -49,9 +49,9 @@ builds:
       - amd64
       - arm64
     mod_timestamp: '{{ .CommitTimestamp }}'
-  - id: wait-for-file-to-exist
-    dir: ./cmd/wait-for-file-to-exist
-    binary: wait-for-file-to-exist
+  - id: wait-for-files-to-exist
+    dir: ./cmd/wait-for-files-to-exist
+    binary: wait-for-files-to-exist
     env:
       - CGO_ENABLED=0
     flags:
@@ -108,7 +108,7 @@ archives:
           - zip
     builds:
       - mindthegap
-      - wait-for-file-to-exist
+      - wait-for-files-to-exist
       - copy-file-to-pod
 
 kos:
@@ -128,11 +128,11 @@ kos:
     bare: true
     tags:
       - v{{trimprefix .Version "v"}}
-  - id: wait-for-file-to-exist
-    build: wait-for-file-to-exist
+  - id: wait-for-files-to-exist
+    build: wait-for-files-to-exist
     labels:
       org.opencontainers.image.created: "{{ .CommitDate }}"
-      org.opencontainers.image.title: wait-for-file-to-exist
+      org.opencontainers.image.title: wait-for-files-to-exist
       org.opencontainers.image.revision: "{{ .FullCommit }}"
       org.opencontainers.image.version: v{{trimprefix .Version "v"}}
       org.opencontainers.image.source: "{{ .GitURL }}"
@@ -140,7 +140,7 @@ kos:
       - linux/amd64
       - linux/arm64
     repositories:
-      - ghcr.io/mesosphere/wait-for-file-to-exist
+      - ghcr.io/mesosphere/wait-for-files-to-exist
     base_image: cgr.dev/chainguard/busybox
     bare: true
     tags:

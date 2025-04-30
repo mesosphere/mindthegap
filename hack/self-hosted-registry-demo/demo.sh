@@ -14,8 +14,8 @@ MINDTHEGAP_BINARY=$(gojq -r '.[] | select(.type == "Binary" and .name == "mindth
 readonly MINDTHEGAP_BINARY
 MINDTHEGAP_IMAGE=$(gojq -r '.[] | select(.type == "Docker Manifest" and .extra.ID == "mindthegap").name' "${ARTIFACTS_FILE}")
 readonly MINDTHEGAP_IMAGE
-WAIT_FOR_FILE_TO_EXIST_IMAGE=$(gojq -r '.[] | select(.type == "Docker Manifest" and .extra.ID == "wait-for-file-to-exist").name' "${ARTIFACTS_FILE}")
-readonly WAIT_FOR_FILE_TO_EXIST_IMAGE
+WAIT_FOR_FILES_TO_EXIST_IMAGE=$(gojq -r '.[] | select(.type == "Docker Manifest" and .extra.ID == "wait-for-files-to-exist") | .name' "${ARTIFACTS_FILE}")
+readonly WAIT_FOR_FILES_TO_EXIST_IMAGE
 COPY_FILE_TO_POD_IMAGE=$(gojq -r '.[] | select(.type == "Docker Manifest" and .extra.ID == "copy-file-to-pod").name' "${ARTIFACTS_FILE}")
 readonly COPY_FILE_TO_POD_IMAGE
 
@@ -58,7 +58,7 @@ kubectl get nodes
 # with the necessary images, but this is a simpler way to demonstrate the concept.
 kind load docker-image --name self-hosted-registry-demo \
   "${MINDTHEGAP_IMAGE}" \
-  "${WAIT_FOR_FILE_TO_EXIST_IMAGE}" \
+  "${WAIT_FOR_FILES_TO_EXIST_IMAGE}" \
   "${COPY_FILE_TO_POD_IMAGE}"
 
 # Configure containerd on each node to use the in-cluster registry service address - this will
@@ -97,7 +97,7 @@ spec:
   hostNetwork: true
   initContainers:
     - name: wait
-      image: ${WAIT_FOR_FILE_TO_EXIST_IMAGE}
+      image: ${WAIT_FOR_FILES_TO_EXIST_IMAGE}
       args:
         - /registry-data/bundle.tar
       volumeMounts:
