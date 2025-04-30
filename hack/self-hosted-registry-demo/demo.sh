@@ -8,14 +8,19 @@ readonly SCRIPT_DIR
 GIT_ROOT="$(git rev-parse --show-toplevel)"
 readonly GIT_ROOT
 
-MINDTHEGAP_VERSION="$(gojq -r .version "${GIT_ROOT}/dist/metadata.json")"
-readonly MINDTHEGAP_VERSION
+readonly ARTIFACTS_FILE="${GIT_ROOT}/dist/artifacts.json"
 
-IMAGE_VERSION="${MINDTHEGAP_VERSION}-$(go env GOARCH)"
-readonly IMAGE_VERSION
+MINDTHEGAP_BINARY=$(gojq -r '.[] | select(.type == "Binary" and .name == "mindthegap") | .path' "${ARTIFACTS_FILE}")
+readonly MINDTHEGAP_BINARY
+MINDTHEGAP_IMAGE=$(gojq -r '.[] | select(.type == "Docker Manifest" and .extra.ID == "mindthegap").name' "${ARTIFACTS_FILE}")
+readonly MINDTHEGAP_IMAGE
+WAIT_FOR_FILE_TO_EXIST_IMAGE=$(gojq -r '.[] | select(.type == "Docker Manifest" and .extra.ID == "wait-for-file-to-exist").name' "${ARTIFACTS_FILE}")
+readonly WAIT_FOR_FILE_TO_EXIST_IMAGE
+COPY_FILE_TO_POD_IMAGE=$(gojq -r '.[] | select(.type == "Docker Manifest" and .extra.ID == "copy-file-to-pod").name' "${ARTIFACTS_FILE}")
+readonly COPY_FILE_TO_POD_IMAGE
 
 # Build the image bundle
-"${GIT_ROOT}/dist/mindthegap_$(go env GOOS)_$(go env GOARCH)/mindthegap" \
+"${GIT_ROOT}/${MINDTHEGAP_BINARY}" \
   create bundle \
   --images-file "${SCRIPT_DIR}/bootstrap-images.txt" \
   --output-file "${SCRIPT_DIR}/bundle.tar" \
@@ -51,8 +56,10 @@ kubectl get nodes
 
 # Load the necessary images into the KinD cluster - this could be done by building the KinD node image
 # with the necessary images, but this is a simpler way to demonstrate the concept.
-kind load docker-image --name self-hosted-registry-demo --quiet \
-  ko.local/{mindthegap,wait-for-file-to-exist,copy-file-to-pod}:"${IMAGE_VERSION}"
+kind load docker-image --name self-hosted-registry-demo \
+  "${MINDTHEGAP_IMAGE}" \
+  "${WAIT_FOR_FILE_TO_EXIST_IMAGE}" \
+  "${COPY_FILE_TO_POD_IMAGE}"
 
 # Configure containerd on each node to use the in-cluster registry service address - this will
 # ensure that the images are only pulled from the in-cluster registry service.
@@ -90,7 +97,7 @@ spec:
   hostNetwork: true
   initContainers:
     - name: wait
-      image: ko.local/wait-for-file-to-exist:${IMAGE_VERSION}
+      image: ${WAIT_FOR_FILE_TO_EXIST_IMAGE}
       args:
         - /registry-data/bundle.tar
       volumeMounts:
@@ -98,7 +105,7 @@ spec:
           mountPath: /registry-data
   containers:
     - name: registry
-      image: ko.local/mindthegap:${IMAGE_VERSION}
+      image: ${MINDTHEGAP_IMAGE}
       args:
         - serve
         - bundle
@@ -205,7 +212,7 @@ spec:
       hostNetwork: true
       containers:
         - name: copy
-          image: ko.local/copy-file-to-pod:${IMAGE_VERSION}
+          image: ${COPY_FILE_TO_POD_IMAGE}
           args:
             - --namespace
             - kube-system
