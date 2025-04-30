@@ -8,15 +8,15 @@ readonly SCRIPT_DIR
 GIT_ROOT="$(git rev-parse --show-toplevel)"
 readonly GIT_ROOT
 
-ARTIFACTS_FILE="${GIT_ROOT}/dist/artifacts.json"
-readonly ARTIFACTS_FILE
-MINDTHEGAP_BINARY=$(gojq -r '.[] | select(.type == "Binary" and .extra.ID == "mindthegap") | .path' "${ARTIFACTS_FILE}")
+readonly ARTIFACTS_FILE="${GIT_ROOT}/dist/artifacts.json"
+
+MINDTHEGAP_BINARY=$(gojq -r '.[] | select(.type == "Binary" and .name == "mindthegap") | .path' "${ARTIFACTS_FILE}")
 readonly MINDTHEGAP_BINARY
-MINDTHEGAP_IMAGE=$(gojq -r '.[] | select(.type == "Docker Manifest" and .extra.ID == "mindthegap") | .name' "${ARTIFACTS_FILE}")
+MINDTHEGAP_IMAGE=$(gojq -r '.[] | select(.type == "Docker Manifest" and .extra.ID == "mindthegap").name' "${ARTIFACTS_FILE}")
 readonly MINDTHEGAP_IMAGE
-WAIT_FOR_FILE_TO_EXIST_IMAGE=$(gojq -r '.[] | select(.type == "Docker Manifest" and .extra.ID == "wait-for-file-to-exist") | .name' "${ARTIFACTS_FILE}")
+WAIT_FOR_FILE_TO_EXIST_IMAGE=$(gojq -r '.[] | select(.type == "Docker Manifest" and .extra.ID == "wait-for-file-to-exist").name' "${ARTIFACTS_FILE}")
 readonly WAIT_FOR_FILE_TO_EXIST_IMAGE
-COPY_FILE_TO_POD_IMAGE=$(gojq -r '.[] | select(.type == "Docker Manifest" and .extra.ID == "copy-file-to-pod") | .name' "${ARTIFACTS_FILE}")
+COPY_FILE_TO_POD_IMAGE=$(gojq -r '.[] | select(.type == "Docker Manifest" and .extra.ID == "copy-file-to-pod").name' "${ARTIFACTS_FILE}")
 readonly COPY_FILE_TO_POD_IMAGE
 
 # Build the image bundle

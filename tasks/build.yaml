@@ -64,11 +64,11 @@ tasks:
         sh: go env GOOS
       HOST_GOARCH:
         sh: go env GOARCH
-      GORELEASER_FLAGS: '--snapshot --config={{.TEMP_CONFIG}}'
+      GORELEASER_FLAGS: '--snapshot --config={{.TEMP_CONFIG}} --skip=announce,archive,publish,validate'
       GORELEASER_PLATFORMS:
         sh: test -n '{{.GORELEASER_PLATFORMS}}' && echo '{{.GORELEASER_PLATFORMS}}' || echo '"{{.HOST_GOOS}}_{{.HOST_GOARCH}}"'
     cmds:
-      - defer: rm -f '{{.TEMP_CONFIG}}' '{{.TEMP_RELEASE_NOTES}}'
+      - defer: rm -f '{{.TEMP_CONFIG}}'
       - cmd: |
           gojq --yaml-input --yaml-output '.builds |= map(del(.goarch) | del(.goos) | .targets|=([{{.GORELEASER_PLATFORMS}}] | unique | map(. | sub("_amd64$";"_amd64_v1"))))' .goreleaser.yml > '{{.TEMP_CONFIG}}'
         silent: true
