@@ -274,6 +274,22 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.21.0 (2025-04-30)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: allow for selector in copy-file-to-pod by @dkoshkin in https://github.com/mesosphere/mindthegap/pull/896
+* feat: support waiting for multiple files by @dkoshkin in https://github.com/mesosphere/mindthegap/pull/895
+### Other Changes
+* build: Use golangci-lint-v2 formatter in vscode by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/891
+* build: Extract go:fmt task by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/897
+* test: fix self-hosted registry demo image names by @dkoshkin in https://github.com/mesosphere/mindthegap/pull/898
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.20.0...v1.21.0
+
 ## 1.20.0 (2025-04-10)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
