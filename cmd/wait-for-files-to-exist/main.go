@@ -10,18 +10,17 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"sync"
 
 	"github.com/fsnotify/fsnotify"
 )
 
-const usage = `wait-for-files-to-exist is a simple utility that waits for file(s) to exist and then exits.
+const usage = `wait-for-files-to-exist is a simple utility that waits for a file to exist and then exits.
 An optional timeout can be provided which will cause the program to exit with an error. A timeout of zero (the default)
 or less means no timeout.
 
 Usage:
 
-    wait-for-files-to-exist [--timeout duration] file1 [file2 ...]
+    wait-for-files-to-exist [--timeout duration] file
 `
 
 // Watch for files to exist and then exit.
@@ -36,7 +35,14 @@ func main() {
 	}
 	flag.Parse()
 
-	// Set up a timeout context if requested.
+	if flag.NArg() < 1 {
+		exit("must specify a file to watch")
+	}
+	if flag.NArg() > 1 {
+		exit("only one file can be specified")
+	}
+	fileToWaitFor := flag.Arg(0)
+
 	if *timeout > 0 {
 		timeoutCtx, cancel := context.WithTimeout(ctx, *timeout)
 		defer cancel()
@@ -44,48 +50,16 @@ func main() {
 		ctx = timeoutCtx
 	}
 
-	if flag.NArg() < 1 {
-		exit("must specify at-least one file to watch")
+	w, err := fsnotify.NewWatcher()
+	if err != nil {
+		exit("creating a new watcher: %s", err)
 	}
-	fileToWaitFor := flag.Args()
+	defer w.Close()
 
-	// Validate and exit early if any file is invalid.
-	for _, f := range fileToWaitFor {
-		if err := validateFileToWaitFor(f); err != nil {
-			exit("%v", err)
-		}
-	}
+	// Start listening for events.
+	errChan := make(chan error)
+	go fileLoop(ctx, w, fileToWaitFor, errChan)
 
-	// Create one watcher per file.
-	var wg sync.WaitGroup
-	wg.Add(len(fileToWaitFor))
-	type fileResult struct {
-		file string
-		err  error
-	}
-	resultCh := make(chan fileResult, len(fileToWaitFor))
-	for _, f := range fileToWaitFor {
-		printOutput("waiting for file %q to exist", f)
-		go func(path string) {
-			defer wg.Done()
-			resultCh <- fileResult{file: path, err: waitForFile(ctx, path)}
-		}(f)
-	}
-
-	go func() {
-		wg.Wait()
-		close(resultCh)
-	}()
-
-	for res := range resultCh {
-		if res.err != nil {
-			exit("error waiting for file %q: %v", res.file, res.err)
-		}
-		printOutput("file %q exists!", res.file)
-	}
-}
-
-func validateFileToWaitFor(fileToWaitFor string) error {
 	st, err := os.Lstat(fileToWaitFor)
 
 	switch {
@@ -93,67 +67,53 @@ func validateFileToWaitFor(fileToWaitFor string) error {
 		// File does not exist, so we need to watch the parent directory for the file creation.
 		// Ensure to watch the real path rather than a symlinked path which does not work properly with
 		// inotify.
-		_, err = filepath.EvalSymlinks(filepath.Dir(fileToWaitFor))
+		dirPath, err := filepath.EvalSymlinks(filepath.Dir(fileToWaitFor))
 		if err != nil {
-			return fmt.Errorf(
-				"failed to evaluate any symlinks to read real directory for %q: %w",
+			exit(
+				"failed to evaluate any symlinks to read real directory for %q: %v",
 				fileToWaitFor,
 				err,
 			)
 		}
-		return nil
-	case err != nil:
-		return fmt.Errorf("failed to stat %q: %w", fileToWaitFor, err)
-	case st.IsDir():
-		return fmt.Errorf("%q is a directory, not a file", fileToWaitFor)
-	case !st.Mode().IsRegular():
-		return fmt.Errorf("%q exists but is not a regular file - type is %s", fileToWaitFor, st.Mode().String())
-	default:
-		// File exists and is a regular file.
-		return nil
-	}
-}
 
-func waitForFile(ctx context.Context, fileToWaitFor string) error {
-	w, err := fsnotify.NewWatcher()
-	if err != nil {
-		return fmt.Errorf("creating a new watcher: %w", err)
-	}
-	defer w.Close()
-
-	// Create a child context to cancel the watcher when the file already exists.
-	subCtx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	errChan := make(chan error)
-	go fileLoop(subCtx, w, fileToWaitFor, errChan)
-
-	_, err = os.Lstat(fileToWaitFor)
-	if os.IsNotExist(err) {
-		dirPath, err := filepath.EvalSymlinks(filepath.Dir(fileToWaitFor))
-		if err != nil {
-			return fmt.Errorf("failed to evaluate any symlinks to read real directory for %q: %w", fileToWaitFor, err)
+		if dirPath != filepath.Dir(fileToWaitFor) {
+			printOutput(
+				"watching for file %q (real path %q) to exist",
+				fileToWaitFor,
+				filepath.Join(dirPath, filepath.Base(fileToWaitFor)),
+			)
+		} else {
+			printOutput(
+				"watching for file %q to exist",
+				fileToWaitFor,
+			)
 		}
 
 		if err := w.Add(dirPath); err != nil {
-			return fmt.Errorf("failed to add watch %q: %w", fileToWaitFor, err)
+			exit("failed to add watch %q: %v", fileToWaitFor, err)
 		}
-	} else {
-		// File already exists, no need to wait.
-		return nil
+	case err != nil:
+		exit("failed to stat %q: %v", fileToWaitFor, err)
+	case st.IsDir():
+		exit("%q is a directory, not a file", fileToWaitFor)
+	case !st.Mode().IsRegular():
+		exit("%q exists but is not a regular file - type is %s", fileToWaitFor, st.Mode().String())
+	default:
+		// File already exists and is a regular file - we are done.
+		printOutput("file already exists!")
+		return
 	}
 
 	// Wait for the file to exist.
 	select {
 	case err := <-errChan:
 		if err != nil {
-			return fmt.Errorf("error waiting for file %q: %w", fileToWaitFor, err)
+			exit("error waiting for file %q: %v", fileToWaitFor, err)
 		}
+		printOutput("file now exists!")
 	case <-ctx.Done():
-		return fmt.Errorf("timeout waiting for file %q to exist: %w", fileToWaitFor, ctx.Err())
+		exit("timeout waiting for file %q: %v", fileToWaitFor, ctx.Err())
 	}
-
-	// File now exists, stop waiting.
-	return nil
 }
 
 func fileLoop(ctx context.Context, w *fsnotify.Watcher, fileToWaitFor string, errChan chan error) {
