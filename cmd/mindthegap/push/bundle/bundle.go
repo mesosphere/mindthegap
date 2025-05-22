@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 	"sync"
 
@@ -231,6 +232,7 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 					imagePushConcurrency,
 					out,
 					forceOCIMediaTypes,
+					filterLabels,
 					prePushFuncs...,
 				)
 				if err != nil {
@@ -316,6 +318,7 @@ type prePushFunc func(destRepositoryName name.Repository, imageTags ...string) e
 type pushConfig struct {
 	forceOCIMediaTypes bool
 	onExistingTag      onExistingTagMode
+	filters []string
 }
 
 type pushOpt func(*pushConfig)
@@ -329,6 +332,12 @@ func withForceOCIMediaTypes(force bool) pushOpt {
 func withOnExistingTagMode(mode onExistingTagMode) pushOpt {
 	return func(cfg *pushConfig) {
 		cfg.onExistingTag = mode
+	}
+}
+
+func withFilters(filters []string) pushOpt {
+	return func(cfg *pushConfig) {
+		cfg.filters = filters
 	}
 }
 
@@ -348,6 +357,7 @@ func pushImages(
 	imagePushConcurrency int,
 	out output.Output,
 	forceOCIMediaTypes bool,
+	filters []string,
 	prePushFuncs ...prePushFunc,
 ) error {
 	puller, err := remote.NewPuller(destRemoteOpts...)
@@ -444,7 +454,9 @@ func pushImages(
 					if forceOCIMediaTypes {
 						opts = append(opts, withForceOCIMediaTypes(forceOCIMediaTypes))
 					}
-
+					if len(filters) > 0 {
+						opts = append(opts, withFilters(filters))
+					}
 					if err := pushFn(srcImage, sourceRemoteOpts, destImage, destRemoteOpts, opts...); err != nil {
 						return err
 					}
@@ -494,10 +506,21 @@ func pushTag(
 		if err != nil {
 			return err 
 		}
-		filters := manifest.Annotations["org.opencontainers.image.labels"]
-		if len(filters) == 0 {
-			return nil
+		if len(pushCfg.filters) > 0 {
+			imageLabels := manifest.Annotations["org.opencontainers.image.labels"]
+			if imageLabels == "" {
+				logs.Debug.Printf("Skipping image %s:%s due to no labels matching filter", srcImage, destImage)
+				return nil
+			}
+			labels := strings.Split(imageLabels, ",")
+			for _, filter := range pushCfg.filters {
+				if !slices.Contains(labels, filter) {
+					logs.Debug.Printf("Skipping image %s:%s due to filter %s", srcImage, destImage, filter)
+					return nil
+				}
+			}
 		}
+		fmt.Println("Pushing image", srcImage, "to", destImage)
 		return remote.Write(destImage, image, destRemoteOpts...)
 	}
 
@@ -510,8 +533,21 @@ func pushTag(
 	if err != nil {
 		return err
 	}
-	if indexManifest.Annotations["org.opencontainers.image.labels"] == "" {
-		return nil
+
+	if len(pushCfg.filters) > 0 {
+		imageLabels := indexManifest.Annotations["org.opencontainers.image.labels"]
+		if imageLabels == "" {
+			logs.Debug.Printf("Skipping image %s:%s due to no labels matching filter", srcImage, destImage)
+			return nil
+		}
+		labels := strings.Split(imageLabels, ",")
+		for _, filter := range pushCfg.filters {
+			if !slices.Contains(labels, filter) {
+				logs.Debug.Printf("Skipping image %s:%s due to filter %s", srcImage, destImage, filter)
+				return nil
+			}
+		}
+		fmt.Println("Pushing filtered image", srcImage, "to", destImage)
 	}
 
 	// Get the existing index from the destination registry if merging is enabled.
@@ -541,7 +577,7 @@ func pushTag(
 			return fmt.Errorf("failed to convert index to OCI format: %w", err)
 		}
 	}
-
+	
 	return remote.WriteIndex(destImage, idx, destRemoteOpts...)
 }
 
