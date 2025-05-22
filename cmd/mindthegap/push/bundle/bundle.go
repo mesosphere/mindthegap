@@ -69,6 +69,7 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 		onExistingTag                 = Overwrite
 		imagePushConcurrency          int
 		forceOCIMediaTypes            bool
+		filterLabels []string
 	)
 
 	cmd := &cobra.Command{
@@ -302,6 +303,10 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 
 	cmd.Flags().
 		BoolVar(&forceOCIMediaTypes, "force-oci-media-types", false, "force OCI media types")
+	
+	cmd.Flags().StringSliceVar(&filterLabels, "filter-labels", 	nil,"Labels to filter images by. "+
+		"Format: key1,value1. Can be specified multiple times. "+
+		"Only images with matching labels will be pushed. ")
 
 	return cmd
 }
@@ -469,6 +474,7 @@ func pushTag(
 	destRemoteOpts []remote.Option,
 	pushOpts ...pushOpt,
 ) error {
+
 	var pushCfg pushConfig
 	for _, opt := range pushOpts {
 		opt(&pushCfg)
@@ -484,12 +490,28 @@ func pushTag(
 		if err != nil {
 			return err
 		}
+		manifest, err := image.Manifest()
+		if err != nil {
+			return err 
+		}
+		filters := manifest.Annotations["org.opencontainers.image.labels"]
+		if len(filters) == 0 {
+			return nil
+		}
 		return remote.Write(destImage, image, destRemoteOpts...)
 	}
 
 	idx, err := desc.ImageIndex()
 	if err != nil {
 		return err
+	}
+
+	indexManifest, err := idx.IndexManifest()
+	if err != nil {
+		return err
+	}
+	if indexManifest.Annotations["org.opencontainers.image.labels"] == "" {
+		return nil
 	}
 
 	// Get the existing index from the destination registry if merging is enabled.

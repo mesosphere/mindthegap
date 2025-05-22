@@ -22,6 +22,9 @@ import (
 type RegistrySyncConfig struct {
 	// Images map images name to slices with the images' references (tags, digests)
 	Images map[string][]string
+
+	// temp variable to demonstrate adding labels to the image
+	ImageLabels map[string][]string
 	// TLS verification mode (enabled by default)
 	TLSVerify *bool `yaml:"tlsVerify,omitempty"`
 	// Username and password used to authenticate with the registry
@@ -182,9 +185,12 @@ func ParseImagesConfigFile(configFile string) (ImagesConfig, error) {
 		if trimmedLine == "" || strings.HasPrefix(trimmedLine, "#") {
 			continue
 		}
-		named, nameErr := reference.ParseNormalizedNamed(trimmedLine)
+		trimmedLine = strings.ReplaceAll(trimmedLine, "\t", " ")
+		fields := strings.Fields(trimmedLine)
+		imageName := fields[0]
+		named, nameErr := reference.ParseNormalizedNamed(imageName)
 		if nameErr != nil {
-			return ImagesConfig{}, fmt.Errorf("failed to parse config file: %w", nameErr)
+			return ImagesConfig{}, fmt.Errorf("failed to parse config file %s: %w", imageName, nameErr)
 		}
 		namedTagged, ok := named.(reference.NamedTagged)
 		if !ok {
@@ -200,9 +206,23 @@ func ParseImagesConfigFile(configFile string) (ImagesConfig, error) {
 		tag := namedTagged.Tag()
 
 		if _, found := config[registry]; !found {
-			config[registry] = RegistrySyncConfig{Images: map[string][]string{}}
+			config[registry] = RegistrySyncConfig{Images: map[string][]string{}, ImageLabels: map[string][]string{}}
 		}
 		config[registry].Images[name] = append(config[registry].Images[name], tag)
+
+		// process labels
+		var labels string
+		for _, field := range fields[1:]{
+			if strings.HasPrefix(field, "labels:") {
+				labels = strings.TrimPrefix(field, "labels:")
+				break
+			}
+		}
+
+		if labels != "" {
+			config[registry].ImageLabels[name] = append(config[registry].ImageLabels[name], strings.Split(labels, ",")...)
+		}
+
 	}
 
 	return config, nil

@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -24,6 +25,7 @@ import (
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/mesosphere/mindthegap/archive"
 	"github.com/mesosphere/mindthegap/cleanup"
 	"github.com/mesosphere/mindthegap/cmd/mindthegap/flags"
@@ -346,7 +348,7 @@ func pullImages(
 		for imageIdx := range imageNames {
 			imageName := imageNames[imageIdx]
 			imageTags := registryConfig.Images[imageName]
-
+			imageLabels := registryConfig.ImageLabels[imageName]
 			wg.Add(len(imageTags))
 			for j := range imageTags {
 				imageTag := imageTags[j]
@@ -387,8 +389,10 @@ func pullImages(
 					if err != nil {
 						return fmt.Errorf("failed to get image %q: %w", srcImageName, err)
 					}
-
-					if err := remote.Push(ref, image, destRemoteOpts...); err != nil {
+					annotated := mutate.Annotations(image, map[string]string{
+						"org.opencontainers.image.labels":  strings.Join(imageLabels,","),
+					})
+					if err := remote.Push(ref, annotated, destRemoteOpts...); err != nil {
 						return err
 					}
 
