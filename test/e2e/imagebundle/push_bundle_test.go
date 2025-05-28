@@ -34,7 +34,7 @@ import (
 	pushbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/push/bundle"
 	"github.com/mesosphere/mindthegap/docker/registry"
 	"github.com/mesosphere/mindthegap/images/httputils"
-	"github.com/mesosphere/mindthegap/test/e2e/imagebundle/helpers"
+	"github.com/mesosphere/mindthegap/test/e2e/helpers"
 )
 
 var _ = Describe("Push Bundle", func() {
@@ -174,7 +174,7 @@ var _ = Describe("Push Bundle", func() {
 				registryInsecure bool,
 				forceOCIMediaTypes bool,
 			) {
-				helpers.CreateBundle(
+				helpers.CreateBundleImages(
 					GinkgoT(),
 					bundleFile,
 					filepath.Join("testdata", "create-success.yaml"),
@@ -194,7 +194,7 @@ var _ = Describe("Push Bundle", func() {
 
 			Entry(
 				"With TLS",
-				helpers.GetFirstNonLoopbackIP(GinkgoT()).String(),
+				helpers.GetPreferredOutboundIP(GinkgoT()).String(),
 				"",
 				"",
 				false,
@@ -203,7 +203,7 @@ var _ = Describe("Push Bundle", func() {
 
 			Entry(
 				"With Insecure TLS",
-				helpers.GetFirstNonLoopbackIP(GinkgoT()).String(),
+				helpers.GetPreferredOutboundIP(GinkgoT()).String(),
 				"",
 				"",
 				true,
@@ -212,7 +212,7 @@ var _ = Describe("Push Bundle", func() {
 
 			Entry(
 				"With http registry",
-				helpers.GetFirstNonLoopbackIP(GinkgoT()).String(),
+				helpers.GetPreferredOutboundIP(GinkgoT()).String(),
 				"http",
 				"",
 				true,
@@ -221,7 +221,7 @@ var _ = Describe("Push Bundle", func() {
 
 			Entry(
 				"With http registry without TLS skip verify flag",
-				helpers.GetFirstNonLoopbackIP(GinkgoT()).String(),
+				helpers.GetPreferredOutboundIP(GinkgoT()).String(),
 				"http",
 				"",
 				false,
@@ -230,7 +230,7 @@ var _ = Describe("Push Bundle", func() {
 
 			Entry(
 				"With Subpath",
-				helpers.GetFirstNonLoopbackIP(GinkgoT()).String(),
+				helpers.GetPreferredOutboundIP(GinkgoT()).String(),
 				"",
 				"/nested/path/for/registry",
 				false,
@@ -239,7 +239,7 @@ var _ = Describe("Push Bundle", func() {
 
 			Entry(
 				"With force OCI media types",
-				helpers.GetFirstNonLoopbackIP(GinkgoT()).String(),
+				helpers.GetPreferredOutboundIP(GinkgoT()).String(),
 				"",
 				"",
 				false,
@@ -261,7 +261,7 @@ var _ = Describe("Push Bundle", func() {
 
 		Context("With proxy", Serial, func() {
 			BeforeEach(func() {
-				helpers.CreateBundle(
+				helpers.CreateBundleImages(
 					GinkgoT(),
 					bundleFile,
 					filepath.Join("testdata", "create-success.yaml"),
@@ -282,7 +282,7 @@ var _ = Describe("Push Bundle", func() {
 			})
 
 			It("Success", func() {
-				runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "", false, false)
+				runTest(helpers.GetPreferredOutboundIP(GinkgoT()).String(), "", "", false, false)
 			})
 
 			Context("With headers from Docker config", func() {
@@ -303,7 +303,7 @@ var _ = Describe("Push Bundle", func() {
 				})
 
 				It("Success", func() {
-					runTest(helpers.GetFirstNonLoopbackIP(GinkgoT()).String(), "", "", false, false)
+					runTest(helpers.GetPreferredOutboundIP(GinkgoT()).String(), "", "", false, false)
 				})
 			})
 		})
@@ -350,7 +350,7 @@ var _ = Describe("Push Bundle", func() {
 			})
 
 			BeforeEach(func() {
-				helpers.CreateBundle(
+				helpers.CreateBundleImages(
 					GinkgoT(),
 					bundleFile,
 					filepath.Join("testdata", "create-success.yaml"),
@@ -501,7 +501,7 @@ var _ = Describe("Push Bundle", func() {
 				Expect(err).NotTo(HaveOccurred(), string(craneCopyOutput))
 
 				amd64BundleFile = filepath.Join(tmpDir, "amd64-image-bundle.tar")
-				helpers.CreateBundle(
+				helpers.CreateBundleImages(
 					GinkgoT(),
 					amd64BundleFile,
 					filepath.Join("testdata", "create-success.yaml"),
@@ -509,7 +509,7 @@ var _ = Describe("Push Bundle", func() {
 				)
 
 				arm64BundleFile = filepath.Join(tmpDir, "arm64-image-bundle.tar")
-				helpers.CreateBundle(
+				helpers.CreateBundleImages(
 					GinkgoT(),
 					arm64BundleFile,
 					filepath.Join("testdata", "create-success.yaml"),
@@ -659,7 +659,7 @@ var _ = Describe("Push Bundle", func() {
 			})
 
 			BeforeEach(func() {
-				helpers.CreateBundle(
+				helpers.CreateBundleImages(
 					GinkgoT(),
 					bundleFile,
 					filepath.Join("testdata", "create-success-large-images.yaml"),

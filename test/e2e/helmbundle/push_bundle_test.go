@@ -22,7 +22,7 @@ import (
 	pushbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/push/bundle"
 	"github.com/mesosphere/mindthegap/docker/registry"
 	"github.com/mesosphere/mindthegap/helm"
-	"github.com/mesosphere/mindthegap/test/e2e/helmbundle/helpers"
+	"github.com/mesosphere/mindthegap/test/e2e/helpers"
 )
 
 var _ = Describe("Push Bundle", func() {
@@ -44,7 +44,7 @@ var _ = Describe("Push Bundle", func() {
 	})
 
 	It("Without TLS", func() {
-		helpers.CreateBundle(
+		helpers.CreateBundleHelmCharts(
 			GinkgoT(),
 			bundleFile,
 			filepath.Join("testdata", "create-success.yaml"),
@@ -90,7 +90,7 @@ var _ = Describe("Push Bundle", func() {
 			port,
 			"podinfo",
 			"6.2.0",
-			helm.InsecureSkipTLSverifyOpt(),
+			helm.PlainHTTPOpt(),
 		)
 
 		helpers.ValidateChartIsAvailable(
@@ -100,7 +100,7 @@ var _ = Describe("Push Bundle", func() {
 			port,
 			"node-feature-discovery",
 			"0.15.2",
-			helm.InsecureSkipTLSverifyOpt(),
+			helm.PlainHTTPOpt(),
 		)
 
 		helpers.ValidateChartIsAvailable(
@@ -110,7 +110,7 @@ var _ = Describe("Push Bundle", func() {
 			port,
 			"podinfo",
 			"6.3.0",
-			helm.InsecureSkipTLSverifyOpt(),
+			helm.PlainHTTPOpt(),
 		)
 
 		Expect(reg.Shutdown(context.Background())).To((Succeed()))
@@ -119,13 +119,13 @@ var _ = Describe("Push Bundle", func() {
 	})
 
 	It("With Insecure TLS", func() {
-		helpers.CreateBundle(
+		helpers.CreateBundleHelmCharts(
 			GinkgoT(),
 			bundleFile,
 			filepath.Join("testdata", "create-success.yaml"),
 		)
 
-		ipAddr := helpers.GetFirstNonLoopbackIP(GinkgoT())
+		ipAddr := helpers.GetPreferredOutboundIP(GinkgoT())
 
 		tempCertDir := GinkgoT().TempDir()
 		_, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(
@@ -181,13 +181,13 @@ var _ = Describe("Push Bundle", func() {
 	})
 
 	It("With TLS", func() {
-		helpers.CreateBundle(
+		helpers.CreateBundleHelmCharts(
 			GinkgoT(),
 			bundleFile,
 			filepath.Join("testdata", "create-success.yaml"),
 		)
 
-		ipAddr := helpers.GetFirstNonLoopbackIP(GinkgoT())
+		ipAddr := helpers.GetPreferredOutboundIP(GinkgoT())
 
 		tempCertDir := GinkgoT().TempDir()
 		caCertFile, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(

@@ -23,7 +23,7 @@ import (
 
 	servebundle "github.com/mesosphere/mindthegap/cmd/mindthegap/serve/bundle"
 	"github.com/mesosphere/mindthegap/images/httputils"
-	"github.com/mesosphere/mindthegap/test/e2e/imagebundle/helpers"
+	"github.com/mesosphere/mindthegap/test/e2e/helpers"
 )
 
 var _ = Describe("Serve Image Bundle", func() {
@@ -46,7 +46,7 @@ var _ = Describe("Serve Image Bundle", func() {
 	})
 
 	It("Without TLS", func() {
-		helpers.CreateBundle(
+		helpers.CreateBundleImages(
 			GinkgoT(),
 			bundleFile,
 			filepath.Join("testdata", "create-success.yaml"),
@@ -91,7 +91,7 @@ var _ = Describe("Serve Image Bundle", func() {
 	})
 
 	It("With TLS", func() {
-		ipAddr := helpers.GetFirstNonLoopbackIP(GinkgoT())
+		ipAddr := helpers.GetPreferredOutboundIP(GinkgoT())
 
 		tempCertDir := GinkgoT().TempDir()
 		caCertFile, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(
@@ -100,7 +100,7 @@ var _ = Describe("Serve Image Bundle", func() {
 			ipAddr,
 		)
 
-		helpers.CreateBundle(
+		helpers.CreateBundleImages(
 			GinkgoT(),
 			bundleFile,
 			filepath.Join("testdata", "create-success.yaml"),
@@ -157,7 +157,7 @@ var _ = Describe("Serve Image Bundle", func() {
 	})
 
 	It("With repositories prefix", func() {
-		ipAddr := helpers.GetFirstNonLoopbackIP(GinkgoT())
+		ipAddr := helpers.GetPreferredOutboundIP(GinkgoT())
 
 		tempCertDir := GinkgoT().TempDir()
 		caCertFile, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(
@@ -166,7 +166,7 @@ var _ = Describe("Serve Image Bundle", func() {
 			ipAddr,
 		)
 
-		helpers.CreateBundle(
+		helpers.CreateBundleImages(
 			GinkgoT(),
 			bundleFile,
 			filepath.Join("testdata", "create-success.yaml"),
