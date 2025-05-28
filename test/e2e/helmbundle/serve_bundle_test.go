@@ -77,7 +77,7 @@ var _ = Describe("Serve Helm Bundle", func() {
 			port,
 			"podinfo",
 			"6.2.0",
-			helm.InsecureSkipTLSverifyOpt(),
+			helm.PlainHTTPOpt(),
 		)
 
 		helpers.ValidateChartIsAvailable(
@@ -87,7 +87,7 @@ var _ = Describe("Serve Helm Bundle", func() {
 			port,
 			"node-feature-discovery",
 			"0.15.2",
-			helm.InsecureSkipTLSverifyOpt(),
+			helm.PlainHTTPOpt(),
 		)
 
 		// This one is bundled via OCI.
@@ -98,7 +98,7 @@ var _ = Describe("Serve Helm Bundle", func() {
 			port,
 			"podinfo",
 			"6.3.0",
-			helm.InsecureSkipTLSverifyOpt(),
+			helm.PlainHTTPOpt(),
 		)
 
 		close(stopCh)
