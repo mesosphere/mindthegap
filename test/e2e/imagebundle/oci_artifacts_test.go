@@ -31,7 +31,7 @@ import (
 	servebundle "github.com/mesosphere/mindthegap/cmd/mindthegap/serve/bundle"
 	"github.com/mesosphere/mindthegap/docker/registry"
 	"github.com/mesosphere/mindthegap/images/httputils"
-	"github.com/mesosphere/mindthegap/test/e2e/imagebundle/helpers"
+	"github.com/mesosphere/mindthegap/test/e2e/helpers"
 )
 
 var _ = Describe("OCI artifacts support", func() {
@@ -97,7 +97,7 @@ var _ = Describe("OCI artifacts support", func() {
 	})
 
 	It("bundles OCI artifacts with repositories prefix", func() {
-		ipAddr := helpers.GetFirstNonLoopbackIP(GinkgoT())
+		ipAddr := helpers.GetPreferredOutboundIP(GinkgoT())
 
 		tempCertDir := GinkgoT().TempDir()
 		caCertFile, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(

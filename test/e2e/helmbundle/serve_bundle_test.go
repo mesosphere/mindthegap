@@ -23,7 +23,7 @@ import (
 
 	servebundle "github.com/mesosphere/mindthegap/cmd/mindthegap/serve/bundle"
 	"github.com/mesosphere/mindthegap/helm"
-	"github.com/mesosphere/mindthegap/test/e2e/helmbundle/helpers"
+	"github.com/mesosphere/mindthegap/test/e2e/helpers"
 )
 
 var _ = Describe("Serve Helm Bundle", func() {
@@ -46,7 +46,7 @@ var _ = Describe("Serve Helm Bundle", func() {
 	})
 
 	It("Without TLS", func() {
-		helpers.CreateBundle(
+		helpers.CreateBundleHelmCharts(
 			GinkgoT(),
 			bundleFile,
 			filepath.Join("testdata", "create-success.yaml"),
@@ -107,7 +107,7 @@ var _ = Describe("Serve Helm Bundle", func() {
 	})
 
 	It("With TLS", func() {
-		ipAddr := helpers.GetFirstNonLoopbackIP(GinkgoT())
+		ipAddr := helpers.GetPreferredOutboundIP(GinkgoT())
 
 		tempCertDir := GinkgoT().TempDir()
 		originalCACertFile, _, certFile, keyFile := helpers.GenerateCertificateAndKeyWithIPSAN(
@@ -116,7 +116,7 @@ var _ = Describe("Serve Helm Bundle", func() {
 			ipAddr,
 		)
 
-		helpers.CreateBundle(
+		helpers.CreateBundleHelmCharts(
 			GinkgoT(),
 			bundleFile,
 			filepath.Join("testdata", "create-success.yaml"),

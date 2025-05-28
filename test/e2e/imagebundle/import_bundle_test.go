@@ -23,7 +23,7 @@ import (
 	"github.com/mesosphere/mindthegap/archive"
 	importimagebundle "github.com/mesosphere/mindthegap/cmd/mindthegap/importcmd/imagebundle"
 	"github.com/mesosphere/mindthegap/cmd/mindthegap/utils"
-	"github.com/mesosphere/mindthegap/test/e2e/imagebundle/helpers"
+	"github.com/mesosphere/mindthegap/test/e2e/helpers"
 )
 
 var _ = Describe("Import Bundle", Label("import"), Serial, func() {
@@ -37,7 +37,7 @@ var _ = Describe("Import Bundle", Label("import"), Serial, func() {
 			imagesFile := filepath.Join(tmpDir, "image-bundle.txt")
 			Expect(os.WriteFile(imagesFile, []byte(image), 0o600)).To(Succeed())
 
-			helpers.CreateBundle(
+			helpers.CreateBundleImages(
 				GinkgoT(),
 				bundleFile,
 				imagesFile,
