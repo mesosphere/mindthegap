@@ -30,14 +30,16 @@ import (
 	"github.com/onsi/gomega"
 	"github.com/onsi/gomega/gstruct"
 	"github.com/spf13/cobra"
+	"helm.sh/helm/v3/pkg/action"
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
 	createbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/create/bundle"
+	"github.com/mesosphere/mindthegap/helm"
 )
 
-func CreateBundle(t ginkgo.GinkgoTInterface, bundleFile, cfgFile string, platforms ...string) {
+func CreateBundleImages(t ginkgo.GinkgoTInterface, bundleFile, cfgFile string, platforms ...string) {
 	platformFlags := make([]string, 0, len(platforms))
 	for _, p := range platforms {
 		platformFlags = append(platformFlags, "--platform", p)
@@ -79,6 +81,45 @@ func CreateBundleOCIAndImages(
 	gomega.ExpectWithOffset(1, createBundleCmd.Execute()).To(gomega.Succeed())
 }
 
+func CreateBundleHelmCharts(t ginkgo.GinkgoTInterface, bundleFile, cfgFile string) {
+	createBundleCmd := NewCommand(t, createbundle.NewCommand)
+	createBundleCmd.SetArgs([]string{
+		"--output-file", bundleFile,
+		"--helm-charts-file", cfgFile,
+	})
+	gomega.ExpectWithOffset(1, createBundleCmd.Execute()).To(gomega.Succeed())
+}
+
+func ValidateChartIsAvailable(
+	t ginkgo.GinkgoTInterface,
+	g gomega.Gomega,
+	addr string,
+	port int,
+	chartName, chartVersion string,
+	pullOpts ...action.PullOpt,
+) {
+	t.Helper()
+	h, cleanup := helm.NewClient(
+		output.NewNonInteractiveShell(ginkgo.GinkgoWriter, ginkgo.GinkgoWriter, 10),
+	)
+	ginkgo.DeferCleanup(cleanup)
+
+	helmTmpDir := t.TempDir()
+
+	d, err := h.GetChartFromRepo(
+		helmTmpDir,
+		"",
+		fmt.Sprintf("%s://%s:%d/charts/%s", helm.OCIScheme, addr, port, chartName),
+		chartVersion,
+		pullOpts...,
+	)
+	g.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
+	chrt, err := helm.LoadChart(d)
+	g.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
+	g.ExpectWithOffset(1, chrt.Metadata.Name).To(gomega.Equal(chartName))
+	g.ExpectWithOffset(1, chrt.Metadata.Version).To(gomega.Equal(chartVersion))
+}
+
 func NewCommand(
 	t ginkgo.GinkgoTInterface,
 	newFn func(out output.Output) *cobra.Command,
@@ -90,21 +131,20 @@ func NewCommand(
 	return cmd
 }
 
-// GetFirstNonLoopbackIP returns the first non-loopback IP of the current host.
-func GetFirstNonLoopbackIP(t ginkgo.GinkgoTInterface) net.IP {
+// GetPreferredOutboundIP returns the preferred outbound IP address of the host.
+func GetPreferredOutboundIP(t ginkgo.GinkgoTInterface) net.IP {
 	t.Helper()
-	addrs, err := net.InterfaceAddrs()
-	gomega.ExpectWithOffset(1, err).ToNot(gomega.HaveOccurred())
-	for _, address := range addrs {
-		// check the address type and if it is not a loopback the display it
-		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-			if ipnet.IP.To4() != nil {
-				return ipnet.IP
-			}
-		}
+
+	// This does not actually create a connect to the remote address as it uses UDP,
+	// but it allows us to discover the preferred outbound IP address of the host.
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("failed to discover preferred outbound IP: %v", err))
 	}
-	ginkgo.Fail("no available non-loopback IP address")
-	return net.IP{}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	return localAddr.IP
 }
 
 func WaitForTCPPort(t ginkgo.GinkgoTInterface, addr string, port int) {
