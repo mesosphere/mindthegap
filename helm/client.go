@@ -94,6 +94,12 @@ func InsecureSkipTLSverifyOpt() action.PullOpt {
 	}
 }
 
+func PlainHTTPOpt() action.PullOpt {
+	return func(p *action.Pull) {
+		p.PlainHTTP = true
+	}
+}
+
 func CAFileOpt(caFile string) action.PullOpt {
 	return func(p *action.Pull) {
 		p.CaFile = caFile

@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	createbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/create/bundle"
-	"github.com/mesosphere/mindthegap/test/e2e/helmbundle/helpers"
+	"github.com/mesosphere/mindthegap/test/e2e/helpers"
 )
 
 var _ = Describe("Create Bundle", func() {
