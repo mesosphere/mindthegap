@@ -42,7 +42,7 @@ jobs:
         run: devbox run -- task test:unit
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action/linux@3a74b2957438d0b6e2e61d67b05318aa25c9e6c6 # v2
-        if: always()
+        if: (!cancelled())
         with:
           check_name: "Unit test results"
           files: |
@@ -72,7 +72,7 @@ jobs:
           TMPDIR: ${{ runner.temp }}
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action/linux@3a74b2957438d0b6e2e61d67b05318aa25c9e6c6 # v2
-        if: always()
+        if: (!cancelled())
         with:
           check_name: "e2e test results"
           files: |
