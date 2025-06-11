@@ -25,6 +25,14 @@ func ExtractFileToDirectory(archive, destDir, fileName string) error {
 		return fmt.Errorf("failed to identify archive format: %w", err)
 	}
 
+	// Disallow tar.gz and tar.bz2 archives as noted in the docs for github.com/mholt/archives that
+	// traversing compressed tar archives is extremely slow and inefficient. Benchmarking confirms
+	// that this is indeed the case, so we don't support them.
+	ext := archiver.Extension()
+	if ext == ".tar.gz" || ext == ".tar.bz2" {
+		return fmt.Errorf("compressed tar archives (%s) are not supported", ext)
+	}
+
 	unarc, ok := archiver.(archives.Extractor)
 	if !ok {
 		return fmt.Errorf("not an valid archive extension")

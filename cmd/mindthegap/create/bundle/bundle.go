@@ -17,6 +17,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/logs"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/mholt/archives"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 	"helm.sh/helm/v3/pkg/action"
@@ -51,7 +52,26 @@ func NewCommand(out output.Output) *cobra.Command {
 		Use:   "bundle",
 		Short: "Create a bundle containing container images and/or Helm charts",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return cmd.ValidateRequiredFlags()
+			if err := cmd.ValidateRequiredFlags(); err != nil {
+				return err
+			}
+
+			archiver, _, err := archives.Identify(context.Background(), outputFile, nil)
+			if err != nil {
+				return fmt.Errorf(
+					"failed to identify archive format for bundle %s: %w", outputFile, err,
+				)
+			}
+
+			// Disallow tar.gz and tar.bz2 archives as noted in the docs for github.com/mholt/archives that
+			// traversing compressed tar archives is extremely slow and inefficient. Benchmarking confirms
+			// that this is indeed the case, so we don't support them.
+			ext := archiver.Extension()
+			if ext == ".tar.gz" || ext == ".tar.bz2" {
+				return fmt.Errorf("compressed tar archives (%s) are not supported", ext)
+			}
+
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var (

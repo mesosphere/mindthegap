@@ -75,8 +75,14 @@ func NewCommand(out output.Output) *cobra.Command {
 			}
 
 			out.StartOperation("Starting temporary Docker registry")
+			storage, err := registry.ArchiveStorage("", imageBundleFiles...)
+			if err != nil {
+				out.EndOperationWithStatus(output.Failure())
+				return fmt.Errorf("failed to create storage for Docker registry from supplied bundles: %w", err)
+			}
+
 			reg, err := registry.NewRegistry(
-				registry.Config{Storage: registry.ArchiveStorage("", imageBundleFiles...)},
+				registry.Config{Storage: storage},
 			)
 			if err != nil {
 				out.EndOperationWithStatus(output.Failure())

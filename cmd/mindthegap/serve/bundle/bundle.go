@@ -61,8 +61,13 @@ func NewCommand(
 			}
 
 			out.StartOperation("Creating Docker registry")
+			storage, err := registry.ArchiveStorage(repositoriesPrefix, bundleFiles...)
+			if err != nil {
+				out.EndOperationWithStatus(output.Failure())
+				return fmt.Errorf("failed to create storage for Docker registry from supplied bundles: %w", err)
+			}
 			reg, err := registry.NewRegistry(registry.Config{
-				Storage:  registry.ArchiveStorage(repositoriesPrefix, bundleFiles...),
+				Storage:  storage,
 				ReadOnly: true,
 				Host:     listenAddress,
 				Port:     listenPort,
