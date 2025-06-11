@@ -19,6 +19,7 @@ import (
 	"github.com/distribution/distribution/v3/registry/handlers"
 	_ "github.com/distribution/distribution/v3/registry/storage/driver/filesystem"
 	"github.com/go-logr/logr"
+	"github.com/mholt/archives"
 	"github.com/phayes/freeport"
 	"github.com/sirupsen/logrus"
 	"sigs.k8s.io/controller-runtime/pkg/certwatcher"
@@ -55,10 +56,24 @@ func FilesystemStorage(rootDir string) Storage {
 	}
 }
 
-func ArchiveStorage(repositoryPrefix string, tarballs ...string) Storage {
-	paths := make([]string, len(tarballs))
-	for i, tarball := range tarballs {
-		paths[i] = fmt.Sprintf("%q", tarball)
+func ArchiveStorage(repositoryPrefix string, bundles ...string) (Storage, error) {
+	paths := make([]string, 0, len(bundles))
+	for _, bundle := range bundles {
+		archiver, _, err := archives.Identify(context.Background(), bundle, nil)
+		if err != nil {
+			return Storage{}, fmt.Errorf(
+				"failed to identify archive format for bundle %s: %w", bundle, err,
+			)
+		}
+
+		// Disallow tar.gz and tar.bz2 archives as noted in the docs for github.com/mholt/archives that
+		// traversing compressed tar archives is extremely slow and inefficient. Benchmarking confirms
+		// that this is indeed the case, so we don't support them.
+		ext := archiver.Extension()
+		if ext == ".tar.gz" || ext == ".tar.bz2" {
+			return Storage{}, fmt.Errorf("compressed tar archives (%s) are not supported", ext)
+		}
+		paths = append(paths, fmt.Sprintf("%q", bundle))
 	}
 
 	return Storage{
@@ -66,7 +81,7 @@ func ArchiveStorage(repositoryPrefix string, tarballs ...string) Storage {
 		Path:               "[" + strings.Join(paths, ",") + "]",
 		AlwaysReadOnly:     true,
 		RepositoriesPrefix: repositoryPrefix,
-	}
+	}, nil
 }
 
 type TLS struct {

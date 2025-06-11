@@ -163,4 +163,20 @@ var _ = Describe("Import Bundle", Label("import"), Serial, func() {
 			cmd.Execute(),
 		).To(MatchError("no bundle configuration(s) found: please check that you have specified valid air-gapped bundle(s)"))
 	})
+
+	It("Bundle file exists but is a compressed tarball", func() {
+		tmpDir := GinkgoT().TempDir()
+		nonBundleFile := filepath.Join(tmpDir, "image-bundle.tar.gz")
+		Expect(archive.ArchiveDirectory("testdata", nonBundleFile)).To(Succeed())
+
+		cmd := helpers.NewCommand(GinkgoT(), importimagebundle.NewCommand)
+
+		cmd.SetArgs([]string{
+			"--image-bundle", nonBundleFile,
+		})
+
+		Expect(
+			cmd.Execute(),
+		).To(MatchError(ContainSubstring("compressed tar archives (.tar.gz) are not supported")))
+	})
 })

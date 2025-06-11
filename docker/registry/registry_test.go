@@ -103,10 +103,12 @@ func Test_registryConfiguration_withTLS(t *testing.T) {
 	require.Equal(t, configWithTLS, config)
 }
 
-func Test_registryConfiguration_archvve(t *testing.T) {
+func Test_registryConfiguration_archive(t *testing.T) {
 	t.Parallel()
+	storage, err := ArchiveStorage("", "/tmp/1.tar", "/some/other/path/2.tar")
+	require.NoError(t, err)
 	c := Config{
-		Storage:  ArchiveStorage("", "/tmp/1.tar", "/some/other/path/2.tar"),
+		Storage:  storage,
 		Host:     "0.0.0.0",
 		Port:     5000,
 		ReadOnly: true,
@@ -115,4 +117,10 @@ func Test_registryConfiguration_archvve(t *testing.T) {
 	config, err := registryConfiguration(c)
 	require.NoError(t, err)
 	require.Equal(t, configWithArchive, config)
+}
+
+func Test_registryConfiguration_archiveDisallowsCompressedArchives(t *testing.T) {
+	t.Parallel()
+	_, err := ArchiveStorage("", "/tmp/1.tar", "/some/other/path/2.tar.gz")
+	require.ErrorContains(t, err, "compressed tar archives (.tar.gz) are not supported")
 }

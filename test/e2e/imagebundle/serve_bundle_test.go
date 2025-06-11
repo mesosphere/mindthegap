@@ -21,6 +21,7 @@ import (
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
+	"github.com/mesosphere/mindthegap/archive"
 	servebundle "github.com/mesosphere/mindthegap/cmd/mindthegap/serve/bundle"
 	"github.com/mesosphere/mindthegap/images/httputils"
 	"github.com/mesosphere/mindthegap/test/e2e/helpers"
@@ -231,5 +232,19 @@ var _ = Describe("Serve Image Bundle", func() {
 		Expect(
 			cmd.Execute(),
 		).To(MatchError(fmt.Sprintf("did find any matching files for %q", bundleFile)))
+	})
+
+	It("Bundle file exists but is a compressed tarball", func() {
+		tmpDir := GinkgoT().TempDir()
+		nonBundleFile := filepath.Join(tmpDir, "image-bundle.tar.gz")
+		Expect(archive.ArchiveDirectory("testdata", nonBundleFile)).To(Succeed())
+
+		cmd.SetArgs([]string{
+			"--bundle", nonBundleFile,
+		})
+
+		Expect(
+			cmd.Execute(),
+		).To(MatchError(ContainSubstring("compressed tar archives (.tar.gz) are not supported")))
 	})
 })
