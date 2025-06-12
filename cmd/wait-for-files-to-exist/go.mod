@@ -5,7 +5,7 @@ module github.com/nutanix-cloud-native/wait-for-files-to-exist
 
 go 1.23.2
 
-toolchain go1.24.2
+toolchain go1.24.4
 
 require github.com/fsnotify/fsnotify v1.7.0
 
