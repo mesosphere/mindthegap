@@ -274,6 +274,19 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.22.0 (2025-06-12)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Breaking Changes 🛠
+* fix!: Disable usage of compressed bundles by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/910
+### Exciting New Features 🎉
+* feat: go 1.24.4 to fix CVEs by @dlipovetsky in https://github.com/mesosphere/mindthegap/pull/911
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.21.0...v1.22.0
+
 ## 1.21.0 (2025-04-30)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
