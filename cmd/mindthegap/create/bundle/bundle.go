@@ -180,7 +180,7 @@ func NewCommand(out output.Output) *cobra.Command {
 			logs.Warn.SetOutput(out.V(2).InfoWriter())
 
 			if imagesConfigFile != "" || ociArtifactsConfigFile != "" {
-				if err := pullImagesAndOCIArtifacts(
+				if err := PullImagesAndOCIArtifacts(
 					imagesConfig,
 					ociArtifactsConfig,
 					platforms,
@@ -242,7 +242,7 @@ func NewCommand(out output.Output) *cobra.Command {
 	return cmd
 }
 
-func pullImagesAndOCIArtifacts(
+func PullImagesAndOCIArtifacts(
 	imagesConfig config.ImagesConfig,
 	ociArtifactsConfig config.ImagesConfig,
 	platforms flags.Platforms,
