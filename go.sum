@@ -1150,10 +1150,12 @@ github.com/mattn/go-sqlite3 v1.14.24/go.mod h1:Uh1q+B4BYcTPb+yiD3kU8Ct7aC0hY9fxU
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
 github.com/mesosphere/dkp-cli-runtime/core v0.7.3 h1:oHRPvWdZgNOJxXCPFPRIqKWppB2cXx+HZeV8RVtwAsg=
 github.com/mesosphere/dkp-cli-runtime/core v0.7.3/go.mod h1:hIC+ZZFofDtkRs1v+TnnGxAhFT5IIXuqVvXMe00zOvw=
-github.com/mholt/archives v0.1.2 h1:UBSe5NfYKHI1sy+S5dJsEsG9jsKKk8NJA4HCC+xTI4A=
-github.com/mholt/archives v0.1.2/go.mod h1:D7QzTHgw3ctfS6wgOO9dN+MFgdZpbksGCxprUOwZWDs=
+github.com/mholt/archives v0.1.3 h1:aEAaOtNra78G+TvV5ohmXrJOAzf++dIlYeDW3N9q458=
+github.com/mholt/archives v0.1.3/go.mod h1:LUCGp++/IbV/I0Xq4SzcIR6uwgeh2yjnQWamjRQfLTU=
 github.com/miekg/dns v1.1.57 h1:Jzi7ApEIzwEPLHWRcafCN9LZSBbqQpxjt/wpgvg7wcM=
 github.com/miekg/dns v1.1.57/go.mod h1:uqRjCRUuEAA6qsOiJvDd+CFo/vW+y5WR6SNmHE55hZk=
+github.com/mikelolasagasti/xz v1.0.1 h1:Q2F2jX0RYJUG3+WsM+FJknv+6eVjsjXNDV0KJXZzkD0=
+github.com/mikelolasagasti/xz v1.0.1/go.mod h1:muAirjiOUxPRXwm9HdDtB3uoRPrGnL85XHtokL9Hcgc=
 github.com/minio/asm2plan9s v0.0.0-20200509001527-cdd76441f9d8/go.mod h1:mC1jAcsrzbxHt8iiaC+zU4b1ylILSosueou12R++wfY=
 github.com/minio/c2goasm v0.0.0-20190812172519-36a3d3bbc4f3/go.mod h1:RagcQ7I8IeTMnF8JTXieKnO4Z6JCsikNEzj0DwauVzE=
 github.com/minio/minlz v1.0.0 h1:Kj7aJZ1//LlTP1DM8Jm7lNKvvJS2m74gyyXXn3+uJWQ=
@@ -1316,8 +1318,6 @@ github.com/thediveo/enumflag/v2 v2.0.7 h1:uxXDU+rTel7Hg4X0xdqICpG9rzuI/mzLAEYXWL
 github.com/thediveo/enumflag/v2 v2.0.7/go.mod h1:bWlnNvTJuUK+huyzf3WECFLy557Ttlc+yk3o+BPs0EA=
 github.com/thediveo/success v1.0.2 h1:w+r3RbSjLmd7oiNnlCblfGqItcsaShcuAorRVh/+0xk=
 github.com/thediveo/success v1.0.2/go.mod h1:hdPJB77k70w764lh8uLUZgNhgeTl3DYeZ4d4bwMO2CU=
-github.com/therootcompany/xz v1.0.1 h1:CmOtsn1CbtmyYiusbfmhmkpAAETj0wBIH6kCYaX+xzw=
-github.com/therootcompany/xz v1.0.1/go.mod h1:3K3UH1yCKgBneZYhuQUvJ9HPD19UEXEI0BWbMn8qNMY=
 github.com/ulikunitz/xz v0.5.8/go.mod h1:nbz6k7qbPmH4IRqmfOplQw/tblSgqTqBwxkY0oWt/14=
 github.com/ulikunitz/xz v0.5.10/go.mod h1:nbz6k7qbPmH4IRqmfOplQw/tblSgqTqBwxkY0oWt/14=
 github.com/ulikunitz/xz v0.5.12 h1:37Nm15o69RwBkXM0J6A5OlE67RZTfzUxTj8fB3dfcsc=
