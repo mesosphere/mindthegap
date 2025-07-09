@@ -248,6 +248,85 @@ var _ = Describe("Push Bundle", func() {
 			),
 		)
 
+		Context("With multiple image bundles", Ordered, func() {
+			var (
+				bundleFile2     string
+				registryAddress string
+				outputBuf       *bytes.Buffer
+			)
+
+			BeforeAll(func() {
+				port, err := freeport.GetFreePort()
+				Expect(err).NotTo(HaveOccurred())
+				reg, err := registry.NewRegistry(registry.Config{
+					Storage: registry.FilesystemStorage(filepath.Join(tmpDir, "registry")),
+					Host:    "127.0.0.1",
+					Port:    uint16(port),
+				})
+				Expect(err).NotTo(HaveOccurred())
+				registryAddress = fmt.Sprintf("http://127.0.0.1:%d", port)
+
+				done := make(chan struct{})
+				go func() {
+					defer GinkgoRecover()
+
+					Expect(
+						reg.ListenAndServe(
+							funcr.New(func(prefix, args string) {
+								log.Println(prefix, args)
+							}, funcr.Options{}),
+						),
+					).To(Succeed())
+
+					close(done)
+				}()
+
+				DeferCleanup(func() {
+					Expect(reg.Shutdown(context.Background())).To((Succeed()))
+
+					Eventually(done).Should(BeClosed())
+				})
+
+				helpers.WaitForTCPPort(GinkgoT(), "127.0.0.1", port)
+			})
+
+			BeforeEach(func() {
+				helpers.CreateBundleImages(
+					GinkgoT(),
+					bundleFile,
+					filepath.Join("testdata", "create-success.yaml"),
+					"linux/"+runtime.GOARCH,
+				)
+
+				bundleFile2 = filepath.Join(tmpDir, "busybox-image-bundle.tar")
+				helpers.CreateBundleImages(
+					GinkgoT(),
+					bundleFile2,
+					filepath.Join("testdata", "create-success-busybox.yaml"),
+					"linux/"+runtime.GOARCH,
+				)
+
+				DeferCleanup(GinkgoWriter.ClearTeeWriters)
+				outputBuf = bytes.NewBuffer(nil)
+				GinkgoWriter.TeeTo(outputBuf)
+			})
+
+			It("Success with multiple image bundles", func() {
+				args := []string{
+					"--bundle", bundleFile,
+					"--bundle", bundleFile2,
+					"--to-registry", registryAddress,
+					"--to-registry-insecure-skip-tls-verify",
+				}
+
+				cmd.SetArgs(args)
+
+				Expect(cmd.Execute()).To(Succeed())
+
+				Expect(outputBuf.String()).NotTo(ContainSubstring("✗"))
+			})
+		})
+
 		It("Bundle does not exist", func() {
 			cmd.SetArgs([]string{
 				"--bundle", bundleFile,
