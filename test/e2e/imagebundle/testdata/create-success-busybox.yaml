@@ -1,0 +1,7 @@
+# Copyright 2021 D2iQ, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+docker.io:
+  images:
+    library/busybox:
+      - 1.37.0-musl

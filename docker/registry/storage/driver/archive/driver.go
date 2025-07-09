@@ -209,12 +209,12 @@ func (d *driver) Reader(ctx context.Context, fPath string, offset int64) (io.Rea
 			return file, nil
 		}
 
-		if !os.IsNotExist(err) {
+		if !errors.Is(err, fs.ErrNotExist) {
 			return nil, err
 		}
 	}
 
-	if os.IsNotExist(err) {
+	if errors.Is(err, fs.ErrNotExist) {
 		return nil, storagedriver.PathNotFoundError{Path: fPath}
 	}
 
@@ -246,12 +246,12 @@ func (d *driver) Stat(ctx context.Context, subPath string) (storagedriver.FileIn
 			}, nil
 		}
 
-		if !os.IsNotExist(err) {
+		if !errors.Is(err, fs.ErrNotExist) {
 			return nil, err
 		}
 	}
 
-	if !os.IsNotExist(err) {
+	if errors.Is(err, fs.ErrNotExist) {
 		return nil, storagedriver.PathNotFoundError{Path: subPath}
 	}
 
@@ -270,11 +270,13 @@ func (d *driver) List(ctx context.Context, subPath string) ([]string, error) {
 
 	for _, tfs := range d.archiveFileSystems {
 		dirEntries, err := fs.ReadDir(tfs, archiveSubpath)
+		// If this archive does not contain the subpath, we skip it.
 		if err != nil {
-			if os.IsNotExist(err) {
-				return nil, storagedriver.PathNotFoundError{Path: subPath}
+			if errors.Is(err, fs.ErrNotExist) {
+				continue
 			}
-			return nil, err
+
+			return nil, fmt.Errorf("failed to list directory %s: %w", archiveSubpath, err)
 		}
 
 		for _, dirEntry := range dirEntries {
@@ -291,6 +293,10 @@ func (d *driver) List(ctx context.Context, subPath string) ([]string, error) {
 				),
 			)
 		}
+	}
+
+	if len(keys) == 0 {
+		return nil, storagedriver.PathNotFoundError{Path: subPath}
 	}
 
 	return keys, nil
