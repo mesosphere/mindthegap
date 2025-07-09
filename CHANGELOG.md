@@ -274,6 +274,21 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.22.1 (2025-07-09)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix: Correctly check not found errors in registry storage by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/918
+### Other Changes
+* refactor: export PullImagesAndOCIArtifacts function by @takirala in https://github.com/mesosphere/mindthegap/pull/913
+
+## New Contributors
+* @takirala made their first contribution in https://github.com/mesosphere/mindthegap/pull/913
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.22.0...v1.22.1
+
 ## 1.22.0 (2025-06-12)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
