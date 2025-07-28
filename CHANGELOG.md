@@ -274,6 +274,19 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.22.2 (2025-07-28)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Other Changes
+* refactor: Remove bitnami references by @SandhyaRavi2403 in https://github.com/mesosphere/mindthegap/pull/923
+
+## New Contributors
+* @SandhyaRavi2403 made their first contribution in https://github.com/mesosphere/mindthegap/pull/923
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.22.1...v1.22.2
+
 ## 1.22.1 (2025-07-09)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
