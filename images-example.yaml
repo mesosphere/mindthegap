@@ -6,13 +6,13 @@ docker.io:
   images:
     apteno/alpine-jq:
       - 2021-01-19
-    bitnami/kubectl:
+    bitnamilegacy/kubectl:
       - 1.17.16
       - 1.19.7
       - 1.21.3
-    bitnami/memcached:
+    bitnamilegacy/memcached:
       - 1.6.9-debian-10-r114
-    bitnami/postgresql:
+    bitnamilegacy/postgresql:
       - 11.11.0-debian-10-r62
     directxman12/k8s-prometheus-adapter:
       - v0.8.3
