@@ -18,8 +18,6 @@ tasks:
           --junitfile-testsuite-name=relative \
           --junitfile-testcase-classname=short \
           -- \
-          -covermode=atomic \
-          -coverprofile=coverage.out \
           -race \
           -short \
           -v \
