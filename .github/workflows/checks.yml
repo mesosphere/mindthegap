@@ -86,18 +86,12 @@ jobs:
         uses: jetify-com/devbox-install-action@22b0f5500b14df4ea357ce673fbd4ced940ed6a1 # v0.13.0
         with:
           enable-cache: true
-      - name: Export golang and golangci-lint versions
-        id: versions
-        run: |
-          echo "golangci-lint=$(devbox run -- golangci-lint version --short)" >>"${GITHUB_OUTPUT}"
-          echo "golang=$(devbox run -- go version | grep -o "[[:digit:]]\+.[[:digit:]]\+\(.[[:digit:]]\+\)\?")" >>"${GITHUB_OUTPUT}"
       - name: golangci-lint
-        uses: reviewdog/action-golangci-lint@f9bba13753278f6a73b27a56a3ffb1bfda90ed71 # v2
-        with:
-          fail_level: error
-          reporter: github-pr-review
-          golangci_lint_version: v${{ steps.versions.outputs.golangci-lint }}
-          go_version: v${{ steps.versions.outputs.golang }}
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          devbox run -- "golangci-lint run --config=${{ github.workspace }}/.golangci.yml --output.text.path=stdout ./... | \
+                         reviewdog -f=golangci-lint -reporter=github-pr-review --fail-level=any"
       - name: golangci-lint-fmt
         run: devbox run -- task go:fmt
   lint-gha:
