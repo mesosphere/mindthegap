@@ -1,0 +1,42 @@
+# Copyright 2021 D2iQ, Inc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Copyright 2025 Nutanix. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+version: '3'
+
+tasks:
+  update:
+    desc: Update mholt/archives to the latest version
+    cmds:
+      - task: update-mholt-archives
+      - task: ensure-no-minio-references
+      - go mod edit -replace github.com/mholt/archives=./third_party/github.com/mholt/archives
+      - go mod tidy -v
+      - go mod verify
+
+  update-mholt-archives:
+    internal: true
+    vars:
+      MHOLT_ARCHIVES_VERSION:
+        sh: go list -m -f '{{ "{{" }}.Version}}' github.com/mholt/archives
+    cmds:
+      - rm -rf third_party/github.com/mholt/archives
+      - git clone https://github.com/mholt/archives.git third_party/github.com/mholt/archives
+          --single-branch --branch='{{.MHOLT_ARCHIVES_VERSION}}' --depth=1
+      - rm -rf third_party/github.com/mholt/archives/{.git,.github,.gitignore,README.md}
+      - fd --glob '*_test.go' third_party/github.com/mholt/archives --exec rm -f
+
+  ensure-no-minio-references:
+    internal: true
+    vars:
+      MINIO_REFERENCES:
+        sh: rg --type=go --files-with-matches minio || true
+    cmds:
+      - rm -f {{.MINIO_REFERENCES}}
+      - go mod tidy -v
+      - go mod verify
+    status:
+      - test -z "{{.MINIO_REFERENCES}}"
+    dir: third_party/github.com/mholt/archives

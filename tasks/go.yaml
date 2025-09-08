@@ -21,7 +21,7 @@ tasks:
     desc: Runs golangci-lint run for all modules in repository
     vars:
       GO_SUBMODULES:
-        sh: fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/
+        sh: fd go.mod --exclude third_party --min-depth 2 --strip-cwd-prefix --exec echo {//}/
     cmds:
       - task: lint-macro
         vars:
@@ -46,7 +46,7 @@ tasks:
     desc: Runs golangci-lint fmt for all modules in repository
     vars:
       GO_SUBMODULES:
-        sh: fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/
+        sh: fd go.mod --exclude third_party --min-depth 2 --strip-cwd-prefix --exec echo {//}/
     cmds:
       - task: fmt-macro
         vars:
@@ -70,7 +70,7 @@ tasks:
     desc: Run go mod tidy for all modules in the repository
     vars:
       GO_SUBMODULES:
-        sh: fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/
+        sh: fd go.mod --exclude third_party --min-depth 2 --strip-cwd-prefix --exec echo {//}/
     cmds:
       - task: mod-tidy-macro
         vars:
@@ -93,7 +93,7 @@ tasks:
     desc: Cleans go build, test and modules caches for all modules in the repository
     vars:
       GO_SUBMODULES:
-        sh: fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/
+        sh: fd go.mod --exclude third_party --min-depth 2 --strip-cwd-prefix --exec echo {//}/
     cmds:
       - task: clean-macro
         vars:
@@ -116,7 +116,7 @@ tasks:
     desc: Runs govulncheck for all modules in repository
     vars:
       GO_SUBMODULES:
-        sh: fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/
+        sh: fd go.mod --exclude third_party --min-depth 2 --strip-cwd-prefix --exec echo {//}/
     cmds:
       - task: vulncheck-macro
         vars:
@@ -146,7 +146,7 @@ tasks:
         - GO_TOOLCHAIN_VERSION
     vars:
       GO_SUBMODULES:
-        sh: fd go.mod --min-depth 2 --strip-cwd-prefix --exec echo {//}/
+        sh: fd go.mod --exclude third_party --min-depth 2 --strip-cwd-prefix --exec echo {//}/
     cmds:
       - task: mod-edit-toolchain-macro
         vars:

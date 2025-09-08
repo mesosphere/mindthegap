@@ -14,3 +14,4 @@ includes:
   pre-commit: ./tasks/pre-commit.yaml
   go: ./tasks/go.yaml
   test: ./tasks/test.yaml
+  fork-archives: ./tasks/fork-archives.yaml

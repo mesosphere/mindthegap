@@ -30,7 +30,7 @@ jobs:
       - name: Get number of versions changed
         id: devbox-versions-changed
         run: |
-          echo "number_changed=$(git diff --unified=0 devbox.lock | grep -c \"version\":)" >>"${GITHUB_OUTPUT}"
+          echo "number_changed=$(git diff --unified=0 devbox.lock | rg --count \"version\":)" >>"${GITHUB_OUTPUT}"
       - name: Commit changes
         if: steps.devbox-versions-changed.outputs.number_changed > 0
         id: commit-changes
