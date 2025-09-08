@@ -274,6 +274,23 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.23.0 (2025-09-08)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: Build with go1.25.0 by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/930
+### Other Changes
+* refactor: Remove bitnami references by @SandhyaRavi2403 in https://github.com/mesosphere/mindthegap/pull/923
+* ci: Run golangci-lint without reviewdog action by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/936
+* build: Remove minio dependencies by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/942
+
+## New Contributors
+* @SandhyaRavi2403 made their first contribution in https://github.com/mesosphere/mindthegap/pull/923
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.22.1...v1.23.0
+
 ## 1.22.1 (2025-07-09)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
