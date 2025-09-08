@@ -20,7 +20,8 @@
       "tasks/git.yaml",
       "tasks/pre-commit.yaml",
       "tasks/go.yaml",
-      "tasks/test.yaml"
+      "tasks/test.yaml",
+      "tasks/fork-archives.yaml"
     ]
   }
 }

@@ -1,9 +1,24 @@
 # Copyright 2021 D2iQ, Inc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+exclude: ^third_party/.*$
+
 repos:
+- repo: meta
+  hooks:
+  - id: check-hooks-apply
+  - id: check-useless-excludes
 - repo: local
   hooks:
+  - id: update-mholt-archives-fork
+    name: Update mholt/archives fork
+    stages: [pre-commit]
+    entry: task fork-archives:update
+    language: system
+    types_or:
+      - go-mod
+      - go-sum
+    pass_filenames: false
   - id: go-mod-tidy
     name: go mod tidy
     stages: [pre-commit]
@@ -31,7 +46,6 @@ repos:
     stages: [pre-commit]
   - id: mixed-line-ending
     args: ["-f", "lf"]
-    exclude: \.bat$
     stages: [pre-commit]
   - id: no-commit-to-branch
     stages: [pre-commit]
@@ -42,8 +56,6 @@ repos:
   - id: check-merge-conflict
     stages: [pre-commit]
   - id: check-executables-have-shebangs
-    stages: [pre-commit]
-  - id: check-symlinks
     stages: [pre-commit]
   - id: end-of-file-fixer
     stages: [pre-commit]
@@ -64,9 +76,6 @@ repos:
   - id: shfmt
     stages: [pre-commit]
     args: ["-s", "-i", "2"]
-  - id: script-must-have-extension
-    stages: [pre-commit]
-    exclude: ^\.envrc$
 - repo: https://github.com/shellcheck-py/shellcheck-py
   rev: v0.10.0.1
   hooks:

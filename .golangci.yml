@@ -63,6 +63,8 @@ linters:
           deny:
             - pkg: k8s.io/kubernetes
               desc: do not use k8s.io/kubernetes directly
+            - pkg: github.com/minio
+              desc: dependencies on minio libraries are not allowed
     errcheck:
       exclude-functions:
         - encoding/json.Marshal
@@ -76,6 +78,10 @@ linters:
         - opinionated
         - performance
         - style
+    gomoddirectives:
+      replace-local: true
+      replace-allow-list:
+        - github.com/mholt/archives
     lll:
       line-length: 120
   exclusions:
@@ -101,9 +107,7 @@ linters:
         path: docker/registry/registry.go
         text: 'hugeParam: cfg is heavy'
     paths:
-      - third_party$
-      - builtin$
-      - examples$
+      - third_party/
 formatters:
   enable:
     - gci
@@ -123,6 +127,4 @@ formatters:
   exclusions:
     generated: lax
     paths:
-      - third_party$
-      - builtin$
-      - examples$
+      - third_party/

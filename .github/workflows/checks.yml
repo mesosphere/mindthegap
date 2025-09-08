@@ -79,6 +79,9 @@ jobs:
             junit-e2e.xml
   lint:
     runs-on: ubuntu-22.04
+    permissions:
+      checks: write
+      pull-requests: write
     steps:
       - name: Check out code
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4
@@ -96,6 +99,9 @@ jobs:
         run: devbox run -- task go:fmt
   lint-gha:
     runs-on: ubuntu-22.04
+    permissions:
+      checks: write
+      pull-requests: write
     steps:
       - name: Check out code
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4

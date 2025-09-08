@@ -405,70 +405,6 @@
       "last_modified": "2025-08-13T10:51:09Z",
       "resolved": "github:NixOS/nixpkgs/d74de548348c46cf25cb1fcc4b74f38103a4590d?lastModified=1755082269&narHash=sha256-Ix7ALeaxv9tW4uBKWeJnaKpYZtZiX4H4Q%2FMhEmj4XYA%3D"
     },
-    "gnugrep@latest": {
-      "last_modified": "2025-07-28T17:09:23Z",
-      "resolved": "github:NixOS/nixpkgs/648f70160c03151bc2121d179291337ad6bc564b#gnugrep",
-      "source": "devbox-search",
-      "version": "3.12",
-      "systems": {
-        "aarch64-darwin": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/f9mkdp2bnnbwshk9vjr4jj34md6911bp-gnugrep-3.12",
-              "default": true
-            },
-            {
-              "name": "info",
-              "path": "/nix/store/v2ykyf0v2pwn2r1sr6z3k145b4vrdwiz-gnugrep-3.12-info"
-            }
-          ],
-          "store_path": "/nix/store/f9mkdp2bnnbwshk9vjr4jj34md6911bp-gnugrep-3.12"
-        },
-        "aarch64-linux": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/c719rihk36bxwgbr8anyhn22h0x7ylp4-gnugrep-3.12",
-              "default": true
-            },
-            {
-              "name": "info",
-              "path": "/nix/store/0kh29ykqwpsv91q5p1kp7q3q3qn3ihxl-gnugrep-3.12-info"
-            }
-          ],
-          "store_path": "/nix/store/c719rihk36bxwgbr8anyhn22h0x7ylp4-gnugrep-3.12"
-        },
-        "x86_64-darwin": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/zfhxb1786sivl2psmqqji41y8r6avvwv-gnugrep-3.12",
-              "default": true
-            },
-            {
-              "name": "info",
-              "path": "/nix/store/9hn95kd8d71nbjhrnkwmiffmzy7kgvbk-gnugrep-3.12-info"
-            }
-          ],
-          "store_path": "/nix/store/zfhxb1786sivl2psmqqji41y8r6avvwv-gnugrep-3.12"
-        },
-        "x86_64-linux": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/k7gv42hpqwh6ghiyl4ava9p5r249x6vn-gnugrep-3.12",
-              "default": true
-            },
-            {
-              "name": "info",
-              "path": "/nix/store/f0jpsd2ssrvixjprdrfvs1x47r16fdwn-gnugrep-3.12-info"
-            }
-          ],
-          "store_path": "/nix/store/k7gv42hpqwh6ghiyl4ava9p5r249x6vn-gnugrep-3.12"
-        }
-      }
-    },
     "gnused@latest": {
       "last_modified": "2025-07-28T17:09:23Z",
       "resolved": "github:NixOS/nixpkgs/648f70160c03151bc2121d179291337ad6bc564b#gnused",
@@ -930,6 +866,54 @@
             }
           ],
           "store_path": "/nix/store/cij16wb8w1i1998732a0dxjqyd1swb2l-reviewdog-0.20.3"
+        }
+      }
+    },
+    "ripgrep@latest": {
+      "last_modified": "2025-07-28T17:09:23Z",
+      "resolved": "github:NixOS/nixpkgs/648f70160c03151bc2121d179291337ad6bc564b#ripgrep",
+      "source": "devbox-search",
+      "version": "14.1.1",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/md9kfvsz7axcb5b1z2yw2mybi3lhxyha-ripgrep-14.1.1",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/md9kfvsz7axcb5b1z2yw2mybi3lhxyha-ripgrep-14.1.1"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/slgpwy2f6j68p47hifz503251dgxb075-ripgrep-14.1.1",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/slgpwy2f6j68p47hifz503251dgxb075-ripgrep-14.1.1"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/m645jkssqpw05acf1cnz037via2y0j4q-ripgrep-14.1.1",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/m645jkssqpw05acf1cnz037via2y0j4q-ripgrep-14.1.1"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/1ijacjhy42pqx7vfi5mnsqrps2k3b8xf-ripgrep-14.1.1",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/1ijacjhy42pqx7vfi5mnsqrps2k3b8xf-ripgrep-14.1.1"
         }
       }
     },
