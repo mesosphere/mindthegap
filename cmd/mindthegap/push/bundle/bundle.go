@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/containers/image/v5/docker/reference"
 	"github.com/containers/image/v5/types"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/logs"
@@ -27,6 +28,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
+	"github.com/mesosphere/dkp-cli-runtime/core/term"
 
 	"github.com/mesosphere/mindthegap/cleanup"
 	"github.com/mesosphere/mindthegap/cmd/mindthegap/flags"
@@ -364,22 +366,49 @@ func pushImages(
 	sourceRemoteOpts = append(sourceRemoteOpts, remote.WithContext(egCtx))
 	destRemoteOpts = append(destRemoteOpts, remote.WithContext(egCtx))
 
-	pushGauge := &output.ProgressGauge{}
-	pushGauge.SetCapacity(cfg.TotalImages())
-	pushGauge.SetStatus("Pushing bundled images")
+	// Either use a gauge for interactive TTY or line per image for non-TTY.
+	isTTY := term.IsSmartTerminal(os.Stderr)
+	type completePushFunc func(image, tag string) error
+	var completePush completePushFunc
+	if isTTY {
+		pushGauge := &output.ProgressGauge{}
+		pushGauge.SetCapacity(cfg.TotalImages())
+		pushGauge.SetStatus("Pushing bundled images")
+		completePush = func(_, _ string) error {
+			pushGauge.Inc()
 
-	out.StartOperationWithProgress(pushGauge)
+			return nil
+		}
+		out.StartOperationWithProgress(pushGauge)
+	} else {
+		// Use an output writer mutex to ensure the output is not interleaved.
+		var outputWriterMutex sync.RWMutex
+		currentImageIdx := 0
+		completePush = func(image, tag string) error {
+			outputWriterMutex.Lock()
+			defer outputWriterMutex.Unlock()
+			currentImageIdx++
+			out.StartOperation(fmt.Sprintf("[%d/%d] Pushing %s:%s", currentImageIdx, cfg.TotalImages(), image, tag))
+			// Use the deprecated EndOperation instead of EndOperationWithStatus to ensure the correct INF prefix
+			// is printed in the output. This needs to be fixed upstream, but this is ok for now.
+			out.EndOperation(true) //nolint:staticcheck // Needs to be fixed upstream.
+			return nil
+		}
+	}
 
-	for registryIdx := range regNames {
-		registryName := regNames[registryIdx]
-
+	for _, registryName := range regNames {
 		registryConfig := cfg[registryName]
 
 		// Sort images for deterministic ordering.
 		imageNames := registryConfig.SortedImageNames()
 
-		for imageIdx := range imageNames {
-			imageName := imageNames[imageIdx]
+		for _, imageName := range imageNames {
+			// Output the origin image name and tag, normalized to the canonical format including
+			// docker.io prefix if necessary.
+			originImage, err := reference.ParseNormalizedNamed(imageName)
+			if err != nil {
+				return fmt.Errorf("failed to parse image name: %w", err)
+			}
 
 			srcRepository := sourceRegistry.Repo(imageName)
 			destRepository := destRegistry.Repo(strings.TrimLeft(destRegistryPath, "/"), imageName)
@@ -392,9 +421,7 @@ func pushImages(
 				existingImageTags   map[string]struct{}
 			)
 
-			for tagIdx := range imageTags {
-				imageTag := imageTags[tagIdx]
-
+			for _, imageTag := range imageTags {
 				eg.Go(func() error {
 					imageTagPrePushSync.Do(func() {
 						for _, prePush := range prePushFuncs {
@@ -434,9 +461,16 @@ func pushImages(
 						}
 					case Error:
 						if _, exists := existingImageTags[imageTag]; exists {
-							return fmt.Errorf(
-								"image tag already exists in destination registry",
-							)
+							pushFn = func(
+								_ name.Reference, _ []remote.Option, _ name.Reference, _ []remote.Option, _ ...pushOpt,
+							) error {
+								return fmt.Errorf(
+									"failed to push image %s:%s to %s: image tag already exists in destination registry",
+									originImage,
+									imageTag,
+									destRepository,
+								)
+							}
 						}
 					}
 
@@ -446,10 +480,18 @@ func pushImages(
 					}
 
 					if err := pushFn(srcImage, sourceRemoteOpts, destImage, destRemoteOpts, opts...); err != nil {
-						return err
+						return fmt.Errorf(
+							"failed to push image %s:%s to %s: %w",
+							originImage,
+							imageTag,
+							destRepository,
+							err,
+						)
 					}
 
-					pushGauge.Inc()
+					if err := completePush(originImage.Name(), imageTag); err != nil {
+						return err
+					}
 
 					return nil
 				})

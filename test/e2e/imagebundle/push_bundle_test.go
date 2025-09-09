@@ -535,9 +535,9 @@ var _ = Describe("Push Bundle", func() {
 
 				cmd.SetArgs(args)
 
-				Expect(cmd.Execute()).To(HaveOccurred())
-
-				Expect(outputBuf.String()).To(ContainSubstring("✗"))
+				Expect(
+					cmd.Execute(),
+				).To(MatchError(ContainSubstring("image tag already exists in destination registry")))
 			})
 		})
 
