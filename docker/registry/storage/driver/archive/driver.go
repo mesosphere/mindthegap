@@ -49,7 +49,7 @@ func init() {
 // archiveDriverFactory implements the factory.StorageDriverFactory interface.
 type archiveDriverFactory struct{}
 
-func (factory *archiveDriverFactory) Create(
+func (driverFactory *archiveDriverFactory) Create(
 	ctx context.Context, parameters map[string]interface{},
 ) (storagedriver.StorageDriver, error) {
 	return FromParameters(ctx, parameters)
@@ -241,7 +241,7 @@ func (d *driver) Stat(ctx context.Context, subPath string) (storagedriver.FileIn
 		fi, err = fs.Stat(tfs, archiveSubpath)
 		if err == nil {
 			return fileInfo{
-				path:     subPath,
+				fPath:    subPath,
 				FileInfo: fi,
 			}, nil
 		}
@@ -322,23 +322,23 @@ func (d *driver) RedirectURL(*http.Request, string) (string, error) {
 // from the given path, calling f on each file and directory.
 func (d *driver) Walk(
 	ctx context.Context,
-	path string,
+	fPath string,
 	f storagedriver.WalkFn,
 	options ...func(*storagedriver.WalkOptions),
 ) error {
-	return storagedriver.WalkFallback(ctx, d, path, f, options...)
+	return storagedriver.WalkFallback(ctx, d, fPath, f, options...)
 }
 
 type fileInfo struct {
 	os.FileInfo
-	path string
+	fPath string
 }
 
 var _ storagedriver.FileInfo = fileInfo{}
 
 // Path provides the full path of the target of this file info.
 func (fi fileInfo) Path() string {
-	return fi.path
+	return fi.fPath
 }
 
 // Size returns current length in bytes of the file. The return value can
