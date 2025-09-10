@@ -43,6 +43,7 @@ func NewCommand(out output.Output) *cobra.Command {
 		helmChartsConfigFile   string
 		ociArtifactsConfigFile string
 		platforms              = flags.NewPlatformsValue("linux/amd64")
+		allPlatforms           bool
 		outputFile             string
 		overwrite              bool
 		imagePullConcurrency   int
@@ -180,6 +181,10 @@ func NewCommand(out output.Output) *cobra.Command {
 			logs.Warn.SetOutput(out.V(2).InfoWriter())
 
 			if imagesConfigFile != "" || ociArtifactsConfigFile != "" {
+				if allPlatforms {
+					platforms = flags.NewPlatformsValue("*/*")
+				}
+
 				if err := PullImagesAndOCIArtifacts(
 					imagesConfig,
 					ociArtifactsConfig,
@@ -232,6 +237,9 @@ func NewCommand(out output.Output) *cobra.Command {
 	cmd.MarkFlagsOneRequired("images-file", "helm-charts-file", "oci-artifacts-file")
 	cmd.Flags().
 		Var(&platforms, "platform", "platforms to download images for (required format: <os>/<arch>[/<variant>])")
+	cmd.Flags().
+		BoolVar(&allPlatforms, "all-platforms", false, "Download images for all platforms specified in the image manifests")
+	cmd.MarkFlagsMutuallyExclusive("platform", "all-platforms")
 	cmd.Flags().
 		StringVar(&outputFile, "output-file", "bundle.tar", "Output file to write bundle to")
 	cmd.Flags().

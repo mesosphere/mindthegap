@@ -19,6 +19,7 @@ OCI registry.
 mindthegap create bundle \
   [--images-file <path/to/images.yaml>] \
   [--platform <platform> [--platform <platform> ...]] \
+  [--all-platforms] \
   [--helm-charts-file <path/to/helm-charts.yaml>] \
   [--oci-artifacts-file <path/to/helm-charts.yaml>] \
   [--output-file <path/to/output.tar>]
@@ -44,6 +45,8 @@ linux/arm64
 windows/amd64
 windows/arm64
 ```
+
+Alternatively use the `--all-platforms` flag to bundle images for all platforms specified in the origin manifests.
 
 All images in the images config file must support all the requested platforms.
 
