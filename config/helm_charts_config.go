@@ -174,7 +174,13 @@ func ParseHelmChartsConfigFile(configFile string) (HelmChartsConfig, error) {
 	return config, nil
 }
 
-func WriteSanitizedHelmChartsConfig(cfg HelmChartsConfig, fileName string) error {
+func WriteSanitizedHelmChartsConfig(fileName string, cfgs ...HelmChartsConfig) error {
+	merged := &HelmChartsConfig{}
+	for _, cfg := range cfgs {
+		merged = merged.Merge(cfg)
+	}
+
+	cfg := *merged
 	for regName, regConfig := range cfg.Repositories {
 		regConfig.Username = ""
 		regConfig.Password = ""

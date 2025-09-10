@@ -153,9 +153,9 @@ func (ic ImagesConfig) TotalImages() int {
 }
 
 func ParseImagesConfigFile(configFile string) (ImagesConfig, error) {
-	f, yamlParseErr := os.Open(configFile)
-	if yamlParseErr != nil {
-		return ImagesConfig{}, fmt.Errorf("failed to read images config file: %w", yamlParseErr)
+	f, err := os.Open(configFile)
+	if err != nil {
+		return ImagesConfig{}, fmt.Errorf("failed to read images config file: %w", err)
 	}
 	defer f.Close()
 
@@ -164,7 +164,7 @@ func ParseImagesConfigFile(configFile string) (ImagesConfig, error) {
 		dec    = yaml.NewDecoder(f)
 	)
 	dec.KnownFields(true)
-	yamlParseErr = dec.Decode(&config)
+	yamlParseErr := dec.Decode(&config)
 	if yamlParseErr == nil {
 		return config, nil
 	}
