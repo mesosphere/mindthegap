@@ -328,6 +328,13 @@ var _ = Describe("Push Bundle", func() {
 
 				Expect(outputBuf.String()).NotTo(ContainSubstring("✗"))
 			})
+		})
+
+		Context("Success for all-platforms", func() {
+			var (
+				registryAddress string
+				registryPort    int
+			)
 
 			busyboxAllPlatformsManifest := map[*v1.Platform]string{
 				{
@@ -366,6 +373,42 @@ var _ = Describe("Push Bundle", func() {
 					Architecture: "s390x",
 				}: "sha256:a31ebdbf0b62af9f333529ad04de1c65a07356474bbe386e2b3a124b05b35d76",
 			}
+
+			BeforeEach(func() {
+				port, err := freeport.GetFreePort()
+				Expect(err).NotTo(HaveOccurred())
+				registryPort = port
+				reg, err := registry.NewRegistry(registry.Config{
+					Storage: registry.FilesystemStorage(filepath.Join(tmpDir, "registry")),
+					Host:    "127.0.0.1",
+					Port:    uint16(registryPort),
+				})
+				Expect(err).NotTo(HaveOccurred())
+				registryAddress = fmt.Sprintf("http://127.0.0.1:%d", registryPort)
+
+				done := make(chan struct{})
+				go func() {
+					defer GinkgoRecover()
+
+					Expect(
+						reg.ListenAndServe(
+							funcr.New(func(prefix, args string) {
+								log.Println(prefix, args)
+							}, funcr.Options{}),
+						),
+					).To(Succeed())
+
+					close(done)
+				}()
+
+				DeferCleanup(func() {
+					Expect(reg.Shutdown(context.Background())).To((Succeed()))
+
+					Eventually(done).Should(BeClosed())
+				})
+
+				helpers.WaitForTCPPort(GinkgoT(), "127.0.0.1", port)
+			})
 
 			It("Successful push with all-platforms specified via */*", func() {
 				allPlatformsBundleFile := filepath.Join(tmpDir, "all-platforms-image-bundle.tar")
@@ -422,6 +465,131 @@ var _ = Describe("Push Bundle", func() {
 					"library/busybox",
 					"1.37.0-musl",
 					busyboxAllPlatformsManifest,
+				)
+			})
+		})
+
+		Context("Success with merged bundle files", func() {
+			var (
+				registryAddress string
+				registryPort    int
+			)
+
+			BeforeEach(func() {
+				port, err := freeport.GetFreePort()
+				Expect(err).NotTo(HaveOccurred())
+				registryPort = port
+				reg, err := registry.NewRegistry(registry.Config{
+					Storage: registry.FilesystemStorage(filepath.Join(tmpDir, "registry")),
+					Host:    "127.0.0.1",
+					Port:    uint16(registryPort),
+				})
+				Expect(err).NotTo(HaveOccurred())
+				registryAddress = fmt.Sprintf("http://127.0.0.1:%d", registryPort)
+
+				done := make(chan struct{})
+				go func() {
+					defer GinkgoRecover()
+
+					Expect(
+						reg.ListenAndServe(
+							funcr.New(func(prefix, args string) {
+								log.Println(prefix, args)
+							}, funcr.Options{}),
+						),
+					).To(Succeed())
+
+					close(done)
+				}()
+
+				DeferCleanup(func() {
+					Expect(reg.Shutdown(context.Background())).To((Succeed()))
+
+					Eventually(done).Should(BeClosed())
+				})
+
+				helpers.WaitForTCPPort(GinkgoT(), "127.0.0.1", port)
+			})
+
+			It("Successful push", func() {
+				mergedBundleFile := filepath.Join(tmpDir, "merged-bundle.tar")
+
+				helpers.CreateBundleImages(
+					GinkgoT(),
+					mergedBundleFile,
+					filepath.Join("testdata", "create-success.yaml"),
+					"linux/amd64",
+				)
+
+				createMergedBundleCmd := helpers.NewCommand(GinkgoT(), createbundle.NewCommand)
+				createMergedBundleCmd.SetArgs([]string{
+					"--output-file", mergedBundleFile,
+					"--images-file", filepath.Join("testdata", "create-success-busybox.yaml"),
+					"--platform", "linux/amd64",
+					"--merge",
+				})
+				Expect(createMergedBundleCmd.Execute()).To(Succeed())
+
+				createMergedBundleCmd.SetArgs([]string{
+					"--output-file", mergedBundleFile,
+					"--images-file", filepath.Join("testdata", "create-success-extra-podinfo-tag.yaml"),
+					"--platform", "linux/amd64",
+					"--merge",
+				})
+				Expect(createMergedBundleCmd.Execute()).To(Succeed())
+
+				args := []string{
+					"--bundle", mergedBundleFile,
+					"--to-registry", registryAddress,
+					"--to-registry-insecure-skip-tls-verify",
+				}
+
+				cmd.SetArgs(args)
+				Expect(cmd.Execute()).To(Succeed())
+
+				helpers.ValidatePlatformDigestsInIndex(
+					GinkgoT(),
+					"127.0.0.1",
+					registryPort,
+					"",
+					"library/busybox",
+					"1.37.0-musl",
+					map[*v1.Platform]string{
+						{
+							OS:           "linux",
+							Architecture: "amd64",
+						}: "sha256:f0657165bbbc518bd1adb6a3605532c0c30b237ee1a85ce51a94ab78878c996e",
+					},
+				)
+
+				helpers.ValidatePlatformDigestsInIndex(
+					GinkgoT(),
+					"127.0.0.1",
+					registryPort,
+					"",
+					"stefanprodan/podinfo",
+					"6.2.0",
+					map[*v1.Platform]string{
+						{
+							OS:           "linux",
+							Architecture: "amd64",
+						}: "sha256:f60e14b08375a64528113dd8808b16030c771f626e66961dfaf511b74d6f68dc",
+					},
+				)
+
+				helpers.ValidatePlatformDigestsInIndex(
+					GinkgoT(),
+					"127.0.0.1",
+					registryPort,
+					"",
+					"stefanprodan/podinfo",
+					"6.3.0",
+					map[*v1.Platform]string{
+						{
+							OS:           "linux",
+							Architecture: "amd64",
+						}: "sha256:cbf799da7ce644b32b8bbd9440abe9a47378f8018850b314b3561230bcdc128c",
+					},
 				)
 			})
 		})

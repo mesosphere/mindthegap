@@ -17,6 +17,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/logs"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/jm33-m0/arc/v2"
 	"github.com/mholt/archives"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
@@ -37,7 +38,9 @@ import (
 	"github.com/mesosphere/mindthegap/images/httputils"
 )
 
-func NewCommand(out output.Output) *cobra.Command {
+func NewCommand( //nolint:gocyclo // TODO: Refactor this command to make it more readable.
+	out output.Output,
+) *cobra.Command {
 	var (
 		imagesConfigFile       string
 		helmChartsConfigFile   string
@@ -46,6 +49,7 @@ func NewCommand(out output.Output) *cobra.Command {
 		allPlatforms           bool
 		outputFile             string
 		overwrite              bool
+		merge                  bool
 		imagePullConcurrency   int
 	)
 
@@ -117,14 +121,15 @@ func NewCommand(out output.Output) *cobra.Command {
 				ociArtifactsConfig = cfg
 			}
 
-			if !overwrite {
+			if !overwrite && !merge {
 				out.StartOperation("Checking if output file already exists")
 				_, err := os.Stat(outputFile)
 				switch {
 				case err == nil:
 					out.EndOperationWithStatus(output.Failure())
 					return fmt.Errorf(
-						"%s already exists: specify --overwrite to overwrite existing file",
+						"%s already exists: specify --overwrite to overwrite existing file"+
+							"                   or --merge to add new images to the existing file",
 						outputFile,
 					)
 				case !errors.Is(err, os.ErrNotExist):
@@ -161,6 +166,44 @@ func NewCommand(out output.Output) *cobra.Command {
 
 			out.EndOperationWithStatus(output.Success())
 
+			var (
+				existingImagesConfig     config.ImagesConfig
+				existingHelmChartsConfig config.HelmChartsConfig
+			)
+
+			if merge {
+				_, err := os.Stat(outputFile)
+				switch {
+				case err != nil && !errors.Is(err, os.ErrNotExist):
+					return fmt.Errorf(
+						"failed to check if output file %s already exists: %w",
+						outputFile,
+						err,
+					)
+				case err == nil:
+					out.StartOperation("Unpacking existing bundle file to prepare for merge")
+					if err := arc.Unarchive(outputFile, tempDir); err != nil {
+						out.EndOperationWithStatus(output.Failure())
+						return fmt.Errorf("failed to unpack existing bundle file: %w", err)
+					}
+					existingImagesConfig, err = config.ParseImagesConfigFile(filepath.Join(tempDir, "images.yaml"))
+					if err != nil && !errors.Is(err, os.ErrNotExist) {
+						out.EndOperationWithStatus(output.Failure())
+						return fmt.Errorf("failed to parse existing bundle config: %w", err)
+					}
+					existingHelmChartsConfig, err = config.ParseHelmChartsConfigFile(
+						filepath.Join(tempDir, "charts.yaml"),
+					)
+					if err != nil && !errors.Is(err, os.ErrNotExist) {
+						out.EndOperationWithStatus(output.Failure())
+						return fmt.Errorf("failed to parse existing bundle config: %w", err)
+					}
+					out.EndOperationWithStatus(output.Success())
+				default:
+					// Do nothing, file doesn't exist.
+				}
+			}
+
 			out.StartOperation("Starting temporary Docker registry")
 			reg, err := registry.NewRegistry(
 				registry.Config{Storage: registry.FilesystemStorage(tempDir)},
@@ -188,6 +231,7 @@ func NewCommand(out output.Output) *cobra.Command {
 				if err := PullImagesAndOCIArtifacts(
 					imagesConfig,
 					ociArtifactsConfig,
+					existingImagesConfig,
 					platforms,
 					imagePullConcurrency,
 					reg,
@@ -206,6 +250,7 @@ func NewCommand(out output.Output) *cobra.Command {
 
 				if err := pullCharts(
 					helmChartsConfig,
+					existingHelmChartsConfig,
 					helmChartsConfigFileAbs,
 					reg,
 					tempDir,
@@ -245,6 +290,9 @@ func NewCommand(out output.Output) *cobra.Command {
 	cmd.Flags().
 		BoolVar(&overwrite, "overwrite", false, "Overwrite bundle file if it already exists")
 	cmd.Flags().
+		BoolVar(&merge, "merge", false, "Merge new images into existing bundle file if it already exists")
+	cmd.MarkFlagsMutuallyExclusive("overwrite", "merge")
+	cmd.Flags().
 		IntVar(&imagePullConcurrency, "image-pull-concurrency", 1, "Image pull concurrency")
 
 	return cmd
@@ -253,6 +301,7 @@ func NewCommand(out output.Output) *cobra.Command {
 func PullImagesAndOCIArtifacts(
 	imagesConfig config.ImagesConfig,
 	ociArtifactsConfig config.ImagesConfig,
+	existingImagesConfig config.ImagesConfig,
 	platforms flags.Platforms,
 	imagePullConcurrency int,
 	reg *registry.Registry,
@@ -297,6 +346,7 @@ func PullImagesAndOCIArtifacts(
 		filepath.Join(outputDir, "images.yaml"),
 		imagesConfig,
 		ociArtifactsConfig,
+		existingImagesConfig,
 	); err != nil {
 		out.EndOperationWithStatus(output.Failure())
 		return err
@@ -444,7 +494,7 @@ func pullImages(
 }
 
 func pullCharts(
-	cfg config.HelmChartsConfig,
+	cfg, existingCfg config.HelmChartsConfig,
 	helmChartsConfigFileAbs string,
 	reg *registry.Registry,
 	outputDir string,
@@ -576,7 +626,9 @@ func pullCharts(
 		out.EndOperationWithStatus(output.Success())
 	}
 
-	if err := config.WriteSanitizedHelmChartsConfig(cfg, filepath.Join(outputDir, "charts.yaml")); err != nil {
+	if err := config.WriteSanitizedHelmChartsConfig(
+		filepath.Join(outputDir, "charts.yaml"), cfg, existingCfg,
+	); err != nil {
 		return err
 	}
 
