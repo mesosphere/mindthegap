@@ -32,6 +32,7 @@ import (
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
 	"github.com/mesosphere/mindthegap/archive"
+	createbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/create/bundle"
 	pushbundle "github.com/mesosphere/mindthegap/cmd/mindthegap/push/bundle"
 	"github.com/mesosphere/mindthegap/docker/registry"
 	"github.com/mesosphere/mindthegap/images/httputils"
@@ -252,19 +253,21 @@ var _ = Describe("Push Bundle", func() {
 			var (
 				bundleFile2     string
 				registryAddress string
+				registryPort    int
 				outputBuf       *bytes.Buffer
 			)
 
 			BeforeAll(func() {
 				port, err := freeport.GetFreePort()
 				Expect(err).NotTo(HaveOccurred())
+				registryPort = port
 				reg, err := registry.NewRegistry(registry.Config{
 					Storage: registry.FilesystemStorage(filepath.Join(tmpDir, "registry")),
 					Host:    "127.0.0.1",
-					Port:    uint16(port),
+					Port:    uint16(registryPort),
 				})
 				Expect(err).NotTo(HaveOccurred())
-				registryAddress = fmt.Sprintf("http://127.0.0.1:%d", port)
+				registryAddress = fmt.Sprintf("http://127.0.0.1:%d", registryPort)
 
 				done := make(chan struct{})
 				go func() {
@@ -324,6 +327,102 @@ var _ = Describe("Push Bundle", func() {
 				Expect(cmd.Execute()).To(Succeed())
 
 				Expect(outputBuf.String()).NotTo(ContainSubstring("✗"))
+			})
+
+			busyboxAllPlatformsManifest := map[*v1.Platform]string{
+				{
+					OS:           "linux",
+					Architecture: "amd64",
+				}: "sha256:f0657165bbbc518bd1adb6a3605532c0c30b237ee1a85ce51a94ab78878c996e",
+				{
+					OS:           "linux",
+					Architecture: "arm",
+					Variant:      "v6",
+				}: "sha256:6be497a98f91dd69a4265943283cd996e756c8c94784578a1b0b4573d039c64b",
+				{
+					OS:           "linux",
+					Architecture: "arm",
+					Variant:      "v7",
+				}: "sha256:c962fb03bc2909ed05015dc2b1a65aba47667e7f51d1f279be4538f1a5e60243",
+				{
+					OS:           "linux",
+					Architecture: "arm64",
+					Variant:      "v8",
+				}: "sha256:cb8f802e96fdfcd4ffc9d2da10c3a2386a4ccc8cdbd6083ee6e38850b2b586d1",
+				{
+					OS:           "linux",
+					Architecture: "386",
+				}: "sha256:cb0ee7880452e1db12d71be7099cde54bcb2c40767aaeac90cdc506142d6767f",
+				{
+					OS:           "linux",
+					Architecture: "ppc64le",
+				}: "sha256:69cb1d7dc93f3c4be8467854846a6e7d2f6d1777bb80df3bc521da367d8b1294",
+				{
+					OS:           "linux",
+					Architecture: "riscv64",
+				}: "sha256:a730bc9f9367b59798adeb8f020420ad886d065040f27d312f967ca798903dd0",
+				{
+					OS:           "linux",
+					Architecture: "s390x",
+				}: "sha256:a31ebdbf0b62af9f333529ad04de1c65a07356474bbe386e2b3a124b05b35d76",
+			}
+
+			It("Successful push with all-platforms specified via */*", func() {
+				allPlatformsBundleFile := filepath.Join(tmpDir, "all-platforms-image-bundle.tar")
+				helpers.CreateBundleImages(
+					GinkgoT(),
+					allPlatformsBundleFile,
+					filepath.Join("testdata", "create-success-busybox.yaml"),
+					"*/*",
+				)
+				args := []string{
+					"--bundle", allPlatformsBundleFile,
+					"--to-registry", registryAddress,
+					"--to-registry-insecure-skip-tls-verify",
+				}
+
+				cmd.SetArgs(args)
+				Expect(cmd.Execute()).To(Succeed())
+
+				helpers.ValidatePlatformDigestsInIndex(
+					GinkgoT(),
+					"127.0.0.1",
+					registryPort,
+					"",
+					"library/busybox",
+					"1.37.0-musl",
+					busyboxAllPlatformsManifest,
+				)
+			})
+
+			It("Successful push with all-platforms flag", func() {
+				allPlatformsBundleFile := filepath.Join(tmpDir, "all-platforms-image-bundle.tar")
+				createBundleCmd := helpers.NewCommand(GinkgoT(), createbundle.NewCommand)
+				createBundleCmd.SetArgs([]string{
+					"--output-file", allPlatformsBundleFile,
+					"--images-file", filepath.Join("testdata", "create-success-busybox.yaml"),
+					"--all-platforms",
+				})
+				Expect(createBundleCmd.Execute()).To(Succeed())
+
+				args := []string{
+					"--bundle", allPlatformsBundleFile,
+					"--to-registry", registryAddress,
+					"--to-registry-insecure-skip-tls-verify",
+				}
+
+				cmd.SetArgs(args)
+				Expect(cmd.Execute()).To(Succeed())
+
+				helpers.ValidatePlatformDigestsInIndex(
+					GinkgoT(),
+					"127.0.0.1",
+					registryPort,
+					"",
+					"library/busybox",
+					"1.37.0-musl",
+					busyboxAllPlatformsManifest,
+				)
 			})
 		})
 

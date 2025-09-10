@@ -5,6 +5,7 @@ package images
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/google/go-containerregistry/pkg/name"
@@ -115,6 +116,10 @@ func RetainOnlyRequestedPlatformsInIndex(
 	index v1.ImageIndex,
 	platforms ...string,
 ) (v1.ImageIndex, error) {
+	if len(platforms) == 0 || slices.Contains(platforms, "*/*") {
+		return index, nil
+	}
+
 	v1Platforms := make([]v1.Platform, 0, len(platforms))
 	for _, p := range platforms {
 		v1P, err := v1.ParsePlatform(p)
@@ -122,10 +127,6 @@ func RetainOnlyRequestedPlatformsInIndex(
 			return nil, fmt.Errorf("invalid platform %q: %w", p, err)
 		}
 		v1Platforms = append(v1Platforms, *v1P)
-	}
-
-	if len(platforms) == 0 {
-		return index, nil
 	}
 
 	return filterIndex(index, v1Platforms), nil
@@ -205,7 +206,7 @@ func IndexForSinglePlatformImage(
 
 	index = mutate.IndexMediaType(index, indexMediaType)
 
-	if len(platforms) == 0 {
+	if len(platforms) == 0 || slices.Contains(platforms, "*/*") {
 		return index, nil
 	}
 
