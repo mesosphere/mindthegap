@@ -274,6 +274,21 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.24.0 (2025-09-11)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: Improved output for push bundle with non-interative TTY by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/944
+* feat: Add --all-platforms flag to create bundle by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/947
+* feat: Add --merge flag to create bundle command by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/948
+### Other Changes
+* refactor: Fix lint errors for shadowing by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/945
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.23.0...v1.24.0
+
 ## 1.23.0 (2025-09-08)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
