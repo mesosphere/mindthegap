@@ -88,188 +88,21 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cleaner := cleanup.NewCleaner()
-			defer cleaner.Cleanup()
-
-			out.StartOperation("Creating temporary directory")
-			tempDir, err := os.MkdirTemp("", ".bundle-*")
-			if err != nil {
-				out.EndOperationWithStatus(output.Failure())
-				return fmt.Errorf("failed to create temporary directory: %w", err)
-			}
-			cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempDir) })
-			out.EndOperationWithStatus(output.Success())
-
-			bundleFiles, err = utils.FilesWithGlobs(bundleFiles)
-			if err != nil {
-				return err
-			}
-			imagesCfg, chartsCfg, err := utils.ExtractConfigs(tempDir, out, bundleFiles...)
-			if err != nil {
-				return err
+			// Create configuration from command flags
+			cfg := &PushConfig{
+				BundleFiles:               bundleFiles,
+				RegistryURI:               destRegistryURI,
+				RegistryCACertificateFile: destRegistryCACertificateFile,
+				RegistrySkipTLSVerify:     destRegistrySkipTLSVerify,
+				RegistryUsername:          destRegistryUsername,
+				RegistryPassword:          destRegistryPassword,
+				ECRLifecyclePolicy:        ecrLifecyclePolicy,
+				OnExistingTag:             onExistingTag,
+				ImagePushConcurrency:      imagePushConcurrency,
+				ForceOCIMediaTypes:        forceOCIMediaTypes,
 			}
 
-			out.StartOperation("Starting temporary Docker registry")
-			storage, err := registry.ArchiveStorage("", bundleFiles...)
-			if err != nil {
-				out.EndOperationWithStatus(output.Failure())
-				return fmt.Errorf("failed to create storage for Docker registry from supplied bundles: %w", err)
-			}
-			reg, err := registry.NewRegistry(
-				registry.Config{Storage: storage},
-			)
-			if err != nil {
-				out.EndOperationWithStatus(output.Failure())
-				return fmt.Errorf("failed to create local Docker registry: %w", err)
-			}
-			go func() {
-				if err := reg.ListenAndServe(output.NewOutputLogr(out)); err != nil {
-					out.Error(err, "error serving Docker registry")
-					os.Exit(2)
-				}
-			}()
-			out.EndOperationWithStatus(output.Success())
-
-			logs.Debug.SetOutput(out.V(4).InfoWriter())
-			logs.Warn.SetOutput(out.V(2).InfoWriter())
-
-			sourceTLSRoundTripper, err := httputils.InsecureTLSRoundTripper(remote.DefaultTransport)
-			if err != nil {
-				out.Error(err, "error configuring TLS for source registry")
-				os.Exit(2)
-			}
-			sourceRemoteOpts := []remote.Option{
-				remote.WithTransport(sourceTLSRoundTripper),
-				remote.WithUserAgent(utils.Useragent()),
-			}
-
-			destTLSRoundTripper, err := httputils.TLSConfiguredRoundTripper(
-				remote.DefaultTransport,
-				destRegistryURI.Host(),
-				flags.SkipTLSVerify(destRegistrySkipTLSVerify, &destRegistryURI),
-				destRegistryCACertificateFile,
-			)
-			if err != nil {
-				out.Error(err, "error configuring TLS for destination registry")
-				os.Exit(2)
-			}
-			destRemoteOpts := []remote.Option{
-				remote.WithTransport(destTLSRoundTripper),
-				remote.WithUserAgent(utils.Useragent()),
-			}
-
-			var destNameOpts []name.Option
-			if flags.SkipTLSVerify(destRegistrySkipTLSVerify, &destRegistryURI) {
-				destNameOpts = append(destNameOpts, name.Insecure)
-			}
-
-			// Determine type of destination registry.
-			var prePushFuncs []prePushFunc
-			if ecr.IsECRRegistry(destRegistryURI.Host()) {
-				ecrClient, err := ecr.ClientForRegistry(destRegistryURI.Host())
-				if err != nil {
-					return err
-				}
-
-				prePushFuncs = append(
-					prePushFuncs,
-					ecr.EnsureRepositoryExistsFunc(ecrClient, ecrLifecyclePolicy),
-				)
-
-				// If a password hasn't been specified, then try to retrieve a token.
-				if destRegistryPassword == "" {
-					out.StartOperation("Retrieving ECR credentials")
-					destRegistryUsername, destRegistryPassword, err = ecr.RetrieveUsernameAndToken(
-						ecrClient,
-					)
-					if err != nil {
-						out.EndOperationWithStatus(output.Failure())
-						return fmt.Errorf(
-							"failed to retrieve ECR credentials: %w\n\nPlease ensure you have authenticated to AWS and try again",
-							err,
-						)
-					}
-					out.EndOperationWithStatus(output.Success())
-				}
-			}
-
-			var keychain authn.Keychain = authn.DefaultKeychain
-			if destRegistryUsername != "" && destRegistryPassword != "" {
-				keychain = authn.NewMultiKeychain(
-					authn.NewKeychainFromHelper(
-						authnhelpers.NewStaticHelper(
-							destRegistryURI.Host(),
-							&types.DockerAuthConfig{
-								Username: destRegistryUsername,
-								Password: destRegistryPassword,
-							},
-						),
-					),
-					keychain,
-				)
-			}
-			destRemoteOpts = append(destRemoteOpts, remote.WithAuthFromKeychain(keychain))
-
-			srcRegistry, err := name.NewRegistry(
-				reg.Address(),
-				name.Insecure,
-				name.StrictValidation,
-			)
-			if err != nil {
-				return err
-			}
-			destRegistry, err := name.NewRegistry(
-				destRegistryURI.Host(),
-				append(destNameOpts, name.StrictValidation)...)
-			if err != nil {
-				return err
-			}
-
-			if imagesCfg != nil {
-				err := pushImages(
-					*imagesCfg,
-					srcRegistry,
-					sourceRemoteOpts,
-					destRegistry,
-					destRegistryURI.Path(),
-					destRemoteOpts,
-					onExistingTag,
-					imagePushConcurrency,
-					out,
-					forceOCIMediaTypes,
-					prePushFuncs...,
-				)
-				if err != nil {
-					return err
-				}
-			}
-
-			chartsSrcRegistry, err := name.NewRegistry(
-				reg.Address(),
-				name.Insecure,
-			)
-			if err != nil {
-				return err
-			}
-
-			if chartsCfg != nil {
-				err := pushOCIArtifacts(
-					*chartsCfg,
-					chartsSrcRegistry,
-					"/charts",
-					sourceRemoteOpts,
-					destRegistry,
-					destRegistryURI.Path(),
-					destRemoteOpts,
-					out,
-					prePushFuncs...,
-				)
-				if err != nil {
-					return err
-				}
-			}
-
-			return nil
+			return PushBundles(cfg, out)
 		},
 	}
 
@@ -334,6 +167,211 @@ func withOnExistingTagMode(mode onExistingTagMode) pushOpt {
 	}
 }
 
+// PushConfig holds all configuration needed for pushing bundles.
+type PushConfig struct {
+	// Bundle files to process
+	BundleFiles []string
+
+	// Destination registry configuration
+	RegistryURI               flags.RegistryURI
+	RegistryCACertificateFile string
+	RegistrySkipTLSVerify     bool
+	RegistryUsername          string
+	RegistryPassword          string
+
+	// ECR specific configuration
+	ECRLifecyclePolicy string
+
+	// Push behavior configuration
+	OnExistingTag        onExistingTagMode
+	ImagePushConcurrency int
+	ForceOCIMediaTypes   bool
+}
+
+// PushBundles pushes both images and charts from bundle files to the destination registry.
+func PushBundles(cfg *PushConfig, out output.Output) error {
+	cleaner := cleanup.NewCleaner()
+	defer cleaner.Cleanup()
+
+	out.StartOperation("Creating temporary directory")
+	tempDir, err := os.MkdirTemp("", ".bundle-*")
+	if err != nil {
+		out.EndOperationWithStatus(output.Failure())
+		return fmt.Errorf("failed to create temporary directory: %w", err)
+	}
+	cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempDir) })
+	out.EndOperationWithStatus(output.Success())
+
+	bundleFiles, err := utils.FilesWithGlobs(cfg.BundleFiles)
+	if err != nil {
+		return err
+	}
+	imagesCfg, chartsCfg, err := utils.ExtractConfigs(tempDir, out, bundleFiles...)
+	if err != nil {
+		return err
+	}
+
+	out.StartOperation("Starting temporary Docker registry")
+	storage, err := registry.ArchiveStorage("", bundleFiles...)
+	if err != nil {
+		out.EndOperationWithStatus(output.Failure())
+		return fmt.Errorf("failed to create storage for Docker registry from supplied bundles: %w", err)
+	}
+	reg, err := registry.NewRegistry(
+		registry.Config{Storage: storage},
+	)
+	if err != nil {
+		out.EndOperationWithStatus(output.Failure())
+		return fmt.Errorf("failed to create local Docker registry: %w", err)
+	}
+	go func() {
+		if err := reg.ListenAndServe(output.NewOutputLogr(out)); err != nil {
+			out.Error(err, "error serving Docker registry")
+			os.Exit(2)
+		}
+	}()
+	out.EndOperationWithStatus(output.Success())
+
+	logs.Debug.SetOutput(out.V(4).InfoWriter())
+	logs.Warn.SetOutput(out.V(2).InfoWriter())
+
+	sourceTLSRoundTripper, err := httputils.InsecureTLSRoundTripper(remote.DefaultTransport)
+	if err != nil {
+		out.Error(err, "error configuring TLS for source registry")
+		os.Exit(2)
+	}
+	sourceRemoteOpts := []remote.Option{
+		remote.WithTransport(sourceTLSRoundTripper),
+		remote.WithUserAgent(utils.Useragent()),
+	}
+
+	destTLSRoundTripper, err := httputils.TLSConfiguredRoundTripper(
+		remote.DefaultTransport,
+		cfg.RegistryURI.Host(),
+		flags.SkipTLSVerify(cfg.RegistrySkipTLSVerify, &cfg.RegistryURI),
+		cfg.RegistryCACertificateFile,
+	)
+	if err != nil {
+		out.Error(err, "error configuring TLS for destination registry")
+		os.Exit(2)
+	}
+	destRemoteOpts := []remote.Option{
+		remote.WithTransport(destTLSRoundTripper),
+		remote.WithUserAgent(utils.Useragent()),
+	}
+
+	var destNameOpts []name.Option
+	if flags.SkipTLSVerify(cfg.RegistrySkipTLSVerify, &cfg.RegistryURI) {
+		destNameOpts = append(destNameOpts, name.Insecure)
+	}
+
+	// Determine type of destination registry.
+	var prePushFuncs []prePushFunc
+	if ecr.IsECRRegistry(cfg.RegistryURI.Host()) {
+		ecrClient, err := ecr.ClientForRegistry(cfg.RegistryURI.Host())
+		if err != nil {
+			return err
+		}
+
+		prePushFuncs = append(
+			prePushFuncs,
+			ecr.EnsureRepositoryExistsFunc(ecrClient, cfg.ECRLifecyclePolicy),
+		)
+
+		// If a password hasn't been specified, then try to retrieve a token.
+		if cfg.RegistryPassword == "" {
+			out.StartOperation("Retrieving ECR credentials")
+			cfg.RegistryUsername, cfg.RegistryPassword, err = ecr.RetrieveUsernameAndToken(ecrClient)
+			if err != nil {
+				out.EndOperationWithStatus(output.Failure())
+				return fmt.Errorf(
+					"failed to retrieve ECR credentials: %w\n\nPlease ensure you have authenticated to AWS and try again",
+					err,
+				)
+			}
+			out.EndOperationWithStatus(output.Success())
+		}
+	}
+
+	var keychain authn.Keychain = authn.DefaultKeychain
+	if cfg.RegistryUsername != "" && cfg.RegistryPassword != "" {
+		keychain = authn.NewMultiKeychain(
+			authn.NewKeychainFromHelper(
+				authnhelpers.NewStaticHelper(
+					cfg.RegistryURI.Host(),
+					&types.DockerAuthConfig{
+						Username: cfg.RegistryUsername,
+						Password: cfg.RegistryPassword,
+					},
+				),
+			),
+			keychain,
+		)
+	}
+	destRemoteOpts = append(destRemoteOpts, remote.WithAuthFromKeychain(keychain))
+
+	srcRegistry, err := name.NewRegistry(
+		reg.Address(),
+		name.Insecure,
+		name.StrictValidation,
+	)
+	if err != nil {
+		return err
+	}
+	destRegistry, err := name.NewRegistry(
+		cfg.RegistryURI.Host(),
+		append(destNameOpts, name.StrictValidation)...)
+	if err != nil {
+		return err
+	}
+
+	if imagesCfg != nil {
+		err = pushImages(
+			*imagesCfg,
+			srcRegistry,
+			sourceRemoteOpts,
+			destRegistry,
+			cfg.RegistryURI.Path(),
+			destRemoteOpts,
+			cfg.OnExistingTag,
+			cfg.ImagePushConcurrency,
+			out,
+			cfg.ForceOCIMediaTypes,
+			prePushFuncs...,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	chartsSrcRegistry, err := name.NewRegistry(
+		reg.Address(),
+		name.Insecure,
+	)
+	if err != nil {
+		return err
+	}
+
+	if chartsCfg != nil {
+		err = pushOCIArtifacts(
+			*chartsCfg,
+			chartsSrcRegistry,
+			"/charts",
+			sourceRemoteOpts,
+			destRegistry,
+			cfg.RegistryURI.Path(),
+			destRemoteOpts,
+			out,
+			prePushFuncs...,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type pushFunc func(
 	srcImage name.Reference,
 	sourceRemoteOpts []remote.Option,
@@ -361,7 +399,7 @@ func pushImages(
 	regNames := cfg.SortedRegistryNames()
 
 	eg, egCtx := errgroup.WithContext(context.Background())
-	eg.SetLimit(imagePushConcurrency)
+	eg.SetLimit(max(imagePushConcurrency, 1))
 
 	sourceRemoteOpts = append(sourceRemoteOpts, remote.WithContext(egCtx))
 	destRemoteOpts = append(destRemoteOpts, remote.WithContext(egCtx))
