@@ -224,10 +224,10 @@ func PushBundles(cfg *PushConfig, out output.Output) error {
 		out.EndOperationWithStatus(output.Failure())
 		return fmt.Errorf("failed to create local Docker registry: %w", err)
 	}
+	registryErrCh := make(chan error, 1)
 	go func() {
 		if err := reg.ListenAndServe(output.NewOutputLogr(out)); err != nil {
-			out.Error(err, "error serving Docker registry")
-			os.Exit(2)
+			registryErrCh <- fmt.Errorf("error serving Docker registry: %w", err)
 		}
 	}()
 	out.EndOperationWithStatus(output.Success())
@@ -237,8 +237,7 @@ func PushBundles(cfg *PushConfig, out output.Output) error {
 
 	sourceTLSRoundTripper, err := httputils.InsecureTLSRoundTripper(remote.DefaultTransport)
 	if err != nil {
-		out.Error(err, "error configuring TLS for source registry")
-		os.Exit(2)
+		return fmt.Errorf("error configuring TLS for source registry: %w", err)
 	}
 	sourceRemoteOpts := []remote.Option{
 		remote.WithTransport(sourceTLSRoundTripper),
@@ -252,8 +251,7 @@ func PushBundles(cfg *PushConfig, out output.Output) error {
 		cfg.RegistryCACertificateFile,
 	)
 	if err != nil {
-		out.Error(err, "error configuring TLS for destination registry")
-		os.Exit(2)
+		return fmt.Errorf("error configuring TLS for destination registry: %w", err)
 	}
 	destRemoteOpts := []remote.Option{
 		remote.WithTransport(destTLSRoundTripper),
@@ -367,6 +365,14 @@ func PushBundles(cfg *PushConfig, out output.Output) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	// Check if the registry goroutine encountered any errors
+	select {
+	case err := <-registryErrCh:
+		return err
+	default:
+		// No error from registry
 	}
 
 	return nil
