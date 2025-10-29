@@ -89,18 +89,26 @@ func NewCommand(out output.Output, bundleCmdName string) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Create configuration from command flags
-			cfg := &PushConfig{
-				BundleFiles:               bundleFiles,
-				RegistryURI:               destRegistryURI,
-				RegistryCACertificateFile: destRegistryCACertificateFile,
-				RegistrySkipTLSVerify:     destRegistrySkipTLSVerify,
-				RegistryUsername:          destRegistryUsername,
-				RegistryPassword:          destRegistryPassword,
-				ECRLifecyclePolicy:        ecrLifecyclePolicy,
-				OnExistingTag:             onExistingTag,
-				ImagePushConcurrency:      imagePushConcurrency,
-				ForceOCIMediaTypes:        forceOCIMediaTypes,
+			cfg, err := NewPushBundleOpts(bundleFiles, &destRegistryURI)
+			if err != nil {
+				return fmt.Errorf("invalid configuration: %w", err)
 			}
+			// Set TLS configuration (mutually exclusive options)
+			if err := cfg.WithRegistryCACertificateFile(destRegistryCACertificateFile); err != nil {
+				return fmt.Errorf("invalid TLS configuration: %w", err)
+			}
+			if err := cfg.WithRegistrySkipTLSVerify(destRegistrySkipTLSVerify); err != nil {
+				return fmt.Errorf("invalid TLS configuration: %w", err)
+			}
+			// Set credentials (both must be provided together)
+			if err := cfg.WithRegistryCredentials(destRegistryUsername, destRegistryPassword); err != nil {
+				return fmt.Errorf("invalid credentials: %w", err)
+			}
+			// Set optional configuration
+			cfg.WithECRLifecyclePolicy(ecrLifecyclePolicy).
+				WithOnExistingTag(onExistingTag).
+				WithImagePushConcurrency(imagePushConcurrency).
+				WithForceOCIMediaTypes(forceOCIMediaTypes)
 
 			return PushBundles(cfg, out)
 		},
@@ -167,29 +175,104 @@ func withOnExistingTagMode(mode onExistingTagMode) pushOpt {
 	}
 }
 
-// PushConfig holds all configuration needed for pushing bundles.
-type PushConfig struct {
+// pushBundleOpts holds all configuration needed for pushing bundles.
+// Use NewPushBundleOpts to create a properly validated instance.
+type pushBundleOpts struct {
 	// Bundle files to process
-	BundleFiles []string
+	bundleFiles []string
 
 	// Destination registry configuration
-	RegistryURI               flags.RegistryURI
-	RegistryCACertificateFile string
-	RegistrySkipTLSVerify     bool
-	RegistryUsername          string
-	RegistryPassword          string
+	registryURI               *flags.RegistryURI
+	registryCACertificateFile string
+	registrySkipTLSVerify     bool
+	registryUsername          string
+	registryPassword          string
 
 	// ECR specific configuration
-	ECRLifecyclePolicy string
+	ecrLifecyclePolicy string
 
 	// Push behavior configuration
-	OnExistingTag        onExistingTagMode
-	ImagePushConcurrency int
-	ForceOCIMediaTypes   bool
+	onExistingTag        onExistingTagMode
+	imagePushConcurrency int
+	forceOCIMediaTypes   bool
+}
+
+// NewPushBundleOpts creates a new pushBundleOpts with required fields.
+// Returns an error if required fields are invalid.
+func NewPushBundleOpts(bundleFiles []string, registryURI *flags.RegistryURI) (*pushBundleOpts, error) {
+	if len(bundleFiles) == 0 {
+		return nil, fmt.Errorf("at least one bundle file is required")
+	}
+
+	if registryURI.Host() == "" {
+		return nil, fmt.Errorf("registry URI is required")
+	}
+
+	return &pushBundleOpts{
+		bundleFiles:          bundleFiles,
+		registryURI:          registryURI,
+		onExistingTag:        Overwrite, // default
+		imagePushConcurrency: 1,         // default
+	}, nil
+}
+
+// WithRegistryCredentials sets the registry credentials.
+// Both username and password must be provided together.
+func (c *pushBundleOpts) WithRegistryCredentials(username, password string) error {
+	if (username == "") != (password == "") {
+		return fmt.Errorf("both username and password must be provided together")
+	}
+	c.registryUsername = username
+	c.registryPassword = password
+	return nil
+}
+
+// WithRegistryCACertificateFile sets the CA certificate file for TLS verification.
+// This option is mutually exclusive with WithRegistrySkipTLSVerify(true).
+func (c *pushBundleOpts) WithRegistryCACertificateFile(caCertFile string) error {
+	if caCertFile != "" && c.registrySkipTLSVerify {
+		return fmt.Errorf("cannot specify both CA certificate and skip TLS verify")
+	}
+	c.registryCACertificateFile = caCertFile
+	return nil
+}
+
+// WithRegistrySkipTLSVerify sets whether to skip TLS verification.
+// This option is mutually exclusive with WithRegistryCACertificateFile.
+func (c *pushBundleOpts) WithRegistrySkipTLSVerify(skip bool) error {
+	if skip && c.registryCACertificateFile != "" {
+		return fmt.Errorf("cannot specify both CA certificate and skip TLS verify")
+	}
+	c.registrySkipTLSVerify = skip
+	return nil
+}
+
+// WithECRLifecyclePolicy sets the ECR lifecycle policy file.
+func (c *pushBundleOpts) WithECRLifecyclePolicy(policyFile string) *pushBundleOpts {
+	c.ecrLifecyclePolicy = policyFile
+	return c
+}
+
+// WithOnExistingTag sets the behavior for handling existing tags.
+func (c *pushBundleOpts) WithOnExistingTag(mode onExistingTagMode) *pushBundleOpts {
+	c.onExistingTag = mode
+	return c
+}
+
+// WithImagePushConcurrency sets the image push concurrency.
+func (c *pushBundleOpts) WithImagePushConcurrency(concurrency int) *pushBundleOpts {
+	c.imagePushConcurrency = concurrency
+	return c
+}
+
+// WithForceOCIMediaTypes sets whether to force OCI media types.
+func (c *pushBundleOpts) WithForceOCIMediaTypes(force bool) *pushBundleOpts {
+	c.forceOCIMediaTypes = force
+	return c
 }
 
 // PushBundles pushes both images and charts from bundle files to the destination registry.
-func PushBundles(cfg *PushConfig, out output.Output) error {
+func PushBundles(cfg *pushBundleOpts, out output.Output) error {
 	cleaner := cleanup.NewCleaner()
 	defer cleaner.Cleanup()
 
@@ -202,7 +285,7 @@ func PushBundles(cfg *PushConfig, out output.Output) error {
 	cleaner.AddCleanupFn(func() { _ = os.RemoveAll(tempDir) })
 	out.EndOperationWithStatus(output.Success())
 
-	bundleFiles, err := utils.FilesWithGlobs(cfg.BundleFiles)
+	bundleFiles, err := utils.FilesWithGlobs(cfg.bundleFiles)
 	if err != nil {
 		return err
 	}
@@ -246,9 +329,9 @@ func PushBundles(cfg *PushConfig, out output.Output) error {
 
 	destTLSRoundTripper, err := httputils.TLSConfiguredRoundTripper(
 		remote.DefaultTransport,
-		cfg.RegistryURI.Host(),
-		flags.SkipTLSVerify(cfg.RegistrySkipTLSVerify, &cfg.RegistryURI),
-		cfg.RegistryCACertificateFile,
+		cfg.registryURI.Host(),
+		flags.SkipTLSVerify(cfg.registrySkipTLSVerify, cfg.registryURI),
+		cfg.registryCACertificateFile,
 	)
 	if err != nil {
 		return fmt.Errorf("error configuring TLS for destination registry: %w", err)
@@ -259,27 +342,27 @@ func PushBundles(cfg *PushConfig, out output.Output) error {
 	}
 
 	var destNameOpts []name.Option
-	if flags.SkipTLSVerify(cfg.RegistrySkipTLSVerify, &cfg.RegistryURI) {
+	if flags.SkipTLSVerify(cfg.registrySkipTLSVerify, cfg.registryURI) {
 		destNameOpts = append(destNameOpts, name.Insecure)
 	}
 
 	// Determine type of destination registry.
 	var prePushFuncs []prePushFunc
-	if ecr.IsECRRegistry(cfg.RegistryURI.Host()) {
-		ecrClient, err := ecr.ClientForRegistry(cfg.RegistryURI.Host())
+	if ecr.IsECRRegistry(cfg.registryURI.Host()) {
+		ecrClient, err := ecr.ClientForRegistry(cfg.registryURI.Host())
 		if err != nil {
 			return err
 		}
 
 		prePushFuncs = append(
 			prePushFuncs,
-			ecr.EnsureRepositoryExistsFunc(ecrClient, cfg.ECRLifecyclePolicy),
+			ecr.EnsureRepositoryExistsFunc(ecrClient, cfg.ecrLifecyclePolicy),
 		)
 
 		// If a password hasn't been specified, then try to retrieve a token.
-		if cfg.RegistryPassword == "" {
+		if cfg.registryPassword == "" {
 			out.StartOperation("Retrieving ECR credentials")
-			cfg.RegistryUsername, cfg.RegistryPassword, err = ecr.RetrieveUsernameAndToken(ecrClient)
+			cfg.registryUsername, cfg.registryPassword, err = ecr.RetrieveUsernameAndToken(ecrClient)
 			if err != nil {
 				out.EndOperationWithStatus(output.Failure())
 				return fmt.Errorf(
@@ -292,14 +375,14 @@ func PushBundles(cfg *PushConfig, out output.Output) error {
 	}
 
 	var keychain authn.Keychain = authn.DefaultKeychain
-	if cfg.RegistryUsername != "" && cfg.RegistryPassword != "" {
+	if cfg.registryUsername != "" && cfg.registryPassword != "" {
 		keychain = authn.NewMultiKeychain(
 			authn.NewKeychainFromHelper(
 				authnhelpers.NewStaticHelper(
-					cfg.RegistryURI.Host(),
+					cfg.registryURI.Host(),
 					&types.DockerAuthConfig{
-						Username: cfg.RegistryUsername,
-						Password: cfg.RegistryPassword,
+						Username: cfg.registryUsername,
+						Password: cfg.registryPassword,
 					},
 				),
 			),
@@ -317,7 +400,7 @@ func PushBundles(cfg *PushConfig, out output.Output) error {
 		return err
 	}
 	destRegistry, err := name.NewRegistry(
-		cfg.RegistryURI.Host(),
+		cfg.registryURI.Host(),
 		append(destNameOpts, name.StrictValidation)...)
 	if err != nil {
 		return err
@@ -329,12 +412,12 @@ func PushBundles(cfg *PushConfig, out output.Output) error {
 			srcRegistry,
 			sourceRemoteOpts,
 			destRegistry,
-			cfg.RegistryURI.Path(),
+			cfg.registryURI.Path(),
 			destRemoteOpts,
-			cfg.OnExistingTag,
-			cfg.ImagePushConcurrency,
+			cfg.onExistingTag,
+			cfg.imagePushConcurrency,
 			out,
-			cfg.ForceOCIMediaTypes,
+			cfg.forceOCIMediaTypes,
 			prePushFuncs...,
 		)
 		if err != nil {
@@ -357,7 +440,7 @@ func PushBundles(cfg *PushConfig, out output.Output) error {
 			"/charts",
 			sourceRemoteOpts,
 			destRegistry,
-			cfg.RegistryURI.Path(),
+			cfg.registryURI.Path(),
 			destRemoteOpts,
 			out,
 			prePushFuncs...,
@@ -405,7 +488,7 @@ func pushImages(
 	regNames := cfg.SortedRegistryNames()
 
 	eg, egCtx := errgroup.WithContext(context.Background())
-	eg.SetLimit(max(imagePushConcurrency, 1))
+	eg.SetLimit(imagePushConcurrency)
 
 	sourceRemoteOpts = append(sourceRemoteOpts, remote.WithContext(egCtx))
 	destRemoteOpts = append(destRemoteOpts, remote.WithContext(egCtx))
