@@ -21,6 +21,14 @@ type RegistryURI struct {
 	path    string
 }
 
+func NewRegistryURI(value string) (*RegistryURI, error) {
+	v := &RegistryURI{}
+	if err := v.Set(value); err != nil {
+		return nil, err
+	}
+	return v, nil
+}
+
 func (v *RegistryURI) String() string {
 	return v.raw
 }
