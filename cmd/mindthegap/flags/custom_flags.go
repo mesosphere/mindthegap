@@ -37,7 +37,7 @@ func (v *RegistryURI) Set(value string) (err error) {
 	v.raw = value
 	v.scheme, v.address, v.host, v.path, err = parsePossibleURI(value)
 
-	return
+	return err
 }
 
 func parsePossibleURI(raw string) (scheme, address, host, subpath string, err error) {

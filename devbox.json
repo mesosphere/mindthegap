@@ -12,9 +12,11 @@
     "git":                              "latest",
     "gnused":                           "latest",
     "go":                               "latest",
+    "golangci-lint":                    "latest",
     "go-task":                          "latest",
     "gojq":                             "latest",
     "goreleaser":                       "latest",
+    "govulncheck":                      "latest",
     "ko":                               "latest",
     "kubernetes-helm":                  "latest",
     "pre-commit":                       "latest",
@@ -22,8 +24,6 @@
     "ripgrep":                          "latest",
     "shfmt":                            "latest",
     "upx":                              "latest",
-    "path:./hack/flakes#golangci-lint": "",
-    "path:./hack/flakes#gotestsum":     "",
-    "path:./hack/flakes#govulncheck":   ""
+    "path:./hack/flakes#gotestsum":     ""
   }
 }
