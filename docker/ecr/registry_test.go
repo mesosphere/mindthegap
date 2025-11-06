@@ -44,6 +44,18 @@ func TestIsECRRegistry(t *testing.T) {
 		name:            "ECR with FIPS protocol",
 		registryAddress: "https://123456789.dkr.ecr-fips.us-east-1.amazonaws.com",
 		want:            true,
+	}, {
+		name:            "ECR with FIPS protocol, no https",
+		registryAddress: "123456789.dkr.ecr-fips.us-east-1.amazonaws.com",
+		want:            true,
+	}, {
+		name:            "ECR with region containing dash",
+		registryAddress: "123456789.dkr.ecr.eu-west-3.amazonaws.com",
+		want:            true,
+	}, {
+		name:            "ECR with region containing numbers",
+		registryAddress: "123456789.dkr.ecr.ap-southeast-2.amazonaws.com",
+		want:            true,
 	}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

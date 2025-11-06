@@ -33,5 +33,5 @@ func ParseECRRegistry(
 	fips = (matches[2] == "-fips")
 	region = matches[3]
 	err = nil
-	return
+	return accountID, fips, region, err
 }
