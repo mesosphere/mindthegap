@@ -274,6 +274,19 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.25.0 (2025-11-06)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: Build with go 1.25.4 to fix CVEs by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/962
+### Other Changes
+* refactor: make push bundle cmd importable by @dkoshkin in https://github.com/mesosphere/mindthegap/pull/961
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.24.0...v1.25.0
+
 ## 1.24.0 (2025-09-11)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
