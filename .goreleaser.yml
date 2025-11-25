@@ -106,7 +106,7 @@ archives:
       - goos: windows
         formats:
           - zip
-    builds:
+    ids:
       - mindthegap
       - wait-for-files-to-exist
       - copy-file-to-pod

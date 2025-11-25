@@ -15,9 +15,15 @@ defaults:
     shell: bash
 jobs:
   release-tag:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v4
+      - name: Free disk space
+        uses: insightsengineering/disk-space-reclaimer@124df9d297f0327c676943bb718a894af8d3897f # v1
+        with:
+          tools-cache: true
+      - name: Recreate tool cache directory
+        run: mkdir -p "${RUNNER_TOOL_CACHE}"
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
         with:
           ref: ${{ github.ref }}
           fetch-depth: 0
@@ -25,7 +31,17 @@ jobs:
         uses: jetify-com/devbox-install-action@a0d2d53632934ae004f878c840055956d9f741b0 # v0.14.0
         with:
           enable-cache: true
+      - name: Go cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
       - name: Release
         run: devbox run -- task build:release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TMPDIR: ${{ runner.temp }}

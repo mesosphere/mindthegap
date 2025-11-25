@@ -12,7 +12,7 @@ defaults:
 jobs:
   backport:
     name: Backport PR
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: |
       github.event.pull_request.merged == true
       && contains(github.event.pull_request.labels.*.name, 'auto-backport')

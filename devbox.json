@@ -16,6 +16,7 @@
     "go-task":                          "latest",
     "gojq":                             "latest",
     "goreleaser":                       "latest",
+    "gotestsum":                        "latest",
     "govulncheck":                      "latest",
     "ko":                               "latest",
     "kubernetes-helm":                  "latest",
@@ -23,7 +24,6 @@
     "reviewdog":                        "latest",
     "ripgrep":                          "latest",
     "shfmt":                            "latest",
-    "upx":                              "latest",
-    "path:./hack/flakes#gotestsum":     ""
+    "upx":                              "latest"
   }
 }
