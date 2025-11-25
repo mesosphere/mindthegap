@@ -15,12 +15,12 @@ defaults:
 jobs:
   devbox-update:
     if: github.ref_type == 'branch'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     env:
       DESTINATION_BRANCH: scheduled-devbox-update-${{ github.ref_name }}
     steps:
       - name: Check out code
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v4
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
       - name: Install devbox
         uses: jetify-com/devbox-install-action@a0d2d53632934ae004f878c840055956d9f741b0 # v0.14.0
         with:

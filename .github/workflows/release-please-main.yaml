@@ -15,7 +15,7 @@ defaults:
     shell: bash
 jobs:
   release-please:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Get app token to create PR with
         uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v1
