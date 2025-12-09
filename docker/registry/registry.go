@@ -22,6 +22,7 @@ import (
 	"github.com/mholt/archives"
 	"github.com/phayes/freeport"
 	"github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/certwatcher"
 
 	_ "github.com/mesosphere/mindthegap/docker/registry/storage/driver/archive"
@@ -240,4 +241,33 @@ func (r Registry) ListenAndServe(log logr.Logger) error {
 	}
 
 	return nil
+}
+
+func (r Registry) WaitForReady(ctx context.Context) error {
+	client := &http.Client{
+		Timeout: 2 * time.Second,
+	}
+	return wait.PollUntilContextTimeout(
+		ctx,
+		500*time.Millisecond,
+		30*time.Second,
+		true,
+		func(httpCtx context.Context) (bool, error) {
+			req, err := http.NewRequestWithContext(httpCtx, http.MethodGet, r.address, nil)
+			if err != nil {
+				return false, nil
+			}
+
+			resp, err := client.Do(req)
+			if err != nil {
+				return false, nil
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusUnauthorized {
+				return true, nil
+			}
+			return false, nil // Continue polling
+		},
+	)
 }

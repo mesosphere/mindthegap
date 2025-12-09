@@ -94,6 +94,12 @@ func NewCommand(out output.Output) *cobra.Command {
 					os.Exit(2)
 				}
 			}()
+
+			out.StartOperation("Waiting for registry to be ready")
+			if err := reg.WaitForReady(cmd.Context()); err != nil {
+				out.EndOperationWithStatus(output.Failure())
+				return fmt.Errorf("registry failed to become ready: %w", err)
+			}
 			out.EndOperationWithStatus(output.Success())
 
 			ociExportsTempDir, err := os.MkdirTemp("", ".oci-exports-*")
