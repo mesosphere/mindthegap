@@ -340,7 +340,7 @@ var _ = Describe("Push Bundle", func() {
 				{
 					OS:           "linux",
 					Architecture: "amd64",
-				}: "sha256:f05e9f05dfa171eed399389ebdbf7d76eb3bdbc6cb892d9e4baaa4c616047916",
+				}: "sha256:e4749fb2291b57af91d8de04dd4664428b1f1cf49c257018a3153e722a6f21ae",
 				{
 					OS:           "linux",
 					Architecture: "arm",
@@ -350,28 +350,28 @@ var _ = Describe("Push Bundle", func() {
 					OS:           "linux",
 					Architecture: "arm",
 					Variant:      "v7",
-				}: "sha256:cce0158859d2a2d0989fb3aa82067e3d1758c69a2a45e53195dd1e84e5538762",
+				}: "sha256:20da573af56c3ea246fa612eecf52f048358175de9eb237e4bdf5bc0db22578f",
 				{
 					OS:           "linux",
 					Architecture: "arm64",
 					Variant:      "v8",
-				}: "sha256:a924255eb340729ad965449a658f36c10d727f009fe117196ad434081660df63",
+				}: "sha256:8e053939c416b9c59df14627bc6d0058534fc584374b15b495cac06550989524",
 				{
 					OS:           "linux",
 					Architecture: "386",
-				}: "sha256:be420df7a227d818041f11b24858c653d7811f2083ff6097e050beb928516eb5",
+				}: "sha256:f344ddc7dc543c373389a9172459ef18b0db83fdd50fa195af1b08a50e667fb3",
 				{
 					OS:           "linux",
 					Architecture: "ppc64le",
-				}: "sha256:207baf8ff3f5a9ed9252dae3b5bbe0f3aa38fcb173449e70cdf36196df05521c",
+				}: "sha256:b8f86cc9cfcc70a5299893fd82037fbcc4257b82664bfc58ff3ccdcbd06b8365",
 				{
 					OS:           "linux",
 					Architecture: "riscv64",
-				}: "sha256:8a1198c2a4de4114cbe5181b3de01269aa76b060559d81b7020950dca16fbd72",
+				}: "sha256:1e917f6c9a46e32fa07b738e1f6d5f41a9843a57521fcd7fea293d25dd58c275",
 				{
 					OS:           "linux",
 					Architecture: "s390x",
-				}: "sha256:b8875ed193588a77a78bd7b7b7d7a60a8d0b59e92ba406ce12d7d2a7caf633b2",
+				}: "sha256:2278a3fe95e26af2ea42f10d9dbd4f0ab3aab949a815f773066bcedd05df4c6b",
 			}
 
 			BeforeEach(func() {
@@ -558,7 +558,7 @@ var _ = Describe("Push Bundle", func() {
 						{
 							OS:           "linux",
 							Architecture: "amd64",
-						}: "sha256:f05e9f05dfa171eed399389ebdbf7d76eb3bdbc6cb892d9e4baaa4c616047916",
+						}: "sha256:e4749fb2291b57af91d8de04dd4664428b1f1cf49c257018a3153e722a6f21ae",
 					},
 				)
 

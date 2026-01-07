@@ -23,7 +23,7 @@ import (
 	"testing"
 )
 
-const tlsTestDir = "../../testdata"
+const tlsTestDir = "testdata"
 
 const (
 	testCaCertFile = "rootca.crt"
