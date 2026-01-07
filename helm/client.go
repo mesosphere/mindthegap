@@ -5,6 +5,8 @@ package helm
 
 import (
 	"fmt"
+	"log/slog"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -12,16 +14,18 @@ import (
 
 	"github.com/distribution/reference"
 	"github.com/hashicorp/go-getter"
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chart/loader"
-	"helm.sh/helm/v3/pkg/cli"
-	helmgetter "helm.sh/helm/v3/pkg/getter"
-	"helm.sh/helm/v3/pkg/registry"
-	"helm.sh/helm/v3/pkg/repo"
+	"helm.sh/helm/v4/pkg/action"
+	"helm.sh/helm/v4/pkg/chart"
+	"helm.sh/helm/v4/pkg/chart/loader"
+	"helm.sh/helm/v4/pkg/cli"
+	helmgetter "helm.sh/helm/v4/pkg/getter"
+	"helm.sh/helm/v4/pkg/registry"
+	repov1 "helm.sh/helm/v4/pkg/repo/v1"
 	"k8s.io/klog/v2"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
+
+	"github.com/mesosphere/mindthegap/helm/internal/tlsutil"
 )
 
 const OCIScheme = registry.OCIScheme
@@ -106,13 +110,54 @@ func CAFileOpt(caFile string) action.PullOpt {
 	}
 }
 
+func (c *Client) newRegistryClientForPullAction(
+	pull *action.Pull,
+) (*registry.Client, error) {
+	if pull.PlainHTTP {
+		return registry.NewClient(
+			registry.ClientOptDebug(klog.V(4).Enabled()),
+			registry.ClientOptPlainHTTP(),
+			registry.ClientOptWriter(c.out.V(4).InfoWriter()),
+		)
+	}
+
+	tlsConf, err := tlsutil.NewTLSConfig(
+		tlsutil.WithInsecureSkipVerify(pull.InsecureSkipTLSverify),
+		tlsutil.WithCertKeyPairFiles(pull.CertFile, pull.KeyFile),
+		tlsutil.WithCAFile(pull.CaFile),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("can't create TLS config for client: %w", err)
+	}
+
+	// Create a new registry client
+	registryClient, err := registry.NewClient(
+		registry.ClientOptDebug(klog.V(4).Enabled()),
+		registry.ClientOptEnableCache(true),
+		registry.ClientOptWriter(c.out.V(4).InfoWriter()),
+		registry.ClientOptHTTPClient(&http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: tlsConf,
+				Proxy:           http.ProxyFromEnvironment,
+			},
+		}),
+		registry.ClientOptBasicAuth(pull.Username, pull.Password),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return registryClient, nil
+}
+
 func (c *Client) GetChartFromRepo(
 	outputDir, repoURL, chartName, chartVersion string,
 	extraPullOpts ...action.PullOpt,
 ) (string, error) {
-	cfg := &action.Configuration{Log: c.out.V(4).Infof}
+	cfg := &action.Configuration{}
+	logHandler := slog.NewTextHandler(c.out.V(4).InfoWriter(), &slog.HandlerOptions{Level: slog.LevelDebug})
+	cfg.SetLogger(logHandler)
 
-	pull := action.NewPullWithOpts(
+	pull := action.NewPull(
 		append(
 			extraPullOpts,
 			action.WithConfig(cfg),
@@ -121,8 +166,15 @@ func (c *Client) GetChartFromRepo(
 			TempRepositoryCacheOpt(c.tempDir),
 			RepoURLOpt(repoURL),
 			ChartVersionOpt(chartVersion),
+			func(p *action.Pull) { p.Settings.ContentCache = c.tempDir },
 		)...,
 	)
+
+	registryClient, err := c.newRegistryClientForPullAction(pull)
+	if err != nil {
+		return "", fmt.Errorf("failed to create registry client: %w", err)
+	}
+	pull.SetRegistryClient(registryClient)
 
 	// Charts pulled from OCI registries will have the scheme "oci://" for the chart name.
 	// We can use the built-in downloader to fetch these charts.
@@ -150,18 +202,15 @@ func (c *Client) GetChartFromRepo(
 
 	// For non-OCI charts, we need to discover the chart URL first to be able to handle
 	// different chart names to the expected `<chartName>-<chartVersion>.tgz` format.
-	chartURL, err := repo.FindChartInAuthAndTLSAndPassRepoURL(
+	chartURL, err := repov1.FindChartInRepoURL(
 		pull.RepoURL,
-		pull.Username,
-		pull.Password,
 		chartName,
-		chartVersion,
-		pull.CertFile,
-		pull.KeyFile,
-		pull.CaFile,
-		pull.InsecureSkipTLSverify,
-		pull.PassCredentialsAll,
 		helmgetter.All(pull.Settings),
+		repov1.WithUsernamePassword(pull.Username, pull.Password),
+		repov1.WithChartVersion(chartVersion),
+		repov1.WithClientTLS(pull.CertFile, pull.KeyFile, pull.CaFile),
+		repov1.WithInsecureSkipTLSverify(pull.InsecureSkipTLSverify),
+		repov1.WithPassCredentialsAll(pull.PassCredentialsAll),
 	)
 	if err != nil {
 		return "", fmt.Errorf(
@@ -242,7 +291,7 @@ func (c *Client) getChartFromOCIURL(outputDir, chartURL string) (string, error) 
 }
 
 func (c *Client) CreateHelmRepoIndex(dir string) error {
-	indexFile, err := repo.IndexDirectory(dir, "")
+	indexFile, err := repov1.IndexDirectory(dir, "")
 	if err != nil {
 		return fmt.Errorf("failed to create Helm repo index file: %w", err)
 	}
@@ -252,8 +301,11 @@ func (c *Client) CreateHelmRepoIndex(dir string) error {
 	return nil
 }
 
-func (c *Client) PushHelmChartToOCIRegistry(src, ociDest string) error {
-	registryClient, err := registry.NewClient(registry.ClientOptDebug(klog.V(4).Enabled()))
+func (c *Client) PushHelmChartToPlainHTTPOCIRegistry(src, ociDest string) error {
+	registryClient, err := registry.NewClient(
+		registry.ClientOptDebug(klog.V(4).Enabled()),
+		registry.ClientOptPlainHTTP(),
+	)
 	if err != nil {
 		return fmt.Errorf("failed to create registry client for Helm chart push: %w", err)
 	}
@@ -280,10 +332,14 @@ func (c *Client) PushHelmChartToOCIRegistry(src, ociDest string) error {
 	return nil
 }
 
-func LoadChart(chartPath string) (*chart.Chart, error) {
-	chrt, err := loader.Load(chartPath)
+func LoadChart(chartPath string) (chart.Accessor, error) {
+	chrter, err := loader.Load(chartPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load chart: %w", err)
+	}
+	chrt, err := chart.NewAccessor(chrter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create chart accessor: %w", err)
 	}
 	return chrt, nil
 }

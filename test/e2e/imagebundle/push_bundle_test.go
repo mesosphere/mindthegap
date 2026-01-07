@@ -340,38 +340,38 @@ var _ = Describe("Push Bundle", func() {
 				{
 					OS:           "linux",
 					Architecture: "amd64",
-				}: "sha256:a365663cd8c362ff782b6c42ca36a7868443098283442694adb0d348d40d7327",
+				}: "sha256:f05e9f05dfa171eed399389ebdbf7d76eb3bdbc6cb892d9e4baaa4c616047916",
 				{
 					OS:           "linux",
 					Architecture: "arm",
 					Variant:      "v6",
-				}: "sha256:359c15b7fec7eb5759c08d0d93f389b442b51954975b3c165a7f8ab4a8815df3",
+				}: "sha256:701b5d533682a9dc206d2f8aa364136bb4aaa67b3edb1ef5bf2fa45eeee660b6",
 				{
 					OS:           "linux",
 					Architecture: "arm",
 					Variant:      "v7",
-				}: "sha256:a8188a0498d60905f5aafe19199fe05bc026018c419075cd54f3170252e804e2",
+				}: "sha256:cce0158859d2a2d0989fb3aa82067e3d1758c69a2a45e53195dd1e84e5538762",
 				{
 					OS:           "linux",
 					Architecture: "arm64",
 					Variant:      "v8",
-				}: "sha256:fcbf1c0057103af4d375c8fc4f863821edc2223124adbb924c586790c53d009d",
+				}: "sha256:a924255eb340729ad965449a658f36c10d727f009fe117196ad434081660df63",
 				{
 					OS:           "linux",
 					Architecture: "386",
-				}: "sha256:e6030835df7fb6514e08929009cef5175557237805dd62cdb67db94201f8af09",
+				}: "sha256:be420df7a227d818041f11b24858c653d7811f2083ff6097e050beb928516eb5",
 				{
 					OS:           "linux",
 					Architecture: "ppc64le",
-				}: "sha256:310db88bf4598613680c4f923fdbad11ec1bdc6a592479517f8aac0a05212db3",
+				}: "sha256:207baf8ff3f5a9ed9252dae3b5bbe0f3aa38fcb173449e70cdf36196df05521c",
 				{
 					OS:           "linux",
 					Architecture: "riscv64",
-				}: "sha256:a0bd2930f338a6edf221649c0dff1a1d35bff4b9035a2c50097d8b63599e9cb0",
+				}: "sha256:8a1198c2a4de4114cbe5181b3de01269aa76b060559d81b7020950dca16fbd72",
 				{
 					OS:           "linux",
 					Architecture: "s390x",
-				}: "sha256:510295b91981d4672e016a7eec849806c26ef46399efab85b0c5adf175cf93c1",
+				}: "sha256:b8875ed193588a77a78bd7b7b7d7a60a8d0b59e92ba406ce12d7d2a7caf633b2",
 			}
 
 			BeforeEach(func() {
@@ -558,7 +558,7 @@ var _ = Describe("Push Bundle", func() {
 						{
 							OS:           "linux",
 							Architecture: "amd64",
-						}: "sha256:a365663cd8c362ff782b6c42ca36a7868443098283442694adb0d348d40d7327",
+						}: "sha256:f05e9f05dfa171eed399389ebdbf7d76eb3bdbc6cb892d9e4baaa4c616047916",
 					},
 				)
 

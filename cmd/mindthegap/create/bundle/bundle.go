@@ -21,7 +21,7 @@ import (
 	"github.com/mholt/archives"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
-	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v4/pkg/action"
 	"k8s.io/utils/ptr"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
@@ -555,7 +555,7 @@ func pullCharts(
 					return fmt.Errorf("failed to create Helm chart bundle: %w", err)
 				}
 
-				if err := helmClient.PushHelmChartToOCIRegistry(
+				if err := helmClient.PushHelmChartToPlainHTTPOCIRegistry(
 					downloaded, ociAddress,
 				); err != nil {
 					out.EndOperationWithStatus(output.Failure())
@@ -609,10 +609,10 @@ func pullCharts(
 		}
 		cfg.Repositories["local"].Charts[chrt.Name()] = append(
 			cfg.Repositories["local"].Charts[chrt.Name()],
-			chrt.Metadata.Version,
+			chrt.MetadataAsMap()["Version"].(string),
 		)
 
-		if err := helmClient.PushHelmChartToOCIRegistry(
+		if err := helmClient.PushHelmChartToPlainHTTPOCIRegistry(
 			downloaded, ociAddress,
 		); err != nil {
 			out.EndOperationWithStatus(output.Failure())
