@@ -30,7 +30,7 @@ import (
 	"github.com/onsi/gomega"
 	"github.com/onsi/gomega/gstruct"
 	"github.com/spf13/cobra"
-	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v4/pkg/action"
 	ctrllog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
@@ -116,8 +116,8 @@ func ValidateChartIsAvailable(
 	g.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
 	chrt, err := helm.LoadChart(d)
 	g.ExpectWithOffset(1, err).NotTo(gomega.HaveOccurred())
-	g.ExpectWithOffset(1, chrt.Metadata.Name).To(gomega.Equal(chartName))
-	g.ExpectWithOffset(1, chrt.Metadata.Version).To(gomega.Equal(chartVersion))
+	g.ExpectWithOffset(1, chrt.Name()).To(gomega.Equal(chartName))
+	g.ExpectWithOffset(1, chrt.MetadataAsMap()["Version"]).To(gomega.Equal(chartVersion))
 }
 
 func NewCommand(

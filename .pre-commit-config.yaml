@@ -96,6 +96,7 @@ repos:
     name: License headers - Go
     stages: [pre-commit]
     files: "(.*\\.go|go.mod)$"
+    exclude: "^helm/internal/.*\\.go$"
     args:
       - --license-filepath
       - header.txt

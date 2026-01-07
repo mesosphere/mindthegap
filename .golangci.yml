@@ -108,6 +108,7 @@ linters:
         text: 'hugeParam: cfg is heavy'
     paths:
       - third_party/
+      - helm/internal/
 formatters:
   enable:
     - gci
