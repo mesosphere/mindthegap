@@ -274,6 +274,14 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.25.2 (2026-01-07)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.25.1...v1.25.2
+
 ## 1.25.1 (2025-11-25)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
