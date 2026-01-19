@@ -30,7 +30,7 @@ jobs:
         with:
           enable-cache: true
       - name: Go cache
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v4
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v4
         with:
           path: |
             ~/.cache/go-build
@@ -129,7 +129,7 @@ jobs:
         with:
           enable-cache: true
       - name: Go cache
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v4
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v4
         with:
           path: |
             ~/.cache/go-build
@@ -138,7 +138,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Set up pre-commit cache
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v4
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v4
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-3|${{ hashFiles('.pre-commit-config.yaml') }}
