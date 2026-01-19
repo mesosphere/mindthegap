@@ -18,25 +18,25 @@ require (
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/docker/docker-credential-helpers v0.9.5
 	github.com/docker/go-connections v0.6.0
-	github.com/elazarl/goproxy v1.7.2
+	github.com/elazarl/goproxy v1.8.0
 	github.com/go-logr/logr v1.4.3
 	github.com/google/go-containerregistry v0.20.7
 	github.com/hashicorp/go-getter v1.8.4
 	github.com/jm33-m0/arc/v2 v2.0.1
 	github.com/mesosphere/dkp-cli-runtime/core v0.7.3
 	github.com/mholt/archives v0.1.5
-	github.com/onsi/ginkgo/v2 v2.27.4
+	github.com/onsi/ginkgo/v2 v2.27.5
 	github.com/onsi/gomega v1.39.0
 	github.com/opencontainers/image-spec v1.1.1
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.9.4
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
 	github.com/thediveo/enumflag/v2 v2.1.0
 	golang.org/x/sync v0.19.0
 	gopkg.in/yaml.v3 v3.0.1
-	helm.sh/helm/v4 v4.0.4
+	helm.sh/helm/v4 v4.0.5
 	k8s.io/apimachinery v0.35.0
 	k8s.io/klog/v2 v2.130.1
 	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4
