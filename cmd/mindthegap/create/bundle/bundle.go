@@ -540,7 +540,7 @@ func pullCharts(
 				)
 			}
 			if !ptr.Deref(repoConfig.TLSVerify, true) {
-				opts = append(opts, helm.InsecureSkipTLSverifyOpt())
+				opts = append(opts, helm.InsecureSkipTLSVerifyOpt())
 			}
 			for _, chartVersion := range chartVersions {
 				downloaded, err := helmClient.GetChartFromRepo(
