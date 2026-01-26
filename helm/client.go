@@ -92,9 +92,9 @@ func UsernamePasswordOpt(username, password string) action.PullOpt {
 	}
 }
 
-func InsecureSkipTLSverifyOpt() action.PullOpt {
+func InsecureSkipTLSVerifyOpt() action.PullOpt {
 	return func(p *action.Pull) {
-		p.InsecureSkipTLSverify = true
+		p.InsecureSkipTLSVerify = true
 	}
 }
 
@@ -122,7 +122,7 @@ func (c *Client) newRegistryClientForPullAction(
 	}
 
 	tlsConf, err := tlsutil.NewTLSConfig(
-		tlsutil.WithInsecureSkipVerify(pull.InsecureSkipTLSverify),
+		tlsutil.WithInsecureSkipVerify(pull.InsecureSkipTLSVerify),
 		tlsutil.WithCertKeyPairFiles(pull.CertFile, pull.KeyFile),
 		tlsutil.WithCAFile(pull.CaFile),
 	)
@@ -209,7 +209,7 @@ func (c *Client) GetChartFromRepo(
 		repov1.WithUsernamePassword(pull.Username, pull.Password),
 		repov1.WithChartVersion(chartVersion),
 		repov1.WithClientTLS(pull.CertFile, pull.KeyFile, pull.CaFile),
-		repov1.WithInsecureSkipTLSverify(pull.InsecureSkipTLSverify),
+		repov1.WithInsecureSkipTLSVerify(pull.InsecureSkipTLSVerify),
 		repov1.WithPassCredentialsAll(pull.PassCredentialsAll),
 	)
 	if err != nil {

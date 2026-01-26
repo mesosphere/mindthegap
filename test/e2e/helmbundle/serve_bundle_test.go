@@ -172,7 +172,7 @@ var _ = Describe("Serve Helm Bundle", func() {
 			port,
 			"podinfo",
 			"6.3.0",
-			helm.InsecureSkipTLSverifyOpt(),
+			helm.InsecureSkipTLSVerifyOpt(),
 		)
 
 		// Backup the original CA file to be used after checking the new CA file works.
