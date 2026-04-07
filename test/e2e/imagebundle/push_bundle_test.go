@@ -558,7 +558,7 @@ var _ = Describe("Push Bundle", func() {
 						{
 							OS:           "linux",
 							Architecture: "amd64",
-						}: "sha256:e4749fb2291b57af91d8de04dd4664428b1f1cf49c257018a3153e722a6f21ae",
+						}: "sha256:298efc24641ff8a1a285abdc555a0ce5ab7c42eb085e1be099f824188e069604",
 					},
 				)
 
