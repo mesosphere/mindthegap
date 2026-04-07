@@ -340,38 +340,38 @@ var _ = Describe("Push Bundle", func() {
 				{
 					OS:           "linux",
 					Architecture: "amd64",
-				}: "sha256:e4749fb2291b57af91d8de04dd4664428b1f1cf49c257018a3153e722a6f21ae",
+				}: "sha256:298efc24641ff8a1a285abdc555a0ce5ab7c42eb085e1be099f824188e069604",
 				{
 					OS:           "linux",
 					Architecture: "arm",
 					Variant:      "v6",
-				}: "sha256:701b5d533682a9dc206d2f8aa364136bb4aaa67b3edb1ef5bf2fa45eeee660b6",
+				}: "sha256:d1ba3375824b1e605503225e2f42280aea16d388fb2e400b9fe7c4d93b9e8d42",
 				{
 					OS:           "linux",
 					Architecture: "arm",
 					Variant:      "v7",
-				}: "sha256:20da573af56c3ea246fa612eecf52f048358175de9eb237e4bdf5bc0db22578f",
+				}: "sha256:02ee02739e62b18f165a9eb04e7b7f1887a59309a6d7d3275ccb461455b27aa9",
 				{
 					OS:           "linux",
 					Architecture: "arm64",
 					Variant:      "v8",
-				}: "sha256:8e053939c416b9c59df14627bc6d0058534fc584374b15b495cac06550989524",
+				}: "sha256:458a2ae4cb09bf96f8e24f135474b1552039738ed16ee470320a9c05c2da2004",
 				{
 					OS:           "linux",
 					Architecture: "386",
-				}: "sha256:f344ddc7dc543c373389a9172459ef18b0db83fdd50fa195af1b08a50e667fb3",
+				}: "sha256:89cb76ffbc0ef99c63cc7444a72d8ee5b13ae4a5f3a263fe07d293a06bd212a3",
 				{
 					OS:           "linux",
 					Architecture: "ppc64le",
-				}: "sha256:b8f86cc9cfcc70a5299893fd82037fbcc4257b82664bfc58ff3ccdcbd06b8365",
+				}: "sha256:8a02eef3fb2441ee34f2aae23e77c9c4ce78e4bc8148e592d4adbe7bea73621f",
 				{
 					OS:           "linux",
 					Architecture: "riscv64",
-				}: "sha256:1e917f6c9a46e32fa07b738e1f6d5f41a9843a57521fcd7fea293d25dd58c275",
+				}: "sha256:657f5a49af9288dc98d2bf45343e45c57c3caf3946aa9df436d05da320a8c863",
 				{
 					OS:           "linux",
 					Architecture: "s390x",
-				}: "sha256:2278a3fe95e26af2ea42f10d9dbd4f0ab3aab949a815f773066bcedd05df4c6b",
+				}: "sha256:cdf860bf6d2257485b416323dd9c2d7e50de512ddbea00c969a1f77a7dec2b00",
 			}
 
 			BeforeEach(func() {
