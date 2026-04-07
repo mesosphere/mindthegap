@@ -5,7 +5,7 @@ module github.com/mesosphere/mindthegap
 
 go 1.25.0
 
-toolchain go1.25.5
+toolchain go1.25.8
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.41.1
