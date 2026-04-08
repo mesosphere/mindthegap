@@ -1,0 +1,22 @@
+---
+description: Ensure all project go.mod files use the same Go version
+globs: "**/go.mod"
+alwaysApply: false
+---
+
+# Go Module Version Consistency
+
+All `go.mod` files in this project (excluding `third_party/`) must use the same Go toolchain version.
+
+## Project go.mod files
+
+- `go.mod` (root) — uses the `go` directive directly (e.g. `go 1.25.9`)
+- `cmd/wait-for-files-to-exist/go.mod` — uses `toolchain` directive (e.g. `toolchain go1.25.9`)
+- `cmd/copy-file-to-pod/go.mod` — uses `toolchain` directive (e.g. `toolchain go1.25.9`)
+
+## Rules
+
+1. When updating the Go version in any `go.mod`, update **all three** files to the same patch version.
+2. Do **not** modify `third_party/**/go.mod` — those are vendored and managed separately.
+3. After updating, run `go mod tidy` in each module directory.
+4. Run `govulncheck ./...` in each module directory to verify no new stdlib vulnerabilities.
