@@ -274,6 +274,20 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.25.3 (2026-04-08)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Other Changes
+* build: Update all tools by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/988
+* build: update Go toolchain to go1.25.8 by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/1016
+* build: add Spec-Kit integration and project constitution by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/1020
+* build: upgrade Go toolchain to 1.25.9 to fix stdlib CVEs by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/1021
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.25.2...v1.25.3
+
 ## 1.25.2 (2026-01-07)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
