@@ -1,0 +1,12 @@
+---
+description: Git workflow - standard GitHub PRs, not Gerrit
+alwaysApply: true
+---
+
+# Git Workflow
+
+This project uses standard GitHub pull requests. Do **not** use Gerrit-style pushes.
+
+- Push branches normally: `git push -u origin <branch>`
+- Create PRs with `gh pr create`
+- Never push to `refs/for/<branch>` — this project does not use Gerrit
