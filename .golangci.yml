@@ -63,6 +63,10 @@ linters:
           deny:
             - pkg: k8s.io/kubernetes
               desc: do not use k8s.io/kubernetes directly
+            - pkg: github.com/docker/docker$
+              desc: use github.com/moby/moby/api and github.com/moby/moby/client instead
+            - pkg: github.com/docker/docker/
+              desc: use github.com/moby/moby/api and github.com/moby/moby/client instead
             - pkg: github.com/minio
               desc: dependencies on minio libraries are not allowed
     errcheck:

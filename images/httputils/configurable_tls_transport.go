@@ -4,15 +4,15 @@
 package httputils
 
 import (
+	"crypto/x509"
 	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/docker/cli/cli/config"
-	"github.com/docker/docker/registry"
-	"github.com/docker/go-connections/tlsconfig"
 	"github.com/google/go-containerregistry/pkg/logs"
 )
 
@@ -30,14 +30,14 @@ func TLSConfiguredRoundTripper(
 	}
 
 	if tr.TLSClientConfig.RootCAs == nil {
-		systemPool, err := tlsconfig.SystemCertPool()
+		systemPool, err := x509.SystemCertPool()
 		if err != nil {
 			return nil, fmt.Errorf("unable to get system cert pool: %w", err)
 		}
 		tr.TLSClientConfig.RootCAs = systemPool
 	}
 
-	hostDockerCertsDir := filepath.Join(registry.CertsDir(), host)
+	hostDockerCertsDir := filepath.Join(dockerCertsDir(), host)
 	fs, err := os.ReadDir(hostDockerCertsDir)
 	if err != nil && !os.IsNotExist(err) {
 		return nil, fmt.Errorf("failed to read from Docker registry certs: %w", err)
@@ -94,4 +94,11 @@ func (ht *headerTransport) RoundTrip(in *http.Request) (*http.Response, error) {
 		in.Header.Set(k, v)
 	}
 	return ht.inner.RoundTrip(in)
+}
+
+func dockerCertsDir() string {
+	if runtime.GOOS == "windows" {
+		return os.Getenv("programdata") + `\docker\certs.d`
+	}
+	return "/etc/docker/certs.d"
 }
