@@ -11,11 +11,10 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/image"
-	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/moby/moby/api/pkg/stdcopy"
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/network"
+	"github.com/moby/moby/client"
 	specs "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
@@ -26,12 +25,12 @@ type Docker struct {
 }
 
 func NewDockerClient() (*Docker, error) {
-	cl, err := client.NewClientWithOpts(client.FromEnv)
+	cl, err := client.New(client.FromEnv)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = cl.Info(context.Background())
+	_, err = cl.Ping(context.Background(), client.PingOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrDockerDaemonNotAccessible, err)
 	}
@@ -48,18 +47,17 @@ func (d *Docker) PullImageWithPlatform(
 	img string,
 	platform *specs.Platform,
 ) error {
-	opts := image.PullOptions{}
+	opts := client.ImagePullOptions{}
 	if platform != nil && platform.OS != "" {
-		opts.Platform = fmt.Sprintf("%s/%s", platform.OS, platform.Architecture)
+		opts.Platforms = []specs.Platform{*platform}
 	}
-	r, err := d.cl.ImagePull(ctx, img, opts)
-	defer r.Close()
+	resp, err := d.cl.ImagePull(ctx, img, opts)
 	if err != nil {
 		return fmt.Errorf("failed to pull image %q: %w", img, err)
 	}
-	_, err = io.Copy(io.Discard, r)
-	if err != nil {
-		return fmt.Errorf("failed to swallow pull image output: %w", err)
+	defer resp.Close()
+	if err := resp.Wait(ctx); err != nil {
+		return fmt.Errorf("failed to pull image %q: %w", img, err)
 	}
 
 	return nil
@@ -78,23 +76,21 @@ func (d *Docker) StartContainerWithPlatform(
 		return nil, err
 	}
 
-	ctr, err := d.cl.ContainerCreate(
-		ctx,
-		&cfg,
-		&container.HostConfig{},
-		&network.NetworkingConfig{},
-		platform,
-		"",
-	)
+	ctr, err := d.cl.ContainerCreate(ctx, client.ContainerCreateOptions{
+		Config:           &cfg,
+		HostConfig:       &container.HostConfig{},
+		NetworkingConfig: &network.NetworkingConfig{},
+		Platform:         platform,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	if err := d.cl.ContainerStart(ctx, ctr.ID, container.StartOptions{}); err != nil {
-		_ = d.cl.ContainerRemove(
+	if _, err := d.cl.ContainerStart(ctx, ctr.ID, client.ContainerStartOptions{}); err != nil {
+		_, _ = d.cl.ContainerRemove(
 			ctx,
 			ctr.ID,
-			container.RemoveOptions{Force: true, RemoveVolumes: true},
+			client.ContainerRemoveOptions{Force: true, RemoveVolumes: true},
 		)
 
 		return nil, err
@@ -116,15 +112,20 @@ type Container struct {
 }
 
 func (c *Container) Stop(ctx context.Context) error {
-	return c.d.cl.ContainerRemove(
+	_, err := c.d.cl.ContainerRemove(
 		ctx,
 		c.id,
-		container.RemoveOptions{Force: true, RemoveVolumes: true},
+		client.ContainerRemoveOptions{Force: true, RemoveVolumes: true},
 	)
+	return err
 }
 
 func (c *Container) CopyTo(ctx context.Context, dest string, src io.Reader) error {
-	return c.d.cl.CopyToContainer(ctx, c.id, dest, src, container.CopyToContainerOptions{})
+	_, err := c.d.cl.CopyToContainer(ctx, c.id, client.CopyToContainerOptions{
+		DestinationPath: dest,
+		Content:         src,
+	})
+	return err
 }
 
 func (c *Container) Exec(
@@ -132,10 +133,10 @@ func (c *Container) Exec(
 	stdout, stderr io.Writer,
 	cmd ...string,
 ) (int, error) {
-	exec, err := c.d.cl.ContainerExecCreate(
+	exec, err := c.d.cl.ExecCreate(
 		ctx,
 		c.id,
-		container.ExecOptions{
+		client.ExecCreateOptions{
 			Cmd:          cmd,
 			AttachStdout: true,
 			AttachStderr: true,
@@ -144,7 +145,7 @@ func (c *Container) Exec(
 	if err != nil {
 		return -1, fmt.Errorf("failed to create exec in container: %w", err)
 	}
-	resp, err := c.d.cl.ContainerExecAttach(ctx, exec.ID, container.ExecStartOptions{})
+	resp, err := c.d.cl.ExecAttach(ctx, exec.ID, client.ExecAttachOptions{})
 	if err != nil {
 		return -1, fmt.Errorf("failed to attach exec in container: %w", err)
 	}
@@ -157,13 +158,13 @@ func (c *Container) Exec(
 		}
 		close(errCh)
 	}()
-	if err := c.d.cl.ContainerExecStart(ctx, exec.ID, container.ExecStartOptions{}); err != nil {
+	if _, err := c.d.cl.ExecStart(ctx, exec.ID, client.ExecStartOptions{}); err != nil {
 		return -1, fmt.Errorf("failed to start exec in container: %w", err)
 	}
 	if err := <-errCh; err != nil {
 		return -1, fmt.Errorf("failed to read exec streams: %w", err)
 	}
-	execInspect, err := c.d.cl.ContainerExecInspect(ctx, exec.ID)
+	execInspect, err := c.d.cl.ExecInspect(ctx, exec.ID, client.ExecInspectOptions{})
 	if err != nil {
 		return -1, fmt.Errorf("failed to inspect exec in container: %w", err)
 	}
