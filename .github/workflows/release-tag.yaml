@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Free disk space
-        uses: insightsengineering/disk-space-reclaimer@124df9d297f0327c676943bb718a894af8d3897f # v1
+        uses: insightsengineering/disk-space-reclaimer@dae9fabcb8febe09f6585471948acf9dc9a57489 # v1
         with:
           tools-cache: true
       - name: Recreate tool cache directory
