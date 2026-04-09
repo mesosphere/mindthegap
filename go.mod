@@ -8,7 +8,7 @@ go 1.25.9
 require (
 	github.com/aws/aws-sdk-go-v2 v1.41.5
 	github.com/aws/aws-sdk-go-v2/config v1.32.14
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.56.2
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.57.0
 	github.com/containers/image/v5 v5.36.2
 	github.com/distribution/distribution/v3 v3.1.0
 	github.com/distribution/reference v0.6.0
@@ -34,11 +34,11 @@ require (
 	github.com/thediveo/enumflag/v2 v2.2.0
 	golang.org/x/sync v0.20.0
 	gopkg.in/yaml.v3 v3.0.1
-	helm.sh/helm/v4 v4.1.3
-	k8s.io/apimachinery v0.35.1
+	helm.sh/helm/v4 v4.1.4
+	k8s.io/apimachinery v0.35.3
 	k8s.io/klog/v2 v2.140.0
 	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4
-	sigs.k8s.io/controller-runtime v0.23.1
+	sigs.k8s.io/controller-runtime v0.23.3
 )
 
 require (
