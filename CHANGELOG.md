@@ -274,6 +274,17 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.25.4 (2026-04-09)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Other Changes
+* build(deps): migrate from docker/docker to moby/moby modules by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/1027
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.25.3...v1.25.4
+
 ## 1.25.3 (2026-04-08)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
