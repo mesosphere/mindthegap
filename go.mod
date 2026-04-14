@@ -12,11 +12,11 @@ require (
 	github.com/containers/image/v5 v5.36.2
 	github.com/distribution/distribution/v3 v3.1.0
 	github.com/distribution/reference v0.6.0
-	github.com/docker/cli v29.3.1+incompatible
+	github.com/docker/cli v29.4.0+incompatible
 	github.com/docker/docker-credential-helpers v0.9.5
 	github.com/elazarl/goproxy v1.8.3
 	github.com/go-logr/logr v1.4.3
-	github.com/google/go-containerregistry v0.21.4
+	github.com/google/go-containerregistry v0.21.5
 	github.com/hashicorp/go-getter v1.8.6
 	github.com/jm33-m0/arc/v2 v2.0.1
 	github.com/mesosphere/dkp-cli-runtime/core v0.7.3
@@ -233,15 +233,15 @@ require (
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
-	golang.org/x/crypto v0.49.0 // indirect
-	golang.org/x/mod v0.34.0 // indirect
-	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/crypto v0.50.0 // indirect
+	golang.org/x/mod v0.35.0 // indirect
+	golang.org/x/net v0.53.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sys v0.42.0 // indirect
-	golang.org/x/term v0.41.0 // indirect
-	golang.org/x/text v0.35.0 // indirect
+	golang.org/x/sys v0.43.0 // indirect
+	golang.org/x/term v0.42.0 // indirect
+	golang.org/x/text v0.36.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	golang.org/x/tools v0.43.0 // indirect
+	golang.org/x/tools v0.44.0 // indirect
 	google.golang.org/api v0.271.0 // indirect
 	google.golang.org/genproto v0.0.0-20260128011058-8636f8732409 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260401024825-9d38bb4040a9 // indirect
