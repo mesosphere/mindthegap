@@ -55,7 +55,7 @@ jobs:
           echo "message=${MESSAGE}" >>"${GITHUB_OUTPUT}"
       - name: Get app token to create PR with
         if: steps.devbox-versions-changed.outputs.number_changed > 0
-        uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v1
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v1
         id: app-token
         with:
           app-id: ${{ secrets.GHA_PR_APP_ID }}
