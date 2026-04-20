@@ -210,24 +210,39 @@ func resolveDestRef(
 	entry archive.Entry,
 	imageTagOverride string,
 ) (ggcrname.Reference, error) {
-	input := imageTagOverride
-	if input == "" {
-		if entry.Ref == nil {
-			return nil, fmt.Errorf(
-				"entry has no embedded tag; pass --image-tag to specify the destination reference",
-			)
-		}
-		input = entry.Ref.Name()
-	}
+	var repoPath, tagPart string
 
-	norm, err := reference.ParseNormalizedNamed(input)
-	if err != nil {
-		return nil, fmt.Errorf("parsing %q: %w", input, err)
-	}
-	repoPath := reference.Path(norm)
-	tagPart := "latest"
-	if tagged, ok := norm.(reference.Tagged); ok {
-		tagPart = tagged.Tag()
+	switch {
+	case imageTagOverride != "":
+		parsed, err := reference.Parse(imageTagOverride)
+		if err != nil {
+			return nil, fmt.Errorf("parsing %q: %w", imageTagOverride, err)
+		}
+		named, ok := parsed.(reference.Named)
+		if !ok {
+			return nil, fmt.Errorf("--image-tag %q must be a repo:tag", imageTagOverride)
+		}
+		repoPath = named.Name()
+		if tagged, ok := parsed.(reference.Tagged); ok {
+			tagPart = tagged.Tag()
+		} else {
+			tagPart = "latest"
+		}
+	case entry.Ref == nil:
+		return nil, fmt.Errorf(
+			"entry has no embedded tag; pass --image-tag to specify the destination reference",
+		)
+	default:
+		norm, err := reference.ParseNormalizedNamed(entry.Ref.Name())
+		if err != nil {
+			return nil, fmt.Errorf("parsing %q: %w", entry.Ref.Name(), err)
+		}
+		repoPath = reference.Path(norm)
+		if tagged, ok := norm.(reference.Tagged); ok {
+			tagPart = tagged.Tag()
+		} else {
+			tagPart = "latest"
+		}
 	}
 
 	destRepo := destRegistry.Repo(strings.TrimLeft(destPath, "/"), repoPath)
@@ -287,8 +302,19 @@ func validateImageTagOverride(opened []openedArchive, imageTagOverride string) e
 			len(opened[0].entries),
 		)
 	}
-	if _, err := ggcrname.ParseReference(imageTagOverride, ggcrname.StrictValidation); err != nil {
+	parsed, err := reference.Parse(imageTagOverride)
+	if err != nil {
 		return fmt.Errorf("parsing --image-tag %q: %w", imageTagOverride, err)
+	}
+	if _, ok := parsed.(reference.Named); !ok {
+		return fmt.Errorf(
+			"--image-tag %q must be a repo:tag", imageTagOverride,
+		)
+	}
+	if _, ok := parsed.(reference.Tagged); !ok {
+		return fmt.Errorf(
+			"--image-tag %q must include a tag (repo:tag)", imageTagOverride,
+		)
 	}
 	return nil
 }
