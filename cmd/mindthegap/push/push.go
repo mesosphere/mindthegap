@@ -9,6 +9,7 @@ import (
 	"github.com/mesosphere/dkp-cli-runtime/core/output"
 
 	"github.com/mesosphere/mindthegap/cmd/mindthegap/push/bundle"
+	"github.com/mesosphere/mindthegap/cmd/mindthegap/push/imagearchive"
 	"github.com/mesosphere/mindthegap/cmd/mindthegap/utils"
 )
 
@@ -30,6 +31,8 @@ func NewCommand(out output.Output) *cobra.Command {
 
 	bundleCmd := bundle.NewCommand(out, "bundle")
 	cmd.AddCommand(bundleCmd)
+
+	cmd.AddCommand(imagearchive.NewCommand(out))
 
 	return cmd
 }
