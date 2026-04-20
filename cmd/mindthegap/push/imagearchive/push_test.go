@@ -6,6 +6,7 @@ package imagearchive_test
 import (
 	"bytes"
 	"fmt"
+	"net/http"
 	"net/http/httptest"
 	"path/filepath"
 	"strings"
@@ -58,6 +59,72 @@ func TestPushDockerArchive_EndToEnd(t *testing.T) {
 	}
 	if gotDigest != wantDigest {
 		t.Fatalf("digest mismatch: got %s, want %s", gotDigest, wantDigest)
+	}
+}
+
+func basicAuthWrap(inner http.Handler, user, pass string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotUser, gotPass, ok := r.BasicAuth()
+		if !ok || gotUser != user || gotPass != pass {
+			w.Header().Set("WWW-Authenticate", `Basic realm="test"`)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		inner.ServeHTTP(w, r)
+	})
+}
+
+func TestPushDockerArchive_BasicAuth(t *testing.T) {
+	const user, pass = "u", "p"
+	srv := httptest.NewServer(basicAuthWrap(registry.New(), user, pass))
+	defer srv.Close()
+	regHost := srv.Listener.Addr().String()
+
+	tmp := t.TempDir()
+	archivePath := filepath.Join(tmp, "auth.tar")
+	testutil.BuildDockerArchive(t, archivePath, "example.com/app:v1")
+
+	buf := &bytes.Buffer{}
+	out := output.NewNonInteractiveShell(buf, buf, 0)
+	cmd := imagearchive.NewCommand(out)
+	cmd.SilenceUsage = true
+	cmd.SilenceErrors = true
+	cmd.SetArgs([]string{
+		"--image-archive", archivePath,
+		"--to-registry", fmt.Sprintf("http://%s", regHost),
+		"--to-registry-insecure-skip-tls-verify",
+		"--to-registry-username", user,
+		"--to-registry-password", pass,
+	})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute: %v\noutput:\n%s", err, buf.String())
+	}
+}
+
+func TestPushDockerArchive_BasicAuthWrongPassword(t *testing.T) {
+	const user, pass = "u", "p"
+	srv := httptest.NewServer(basicAuthWrap(registry.New(), user, pass))
+	defer srv.Close()
+	regHost := srv.Listener.Addr().String()
+
+	tmp := t.TempDir()
+	archivePath := filepath.Join(tmp, "auth-fail.tar")
+	testutil.BuildDockerArchive(t, archivePath, "example.com/app:v1")
+
+	buf := &bytes.Buffer{}
+	out := output.NewNonInteractiveShell(buf, buf, 0)
+	cmd := imagearchive.NewCommand(out)
+	cmd.SilenceUsage = true
+	cmd.SilenceErrors = true
+	cmd.SetArgs([]string{
+		"--image-archive", archivePath,
+		"--to-registry", fmt.Sprintf("http://%s", regHost),
+		"--to-registry-insecure-skip-tls-verify",
+		"--to-registry-username", user,
+		"--to-registry-password", "wrong",
+	})
+	if err := cmd.Execute(); err == nil {
+		t.Fatalf("expected authentication error, got nil")
 	}
 }
 
