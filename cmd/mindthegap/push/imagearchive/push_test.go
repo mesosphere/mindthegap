@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/google/go-containerregistry/pkg/crane"
@@ -57,6 +58,36 @@ func TestPushDockerArchive_EndToEnd(t *testing.T) {
 	}
 	if gotDigest != wantDigest {
 		t.Fatalf("digest mismatch: got %s, want %s", gotDigest, wantDigest)
+	}
+}
+
+func TestPush_TaglessWithoutOverride(t *testing.T) {
+	reg := registry.New()
+	srv := httptest.NewServer(reg)
+	defer srv.Close()
+	regHost := srv.Listener.Addr().String()
+
+	tmp := t.TempDir()
+	archivePath := filepath.Join(tmp, "tagless.tar")
+	testutil.BuildOCIArchive(t, archivePath, "")
+
+	buf := &bytes.Buffer{}
+	out := output.NewNonInteractiveShell(buf, buf, 0)
+	cmd := imagearchive.NewCommand(out)
+	cmd.SilenceUsage = true
+	cmd.SilenceErrors = true
+	cmd.SetArgs([]string{
+		"--image-archive", archivePath,
+		"--to-registry", fmt.Sprintf("http://%s", regHost),
+		"--to-registry-insecure-skip-tls-verify",
+	})
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "--image-tag") {
+		t.Fatalf("error does not mention --image-tag: %v", err)
 	}
 }
 
