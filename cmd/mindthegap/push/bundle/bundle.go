@@ -976,12 +976,15 @@ func mergeIndexesOverwriteExisting(
 // rejectImageArchives returns an error pointing users to
 // `mindthegap push image-archive` if any of the supplied files are
 // OCI image layout or docker-save tarballs rather than mindthegap
-// bundles.
+// bundles. Files that Detect cannot classify (e.g. compressed
+// archives, non-tar files, or malformed tars) are ignored here so
+// that downstream processing can surface its own, more specific
+// error message.
 func rejectImageArchives(paths []string) error {
 	for _, p := range paths {
 		format, err := archive.Detect(p)
 		if err != nil {
-			return fmt.Errorf("inspecting bundle %s: %w", p, err)
+			continue
 		}
 		if format == archive.FormatUnknown {
 			continue
