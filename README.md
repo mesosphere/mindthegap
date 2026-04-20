@@ -93,6 +93,30 @@ specified via the `--on-existing-tag` flag. The following strategies are availab
 - `merge-with-overwrite`: Merge the image index from the bundle with the existing tag, overwriting any platforms that
   already exist in the registry
 
+### Pushing an OCI/docker image archive
+
+```shell
+mindthegap push image-archive \
+  --image-archive <path/to/archive.tar> [--image-archive <path> ...] \
+  --to-registry <registry.address> \
+  [--image-tag <repo:tag>] \
+  [--to-registry-insecure-skip-tls-verify]
+```
+
+This pushes image archives produced by `docker save`, `podman save`,
+`skopeo copy docker://... oci-archive:out.tar`,
+`crane push --format=oci`, or `buildah push ... oci-archive:out.tar`
+directly to an OCI registry. Archive format (OCI image layout or
+docker-save) is auto-detected from file contents.
+
+Destination references are taken from the archive's embedded metadata — the first entry of `RepoTags` for docker-save
+archives, or the `org.opencontainers.image.ref.name` annotation for OCI layout archives. Any registry host in the
+embedded reference is dropped; images are always pushed under `--to-registry`.
+
+If an archive contains a single image with no embedded tag, or if you want to push it under a different reference,
+supply `--image-tag <repo:tag>`. This flag is only valid when exactly one archive containing exactly one image is
+provided.
+
 ### Serving a bundle
 
 ```shell

@@ -37,6 +37,7 @@ import (
 	"github.com/mesosphere/mindthegap/docker/ecr"
 	"github.com/mesosphere/mindthegap/docker/registry"
 	"github.com/mesosphere/mindthegap/images"
+	"github.com/mesosphere/mindthegap/images/archive"
 	"github.com/mesosphere/mindthegap/images/authnhelpers"
 	"github.com/mesosphere/mindthegap/images/httputils"
 )
@@ -287,6 +288,9 @@ func PushBundles(cfg *pushBundleOpts, out output.Output) error {
 
 	bundleFiles, err := utils.FilesWithGlobs(cfg.bundleFiles)
 	if err != nil {
+		return err
+	}
+	if err := rejectImageArchives(bundleFiles); err != nil {
 		return err
 	}
 	imagesCfg, chartsCfg, err := utils.ExtractConfigs(tempDir, out, bundleFiles...)
@@ -967,4 +971,29 @@ func mergeIndexesOverwriteExisting(
 	mergedIndex := mutate.AppendManifests(mergeToIndex, adds...)
 
 	return mergedIndex, nil
+}
+
+// rejectImageArchives returns an error pointing users to
+// `mindthegap push image-archive` if any of the supplied files are
+// OCI image layout or docker-save tarballs rather than mindthegap
+// bundles. Files that Detect cannot classify (e.g. compressed
+// archives, non-tar files, or malformed tars) are ignored here so
+// that downstream processing can surface its own, more specific
+// error message.
+func rejectImageArchives(paths []string) error {
+	for _, p := range paths {
+		format, err := archive.Detect(p)
+		if err != nil {
+			continue
+		}
+		if format == archive.FormatUnknown {
+			continue
+		}
+		return fmt.Errorf(
+			"file %s appears to be an OCI/docker image archive, not a "+
+				"mindthegap bundle; use 'mindthegap push image-archive' instead",
+			p,
+		)
+	}
+	return nil
 }
