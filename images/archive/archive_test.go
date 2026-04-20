@@ -117,3 +117,43 @@ func TestDetect(t *testing.T) {
 		})
 	}
 }
+
+func TestOpenDispatch(t *testing.T) {
+	ociPath := filepath.Join(t.TempDir(), "oci.tar")
+	writeTarFile(t, ociPath, []tarFile{
+		{Name: "oci-layout", Contents: []byte(`{"imageLayoutVersion":"1.0.0"}`)},
+		{Name: "index.json", Contents: []byte(`{"schemaVersion":2,"manifests":[]}`)},
+	})
+
+	a, err := archive.Open(ociPath)
+	if err != nil {
+		t.Fatalf("Open OCI: %v", err)
+	}
+	defer a.Close()
+	if a.Format() != archive.FormatOCILayout {
+		t.Fatalf("OCI: got format %v, want FormatOCILayout", a.Format())
+	}
+
+	dockerPath := filepath.Join(t.TempDir(), "docker.tar")
+	writeTarFile(t, dockerPath, []tarFile{
+		{Name: "manifest.json", Contents: []byte(`[]`)},
+	})
+
+	a2, err := archive.Open(dockerPath)
+	if err != nil {
+		t.Fatalf("Open docker: %v", err)
+	}
+	defer a2.Close()
+	if a2.Format() != archive.FormatDockerArchive {
+		t.Fatalf("docker: got format %v, want FormatDockerArchive", a2.Format())
+	}
+
+	unkPath := filepath.Join(t.TempDir(), "unknown.tar")
+	writeTarFile(t, unkPath, []tarFile{
+		{Name: "random.txt", Contents: []byte(`hi`)},
+	})
+
+	if _, err := archive.Open(unkPath); err == nil {
+		t.Fatalf("expected error for unknown format, got nil")
+	}
+}

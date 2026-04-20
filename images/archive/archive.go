@@ -13,6 +13,9 @@ import (
 	"io"
 	"os"
 	"path"
+
+	"github.com/google/go-containerregistry/pkg/name"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 )
 
 // Format identifies the type of an image archive.
@@ -43,6 +46,58 @@ func (f Format) String() string {
 	}
 }
 
+// Entry represents a single image or image index contained in an
+// archive, with an optional embedded reference.
+//
+// Exactly one of Image or Index is non-nil.
+type Entry struct {
+	// Ref is the embedded reference from the archive, or nil if the
+	// archive did not carry one. Docker archives use the first entry
+	// of RepoTags; OCI archives use the
+	// org.opencontainers.image.ref.name annotation on the top-level
+	// descriptor.
+	Ref name.Reference
+	// Image is non-nil for single-manifest entries.
+	Image v1.Image
+	// Index is non-nil for image-index entries (multi-platform).
+	Index v1.ImageIndex
+}
+
+// Archive iterates image entries in an archive.
+type Archive interface {
+	// Format returns the classification of the archive.
+	Format() Format
+	// Entries returns all image entries in the archive. The slice
+	// may be empty for an archive that contains no images.
+	Entries() ([]Entry, error)
+	// Close releases any resources held by the archive.
+	Close() error
+}
+
+// Open detects the archive format and returns an Archive for reading
+// its entries. Returns an error with a friendly message if the file
+// is not a recognised image archive.
+func Open(archivePath string) (Archive, error) {
+	format, err := Detect(archivePath)
+	if err != nil {
+		return nil, err
+	}
+	switch format {
+	case FormatOCILayout:
+		return openOCI(archivePath)
+	case FormatDockerArchive:
+		return openDocker(archivePath)
+	case FormatUnknown:
+		return nil, fmt.Errorf(
+			"file %s is not a recognised image archive "+
+				"(expected OCI image layout tarball or docker-save tarball)",
+			archivePath,
+		)
+	default:
+		return nil, fmt.Errorf("unhandled archive format: %v", format)
+	}
+}
+
 // Detect classifies the tar archive at the given path. Detection is a
 // single streaming scan of the tar headers that stops as soon as an
 // OCI layout marker ("oci-layout") or docker-save marker
@@ -67,11 +122,11 @@ func Detect(archivePath string) (Format, error) {
 			return FormatUnknown, fmt.Errorf("reading tar %s: %w", archivePath, err)
 		}
 
-		name := path.Clean(hdr.Name)
-		if path.Dir(name) != "." {
+		entryName := path.Clean(hdr.Name)
+		if path.Dir(entryName) != "." {
 			continue
 		}
-		switch name {
+		switch entryName {
 		case "oci-layout":
 			return FormatOCILayout, nil
 		case "manifest.json":
