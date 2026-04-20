@@ -274,6 +274,17 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.26.0 (2026-04-20)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: push OCI/docker image archive tarballs (NCN-113655) by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/1038
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.25.4...v1.26.0
+
 ## 1.25.4 (2026-04-09)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
