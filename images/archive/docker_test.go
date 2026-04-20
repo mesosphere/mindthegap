@@ -73,3 +73,22 @@ func TestDockerArchiveEntries(t *testing.T) {
 		t.Fatalf("missing expected refs; got %v", refs)
 	}
 }
+
+func TestDockerArchiveEntries_Empty(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "empty-docker.tar")
+	writeTarFile(t, path, []tarFile{
+		{Name: "manifest.json", Contents: []byte(`[]`)},
+	})
+	a, err := archive.Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	defer a.Close()
+	entries, err := a.Entries()
+	if err != nil {
+		t.Fatalf("Entries: %v", err)
+	}
+	if len(entries) != 0 {
+		t.Fatalf("got %d entries, want 0", len(entries))
+	}
+}
