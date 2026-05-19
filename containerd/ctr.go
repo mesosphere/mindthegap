@@ -15,7 +15,8 @@ func ImportImageArchive(
 	ctx context.Context,
 	archivePath, containerdNamespace string,
 ) ([]byte, error) {
-	baseArgs := []string{"-n", containerdNamespace}
+	baseArgs := make([]string, 0, 8)
+	baseArgs = append(baseArgs, "-n", containerdNamespace)
 	//nolint:gosec // Args are fine.
 	cmd := exec.CommandContext(
 		ctx,

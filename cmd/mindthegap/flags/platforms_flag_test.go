@@ -237,7 +237,8 @@ func TestPSAppend(t *testing.T) {
 	t.Parallel()
 	f := setUpPSFlagSet()
 
-	in := []string{"linux/amd64", "darwin/arm64/v8"}
+	in := make([]string, 0, 3)
+	in = append(in, "linux/amd64", "darwin/arm64/v8")
 	arg1 := fmt.Sprintf(argfmt, in[0])
 	arg2 := fmt.Sprintf(argfmt, in[1])
 	require.NoError(t, f.Parse([]string{arg1, arg2}), "error parsing flags")

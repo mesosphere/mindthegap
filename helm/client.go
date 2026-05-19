@@ -6,6 +6,7 @@ package helm
 import (
 	"fmt"
 	"log/slog"
+	"maps"
 	"net/http"
 	"net/url"
 	"os"
@@ -233,9 +234,7 @@ func (c *Client) GetChartFromURL(outputDir, chartURL, workingDir string) (string
 	}
 
 	getters := make(map[string]getter.Getter, len(getter.Getters))
-	for scheme, getter := range getter.Getters {
-		getters[scheme] = getter
-	}
+	maps.Copy(getters, getter.Getters)
 	copyFileGetter := new(getter.FileGetter)
 	copyFileGetter.Copy = true
 	getters["file"] = copyFileGetter

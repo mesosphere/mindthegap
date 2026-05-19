@@ -143,7 +143,10 @@ func NewCommand(out output.Output) *cobra.Command {
 
 						exportTarball := filepath.Join(ociExportsTempDir, "docker-archive.tar")
 
-						if err := tarball.MultiWriteToFile(exportTarball, map[name.Tag]v1.Image{tag: v1Image}); err != nil {
+						if err := tarball.MultiWriteToFile(
+							exportTarball,
+							map[name.Tag]v1.Image{tag: v1Image},
+						); err != nil {
 							out.EndOperationWithStatus(output.Failure())
 							return err
 						}

@@ -178,11 +178,11 @@ func fileLoop(ctx context.Context, w *fsnotify.Watcher, fileToWaitFor string, er
 	}
 }
 
-func printOutput(format string, a ...interface{}) {
+func printOutput(format string, a ...any) {
 	fmt.Fprintf(os.Stderr, format+"\n", a...)
 }
 
-func exit(format string, a ...interface{}) {
+func exit(format string, a ...any) {
 	printOutput(format, a...)
 	os.Exit(1)
 }
