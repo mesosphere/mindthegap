@@ -142,12 +142,7 @@ func satisfiesPlatforms(platforms []v1.Platform) match.Matcher {
 		if desc.Platform == nil {
 			return false
 		}
-		for _, p := range platforms {
-			if desc.Platform.Satisfies(p) {
-				return true
-			}
-		}
-		return false
+		return slices.ContainsFunc(platforms, desc.Platform.Satisfies)
 	}
 }
 

@@ -50,7 +50,7 @@ func init() {
 type archiveDriverFactory struct{}
 
 func (driverFactory *archiveDriverFactory) Create(
-	ctx context.Context, parameters map[string]interface{},
+	ctx context.Context, parameters map[string]any,
 ) (storagedriver.StorageDriver, error) {
 	return FromParameters(ctx, parameters)
 }
@@ -76,7 +76,7 @@ type Driver struct {
 // Optional Parameters:
 // - archives
 // - maxthreads.
-func FromParameters(ctx context.Context, parameters map[string]interface{}) (*Driver, error) {
+func FromParameters(ctx context.Context, parameters map[string]any) (*Driver, error) {
 	params, err := fromParametersImpl(parameters)
 	if err != nil || params == nil {
 		return nil, err
@@ -84,13 +84,13 @@ func FromParameters(ctx context.Context, parameters map[string]interface{}) (*Dr
 	return New(ctx, *params)
 }
 
-func fromParametersImpl(parameters map[string]interface{}) (*DriverParameters, error) {
+func fromParametersImpl(parameters map[string]any) (*DriverParameters, error) {
 	archivesParam, ok := parameters["archives"]
 	if !ok {
 		return nil, errors.New("archive config is required")
 	}
 
-	archivesIface, ok := archivesParam.([]interface{})
+	archivesIface, ok := archivesParam.([]any)
 	if !ok {
 		return nil, errors.New("archives  config must be a string array")
 	}

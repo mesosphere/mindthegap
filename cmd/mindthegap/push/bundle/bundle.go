@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 	"sync"
 
@@ -340,10 +341,11 @@ func PushBundles(cfg *pushBundleOpts, out output.Output) error {
 	if err != nil {
 		return fmt.Errorf("error configuring TLS for destination registry: %w", err)
 	}
-	destRemoteOpts := []remote.Option{
+	destRemoteOpts := make([]remote.Option, 0, 4)
+	destRemoteOpts = append(destRemoteOpts,
 		remote.WithTransport(destTLSRoundTripper),
 		remote.WithUserAgent(utils.Useragent()),
-	}
+	)
 
 	var destNameOpts []name.Option
 	if flags.SkipTLSVerify(cfg.registrySkipTLSVerify, cfg.registryURI) {
@@ -932,13 +934,7 @@ func mergeIndexesOverwriteExisting(
 			return false
 		}
 
-		for _, fromPlatform := range fromPlatforms {
-			if manifest.Platform.Satisfies(fromPlatform) {
-				return true
-			}
-		}
-
-		return false
+		return slices.ContainsFunc(fromPlatforms, manifest.Platform.Satisfies)
 	})
 
 	var adds []mutate.IndexAddendum

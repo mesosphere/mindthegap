@@ -29,7 +29,7 @@ linters:
     - gocyclo
     - godot
     - gomoddirectives
-    - gomodguard
+    - gomodguard_v2
     - gosec
     - govet
     - ineffassign
@@ -87,20 +87,19 @@ linters:
       replace-local: true
       replace-allow-list:
         - github.com/mholt/archives
-    gomodguard:
+    gomodguard_v2:
       blocked:
-        modules:
-          - k8s.io/kubernetes:
-              reason: do not use k8s.io/kubernetes directly
-          - github.com/docker/docker:
-              recommendations:
-                - github.com/moby/moby/api
-                - github.com/moby/moby/client
-              reason: use github.com/moby/moby/api and github.com/moby/moby/client instead
-          - github.com/minio/minio:
-              reason: dependencies on minio libraries are not allowed
-          - github.com/minio/minio-go:
-              reason: dependencies on minio libraries are not allowed
+        - module: k8s.io/kubernetes
+          reason: do not use k8s.io/kubernetes directly
+        - module: github.com/docker/docker
+          recommendations:
+            - github.com/moby/moby/api
+            - github.com/moby/moby/client
+          reason: use github.com/moby/moby/api and github.com/moby/moby/client instead
+        - module: github.com/minio/minio
+          reason: dependencies on minio libraries are not allowed
+        - module: github.com/minio/minio-go
+          reason: dependencies on minio libraries are not allowed
     lll:
       line-length: 120
   exclusions:
@@ -125,6 +124,17 @@ linters:
           - gocritic
         path: docker/registry/registry.go
         text: 'hugeParam: cfg is heavy'
+      - linters:
+          - goconst
+        path: _test\.go
+      - linters:
+          - gosec
+        path: _test\.go
+        text: G122
+      - linters:
+          - gosec
+        path: images/archive/testutil/
+        text: G122
     paths:
       - third_party/
       - helm/internal/

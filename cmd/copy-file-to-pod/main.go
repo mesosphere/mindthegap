@@ -144,11 +144,11 @@ func podNameFromFlags(f cmdutil.Factory, podName, podSelector, namespace string)
 	return pods.Items[0].Name, nil
 }
 
-func printOutput(format string, a ...interface{}) {
+func printOutput(format string, a ...any) {
 	fmt.Fprintf(os.Stderr, format+"\n", a...)
 }
 
-func exit(format string, a ...interface{}) {
+func exit(format string, a ...any) {
 	printOutput(format, a...)
 	os.Exit(1)
 }

@@ -136,10 +136,11 @@ func runPushImageArchive(
 	if err != nil {
 		return fmt.Errorf("configuring TLS for destination registry: %w", err)
 	}
-	destRemoteOpts := []remote.Option{
+	destRemoteOpts := make([]remote.Option, 0, 3)
+	destRemoteOpts = append(destRemoteOpts,
 		remote.WithTransport(destTLSRoundTripper),
 		remote.WithUserAgent(utils.Useragent()),
-	}
+	)
 
 	var destNameOpts []ggcrname.Option
 	if flags.SkipTLSVerify(destRegistrySkipTLSVerify, destRegistryURI) {

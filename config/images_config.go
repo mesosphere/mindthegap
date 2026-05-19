@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 
@@ -126,13 +127,7 @@ func (ic *ImagesConfig) Merge(cfg ImagesConfig) *ImagesConfig {
 }
 
 func sliceContains(sl []string, s string) bool {
-	for _, v := range sl {
-		if v == s {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(sl, s)
 }
 
 func (ic ImagesConfig) SortedRegistryNames() []string {
@@ -224,7 +219,7 @@ func WriteSanitizedImagesConfigs(fileName string, cfgs ...ImagesConfig) error {
 	return writeYAMLToFile(cfg, fileName)
 }
 
-func writeYAMLToFile(obj interface{}, fileName string) error {
+func writeYAMLToFile(obj any, fileName string) error {
 	f, err := os.Create(fileName)
 	if err != nil {
 		return fmt.Errorf("failed to create file to write config to: %w", err)

@@ -11,6 +11,8 @@ updates:
   - package-ecosystem: "gomod"
     directories:
       - "/"
+      - "/cmd/copy-file-to-pod/"
+      - "/cmd/wait-for-files-to-exist/"
     schedule:
       interval: "weekly"
     groups:
