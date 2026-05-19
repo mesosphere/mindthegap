@@ -361,10 +361,11 @@ func TestManifestListForImage_RemoteImage(t *testing.T) {
 		args: args{img: "mesosphere/kube-apiserver:v1.24.4_fips.0"},
 		wantIndexManifest: v1.IndexManifest{
 			Manifests: []v1.Descriptor{{
-				Digest:    v1.Hash{Algorithm: "sha256", Hex: digestFIPSImageManifest},
-				MediaType: types.DockerManifestSchema2,
-				Platform:  &v1.Platform{OS: "linux", Architecture: "amd64", Variant: "v1"},
-				Size:      int64(sizeFIPSImageManifest),
+				Digest:       v1.Hash{Algorithm: "sha256", Hex: digestFIPSImageManifest},
+				MediaType:    types.DockerManifestSchema2,
+				Platform:     &v1.Platform{OS: "linux", Architecture: "amd64", Variant: "v1"},
+				Size:         int64(sizeFIPSImageManifest),
+				ArtifactType: string(types.DockerConfigJSON),
 			}},
 			MediaType:     types.DockerManifestList,
 			SchemaVersion: 2,
@@ -384,10 +385,11 @@ func TestManifestListForImage_RemoteImage(t *testing.T) {
 		},
 		wantIndexManifest: v1.IndexManifest{
 			Manifests: []v1.Descriptor{{
-				Digest:    v1.Hash{Algorithm: "sha256", Hex: digestFIPSImageManifest},
-				MediaType: types.DockerManifestSchema2,
-				Platform:  &v1.Platform{OS: "linux", Architecture: "amd64", Variant: "v1"},
-				Size:      int64(sizeFIPSImageManifest),
+				Digest:       v1.Hash{Algorithm: "sha256", Hex: digestFIPSImageManifest},
+				MediaType:    types.DockerManifestSchema2,
+				Platform:     &v1.Platform{OS: "linux", Architecture: "amd64", Variant: "v1"},
+				Size:         int64(sizeFIPSImageManifest),
+				ArtifactType: string(types.DockerConfigJSON),
 			}},
 			MediaType:     types.DockerManifestList,
 			SchemaVersion: 2,
@@ -400,10 +402,11 @@ func TestManifestListForImage_RemoteImage(t *testing.T) {
 		},
 		wantIndexManifest: v1.IndexManifest{
 			Manifests: []v1.Descriptor{{
-				Digest:    v1.Hash{Algorithm: "sha256", Hex: digestFIPSImageManifest},
-				MediaType: types.DockerManifestSchema2,
-				Platform:  &v1.Platform{OS: "linux", Architecture: "amd64", Variant: "v1"},
-				Size:      int64(sizeFIPSImageManifest),
+				Digest:       v1.Hash{Algorithm: "sha256", Hex: digestFIPSImageManifest},
+				MediaType:    types.DockerManifestSchema2,
+				Platform:     &v1.Platform{OS: "linux", Architecture: "amd64", Variant: "v1"},
+				Size:         int64(sizeFIPSImageManifest),
+				ArtifactType: string(types.DockerConfigJSON),
 			}},
 			MediaType:     types.DockerManifestList,
 			SchemaVersion: 2,
