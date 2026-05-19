@@ -274,6 +274,21 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.26.0 (2026-05-19)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Exciting New Features 🎉
+* feat: push OCI/docker image archive tarballs (NCN-113655) by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/1038
+### Fixes 🔧
+* fix: Allow same-host private/loopback registry bearer realms (NCN-114223) by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/1046
+### Other Changes
+* build: bump Go toolchain to 1.26.3 by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/1048
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.25.4...v1.26.0
+
 ## 1.25.4 (2026-04-09)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
