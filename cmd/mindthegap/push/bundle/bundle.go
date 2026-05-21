@@ -4,11 +4,14 @@
 package bundle
 
 import (
+	"archive/tar"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	tarpath "path"
 	"slices"
 	"strings"
 	"sync"
@@ -38,7 +41,6 @@ import (
 	"github.com/mesosphere/mindthegap/docker/ecr"
 	"github.com/mesosphere/mindthegap/docker/registry"
 	"github.com/mesosphere/mindthegap/images"
-	"github.com/mesosphere/mindthegap/images/archive"
 	"github.com/mesosphere/mindthegap/images/authnhelpers"
 	"github.com/mesosphere/mindthegap/images/httputils"
 )
@@ -972,17 +974,36 @@ func mergeIndexesOverwriteExisting(
 // rejectImageArchives returns an error pointing users to
 // `mindthegap push image-archive` if any of the supplied files are
 // OCI image layout or docker-save tarballs rather than mindthegap
-// bundles. Files that Detect cannot classify (e.g. compressed
-// archives, non-tar files, or malformed tars) are ignored here so
-// that downstream processing can surface its own, more specific
-// error message.
+// bundles.
+//
+// Classification is performed by a single streaming tar-header
+// walk per file that records four markers:
+//
+//   - the registry storage tree (any entry whose path starts with
+//     "docker/registry/v2/")
+//   - a bundle config (images.yaml or charts.yaml at the tar root)
+//   - an OCI image layout marker (oci-layout at the tar root)
+//   - a docker-save manifest (manifest.json at the tar root)
+//
+// A file is treated as a mindthegap bundle iff it carries BOTH the
+// storage tree AND at least one bundle config; in that case it is
+// accepted regardless of any image-archive markers it may also
+// carry. Otherwise, if an OCI layout or docker-save marker is
+// present, the file is rejected with a hint pointing at
+// `mindthegap push image-archive`. Files that cannot be classified
+// at all (compressed tarballs, non-tar files, malformed tars) are
+// ignored so that downstream processing can surface its own, more
+// specific error message.
 func rejectImageArchives(paths []string) error {
 	for _, p := range paths {
-		format, err := archive.Detect(p)
+		c, err := classifyBundleCandidate(p)
 		if err != nil {
 			continue
 		}
-		if format == archive.FormatUnknown {
+		if c.isBundle() {
+			continue
+		}
+		if !c.looksLikeImageArchive() {
 			continue
 		}
 		return fmt.Errorf(
@@ -992,4 +1013,77 @@ func rejectImageArchives(paths []string) error {
 		)
 	}
 	return nil
+}
+
+// bundleCandidate records which classification markers a tar file
+// contains. See rejectImageArchives for the precise semantics.
+type bundleCandidate struct {
+	hasStorageTree    bool
+	hasImagesYAML     bool
+	hasChartsYAML     bool
+	hasOCILayout      bool
+	hasDockerManifest bool
+}
+
+func (c bundleCandidate) isBundle() bool {
+	return c.hasStorageTree && (c.hasImagesYAML || c.hasChartsYAML)
+}
+
+func (c bundleCandidate) looksLikeImageArchive() bool {
+	return c.hasOCILayout || c.hasDockerManifest
+}
+
+func (c bundleCandidate) allMarkersSeen() bool {
+	return c.hasStorageTree &&
+		c.hasImagesYAML &&
+		c.hasChartsYAML &&
+		c.hasOCILayout &&
+		c.hasDockerManifest
+}
+
+// storageTreePrefix is the path prefix under which the
+// distribution registry's filesystem storage driver lays out
+// repository data inside a mindthegap bundle. See
+// docker/registry/storage/driver/archive.
+const storageTreePrefix = "docker/registry/v2/"
+
+func classifyBundleCandidate(path string) (bundleCandidate, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return bundleCandidate{}, err
+	}
+	defer f.Close()
+
+	var c bundleCandidate
+	tr := tar.NewReader(f)
+	for {
+		hdr, err := tr.Next()
+		if errors.Is(err, io.EOF) {
+			return c, nil
+		}
+		if err != nil {
+			return bundleCandidate{}, err
+		}
+
+		entryName := tarpath.Clean(hdr.Name)
+
+		if strings.HasPrefix(entryName, storageTreePrefix) {
+			c.hasStorageTree = true
+		} else if tarpath.Dir(entryName) == "." {
+			switch entryName {
+			case "images.yaml":
+				c.hasImagesYAML = true
+			case "charts.yaml":
+				c.hasChartsYAML = true
+			case "oci-layout":
+				c.hasOCILayout = true
+			case "manifest.json":
+				c.hasDockerManifest = true
+			}
+		}
+
+		if c.allMarkersSeen() {
+			return c, nil
+		}
+	}
 }
