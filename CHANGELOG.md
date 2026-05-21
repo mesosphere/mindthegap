@@ -274,6 +274,17 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.26.1 (2026-05-21)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Fixes 🔧
+* fix(cmd/push): use positive bundle markers for push bundle detection (NCN-114493) by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/1053
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.26.0...v1.26.1
+
 ## 1.26.0 (2026-05-19)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
