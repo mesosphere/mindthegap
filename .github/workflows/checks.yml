@@ -41,7 +41,7 @@ jobs:
       - name: Run unit tests
         run: devbox run -- task test:unit
       - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action/linux@c950f6fb443cb5af20a377fd0dfaa78838901040 # v2
+        uses: EnricoMi/publish-unit-test-result-action/linux@d0a4676d0e0b938bc201470d88276b7c74c712b3 # v2
         if: (!cancelled())
         with:
           check_name: "Unit test results"
@@ -78,7 +78,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TMPDIR: ${{ runner.temp }}
       - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action/linux@c950f6fb443cb5af20a377fd0dfaa78838901040 # v2
+        uses: EnricoMi/publish-unit-test-result-action/linux@d0a4676d0e0b938bc201470d88276b7c74c712b3 # v2
         if: (!cancelled())
         with:
           check_name: "e2e test results"
