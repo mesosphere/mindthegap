@@ -5,11 +5,11 @@ package flags
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"k8s.io/utils/strings/slices"
 )
 
 func ValidateFlagsThatRequireValues(cmd *cobra.Command, requiredFlagsWithValues ...string) error {
@@ -23,7 +23,7 @@ func ValidateFlagsThatRequireValues(cmd *cobra.Command, requiredFlagsWithValues 
 		}
 
 		if sv, ok := foundFlag.Value.(pflag.SliceValue); ok {
-			if len(slices.Filter(nil, sv.GetSlice(), func(s string) bool { return s != "" })) == 0 {
+			if !slices.ContainsFunc(sv.GetSlice(), func(s string) bool { return s != "" }) {
 				missingFlagValues = append(missingFlagValues, flagName)
 			}
 		} else {

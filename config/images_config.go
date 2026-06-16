@@ -15,7 +15,6 @@ import (
 	"github.com/containers/image/v5/types"
 	"github.com/distribution/reference"
 	"gopkg.in/yaml.v3"
-	"k8s.io/utils/ptr"
 )
 
 // RegistrySyncConfig contains information about a single registry, read from
@@ -54,7 +53,7 @@ func (rsc RegistrySyncConfig) Clone() RegistrySyncConfig {
 
 	var tlsVerify *bool = nil
 	if rsc.TLSVerify != nil {
-		tlsVerify = ptr.To(*rsc.TLSVerify)
+		tlsVerify = new(*rsc.TLSVerify)
 	}
 
 	var creds *types.DockerAuthConfig = nil

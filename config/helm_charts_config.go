@@ -13,7 +13,6 @@ import (
 
 	"gopkg.in/yaml.v3"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/utils/ptr"
 )
 
 // HelmRepositorySyncConfig contains information about a single repository, read from
@@ -39,7 +38,7 @@ func (c HelmRepositorySyncConfig) Clone() HelmRepositorySyncConfig {
 
 	var tlsVerify *bool = nil
 	if c.TLSVerify != nil {
-		tlsVerify = ptr.To(*c.TLSVerify)
+		tlsVerify = new(*c.TLSVerify)
 	}
 
 	return HelmRepositorySyncConfig{

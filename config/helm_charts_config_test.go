@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/utils/ptr"
 )
 
 func TestParseHelmChartsFile(t *testing.T) {
@@ -99,7 +98,7 @@ func TestParseHelmChartsFile(t *testing.T) {
 		want: HelmChartsConfig{
 			Repositories: map[string]HelmRepositorySyncConfig{
 				"test.repository.io": {
-					TLSVerify: ptr.To(false),
+					TLSVerify: new(false),
 				},
 			},
 		},
@@ -108,10 +107,10 @@ func TestParseHelmChartsFile(t *testing.T) {
 		want: HelmChartsConfig{
 			Repositories: map[string]HelmRepositorySyncConfig{
 				"test.repository.io": {
-					TLSVerify: ptr.To(false),
+					TLSVerify: new(false),
 				},
 				"test.repository2.io": {
-					TLSVerify: ptr.To(true),
+					TLSVerify: new(true),
 				},
 			},
 		},
