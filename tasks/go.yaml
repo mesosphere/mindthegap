@@ -110,6 +110,7 @@ tasks:
       vars:
         - MODULE_DIR
     cmds:
+      - echo "Running govulncheck for '{{.MODULE_DIR}}'"
       - govulncheck ./...
 
   vulncheck:
