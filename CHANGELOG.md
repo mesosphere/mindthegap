@@ -274,6 +274,17 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.26.2 (2026-06-16)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Other Changes
+* build: migrate to prek and bump Go toolchain to go1.26.4 by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/1060
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.26.1...v1.26.2
+
 ## 1.26.1 (2026-05-21)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
