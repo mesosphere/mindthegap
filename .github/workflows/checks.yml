@@ -137,12 +137,12 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-      - name: Set up pre-commit cache
+      - name: Set up prek cache
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
         with:
-          path: ~/.cache/pre-commit
-          key: pre-commit-3|${{ hashFiles('.pre-commit-config.yaml') }}
-      - name: Run pre-commit
+          path: ~/.cache/prek
+          key: prek-1|${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Run prek
         run: devbox run -- task pre-commit:run
         env:
           SKIP: no-commit-to-branch,golangci-lint,actionlint-system

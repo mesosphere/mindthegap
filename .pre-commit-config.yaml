@@ -3,6 +3,8 @@
 
 exclude: ^third_party/.*$
 
+default_install_hook_types: [pre-commit, commit-msg]
+
 repos:
 - repo: meta
   hooks:
@@ -36,13 +38,12 @@ repos:
     language: system
     types: [go]
     pass_filenames: false
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v6.0.0
+- repo: builtin
   hooks:
   - id: trailing-whitespace
     stages: [pre-commit]
   - id: check-yaml
-    args: ["-m", "--unsafe"]
+    args: ["-m"]
     stages: [pre-commit]
   - id: mixed-line-ending
     args: ["-f", "lf"]
@@ -57,19 +58,27 @@ repos:
     stages: [pre-commit]
   - id: check-executables-have-shebangs
     stages: [pre-commit]
+  - id: check-shebang-scripts-are-executable
+    stages: [pre-commit]
   - id: end-of-file-fixer
     stages: [pre-commit]
+  - id: check-json
+    stages: [pre-commit]
+    exclude: ^\.vscode/
+  - id: detect-private-key
+    stages: [pre-commit]
+    exclude: ^helm/internal/tlsutil/testdata/
 - repo: https://github.com/rhysd/actionlint
-  rev: v1.7.10
+  rev: v1.7.12
   hooks:
   - id: actionlint-system
     stages: [pre-commit]
-- repo: https://github.com/jorisroovers/gitlint
-  rev: v0.19.1
+- repo: https://github.com/compilerla/conventional-pre-commit
+  rev: v4.4.0
   hooks:
-  - id: gitlint
-  - id: gitlint-ci
-    args: ["--commits", "origin/main..HEAD"]
+  - id: conventional-pre-commit
+    stages: [commit-msg]
+    args: [build, ci, docs, feat, fix, perf, refactor, release, revert, style, test]
 - repo: https://github.com/jumanjihouse/pre-commit-hooks
   rev: 3.0.0
   hooks:
@@ -84,13 +93,13 @@ repos:
     args: ["-e", "SC2211"]
     exclude: ^(\.envrc|\.specify/scripts/.*)$
 - repo: https://github.com/igorshubovych/markdownlint-cli
-  rev: v0.47.0
+  rev: v0.48.0
   hooks:
   - id: markdownlint
     stages: [pre-commit]
     exclude: ^(CHANGELOG\.md|\.specify/templates/.*|\.cursor/commands/.*)$
 - repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.5.5
+  rev: v1.5.6
   hooks:
   - id: insert-license
     name: License headers - Go

@@ -20,7 +20,7 @@
     "govulncheck":                      "latest",
     "ko":                               "latest",
     "kubernetes-helm":                  "latest",
-    "pre-commit":                       "latest",
+    "prek":                             "latest",
     "reviewdog":                        "latest",
     "ripgrep":                          "latest",
     "shfmt":                            "latest",
