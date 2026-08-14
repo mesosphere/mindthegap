@@ -445,7 +445,7 @@ func (f ArchiveFS) Open(name string) (fs.File, error) {
 		// this could result in loading the wrong file (!!) so we append a
 		// path separator to ensure that can't happen: "a/b/c.jpg.json/"
 		// is not prefixed by "a/b/c.jpg/", but it will still match as we
-		// expect: "a/b/c/d/" is is prefixed by "a/b/c/", allowing us to
+		// expect: "a/b/c/d/" is prefixed by "a/b/c/", allowing us to
 		// match descenedent files, and "a/b/c.jpg/" is prefixed by
 		// "a/b/c.jpg/", allowing us to match exact filenames.
 		if !strings.HasPrefix(file.NameInArchive+"/", name+"/") {
@@ -738,9 +738,9 @@ func (f *ArchiveFS) Sub(dir string) (fs.FS, error) {
 	// the reason we don't append to the Path field directly
 	// is because the input might be a stream rather than a
 	// path on disk, and the Prefix field is applied on both
-	result := f
-	result.Prefix = dir
-	return result, nil
+	result := *f
+	result.Prefix = path.Join(f.Prefix, dir)
+	return &result, nil
 }
 
 // DeepFS is a fs.FS that represents the real file system, but also has
