@@ -32,3 +32,4 @@ dist/
 
 .envrc.local
 kubeconfig
+.worktrees/
