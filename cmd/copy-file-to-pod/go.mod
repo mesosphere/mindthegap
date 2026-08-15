@@ -5,7 +5,7 @@ module github.com/nutanix-cloud-native/copy-file-to-pod
 
 go 1.26.0
 
-toolchain go1.26.5
+toolchain go1.26.6
 
 require (
 	k8s.io/apimachinery v0.36.2

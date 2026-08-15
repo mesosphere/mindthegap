@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/fs"
 	"log"
+	"path/filepath"
 	"strings"
 
 	"github.com/bodgit/sevenzip"
@@ -37,7 +38,7 @@ func (z SevenZip) Match(_ context.Context, filename string, stream io.Reader) (M
 	var mr MatchResult
 
 	// match filename
-	if strings.Contains(strings.ToLower(filename), z.Extension()) {
+	if filepath.Ext(strings.ToLower(filename)) == z.Extension() {
 		mr.ByName = true
 	}
 
@@ -57,12 +58,12 @@ func (z SevenZip) Match(_ context.Context, filename string, stream io.Reader) (M
 // sourceArchive must be an io.ReaderAt and io.Seeker, which are oddly disjoint interfaces
 // from io.Reader which is what the method signature requires. We chose this signature for
 // the interface because we figure you can Read() from anything you can ReadAt() or Seek()
-// with. Due to the nature of the zip archive format, if sourceArchive is not an io.Seeker
+// with. Due to the nature of the 7z archive format, if sourceArchive is not an io.Seeker
 // and io.ReaderAt, an error is returned.
 func (z SevenZip) Extract(ctx context.Context, sourceArchive io.Reader, handleFile FileHandler) error {
 	sra, ok := sourceArchive.(seekReaderAt)
 	if !ok {
-		return fmt.Errorf("input type must be an io.ReaderAt and io.Seeker because of zip format constraints")
+		return fmt.Errorf("input type must be an io.ReaderAt and io.Seeker because of 7z format constraints")
 	}
 
 	size, err := streamSizeBySeeking(sra)

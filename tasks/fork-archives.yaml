@@ -23,8 +23,8 @@ tasks:
         sh: go list -m -f '{{ "{{" }}.Version}}' github.com/mholt/archives
     cmds:
       - rm -rf third_party/github.com/mholt/archives
-      - git clone https://github.com/mholt/archives.git third_party/github.com/mholt/archives
-          --single-branch --branch='{{.MHOLT_ARCHIVES_VERSION}}' --depth=1
+      - git clone --filter=blob:none --no-checkout https://github.com/mholt/archives.git third_party/github.com/mholt/archives
+      - git -C third_party/github.com/mholt/archives checkout "$(echo '{{.MHOLT_ARCHIVES_VERSION}}' | grep -oE '[0-9a-f]{12}$' || echo '{{.MHOLT_ARCHIVES_VERSION}}')"
       - rm -rf third_party/github.com/mholt/archives/{.git,.github,.gitignore,README.md}
       - fd --glob '*_test.go' third_party/github.com/mholt/archives --exec rm -f
 
