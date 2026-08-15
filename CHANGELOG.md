@@ -274,6 +274,17 @@
 
 **Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.6.1...v1.7.0
 
+## 1.26.4 (2026-08-15)
+
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+### Other Changes
+* test: Fix busybox manifests by @jimmidyson in https://github.com/mesosphere/mindthegap/pull/1082
+
+
+**Full Changelog**: https://github.com/mesosphere/mindthegap/compare/v1.26.3...v1.26.4
+
 ## 1.26.3 (2026-08-13)
 
 <!-- Release notes generated using configuration in .github/release.yaml at main -->
