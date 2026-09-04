@@ -58,7 +58,7 @@ tasks:
     deps:
       - task: :build:release-unpublished
         vars:
-          GORELEASER_PLATFORMS: '"linux_amd64","linux_arm64","{{.E2E_GOOS}}_{{.E2E_GOARCH}}"'
+          GORELEASER_PLATFORMS: '"linux_amd64","linux_arm64","darwin_arm64","{{.E2E_GOOS}}_{{.E2E_GOARCH}}"'
     vars:
       E2E_GOOS:
         sh: go env GOOS
