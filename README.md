@@ -133,12 +133,17 @@ registry will fail.
 
 ```shell
 mindthegap import image-bundle --image-bundle <path/to/images.tar> \
-  [--containerd-namespace <containerd.namespace]
+  [--containerd-namespace <containerd.namespace] \
+  [--unpack]
 ```
 
 Import the images from the image bundle into containerd in the specified namespace. If
 `--containerd-namespace` is not specified, images will be imported into `k8s.io` namespace. This
 command requires `ctr` to be in the `PATH`.
+
+By default, images are imported without being unpacked into the containerd snapshotter, and are
+unpacked on first use. Specify `--unpack` to unpack the images during import, e.g. so that
+`ctr images check -q` (which on containerd 2.x only lists complete and unpacked images) reports them.
 
 ## How does it work?
 

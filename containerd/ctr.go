@@ -14,9 +14,13 @@ type CtrOption func() string
 func ImportImageArchive(
 	ctx context.Context,
 	archivePath, containerdNamespace string,
+	unpack bool,
 ) ([]byte, error) {
 	baseArgs := make([]string, 0, 8)
-	baseArgs = append(baseArgs, "-n", containerdNamespace)
+	baseArgs = append(baseArgs, "-n", containerdNamespace, "images", "import")
+	if !unpack {
+		baseArgs = append(baseArgs, "--no-unpack")
+	}
 	//nolint:gosec // Args are fine.
 	cmd := exec.CommandContext(
 		ctx,
@@ -24,9 +28,6 @@ func ImportImageArchive(
 		append(
 			baseArgs,
 			[]string{
-				"images",
-				"import",
-				"--no-unpack",
 				"--all-platforms",
 				"--digests",
 				archivePath,
