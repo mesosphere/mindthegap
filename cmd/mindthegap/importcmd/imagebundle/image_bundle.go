@@ -31,6 +31,7 @@ func NewCommand(out output.Output) *cobra.Command {
 	var (
 		imageBundleFiles    []string
 		containerdNamespace string
+		unpack              bool
 	)
 
 	cmd := &cobra.Command{
@@ -152,7 +153,7 @@ func NewCommand(out output.Output) *cobra.Command {
 						}
 
 						ctrOutput, err := containerd.ImportImageArchive(
-							context.TODO(), exportTarball, containerdNamespace,
+							context.TODO(), exportTarball, containerdNamespace, unpack,
 						)
 						if err != nil {
 							out.Warn(string(ctrOutput))
@@ -178,6 +179,9 @@ func NewCommand(out output.Output) *cobra.Command {
 	_ = cmd.MarkFlagRequired("image-bundle")
 	cmd.Flags().StringVar(&containerdNamespace, "containerd-namespace", "k8s.io",
 		"Containerd namespace to import images into")
+	cmd.Flags().BoolVar(&unpack, "unpack", false,
+		"Unpack the imported images into the containerd snapshotter. By default images are not "+
+			"unpacked until first use")
 
 	return cmd
 }
