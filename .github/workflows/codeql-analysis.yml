@@ -37,4 +37,4 @@ jobs:
       - name: Build
         run: devbox run -- task build:snapshot
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@97c34c320a23709ce7144dcb00697f21d5157ec8 # v3
+        uses: github/codeql-action/analyze@c050421152f5bd3d7e4d8ece8dbd46d93ca0f926 # v3
